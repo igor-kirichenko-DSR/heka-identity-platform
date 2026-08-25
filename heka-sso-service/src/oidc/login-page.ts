@@ -3,14 +3,17 @@
  * page served by the bridge on its own origin — the interaction uid comes
  * from the URL and everything else from the same-origin JSON interaction API
  * (`/interaction/:uid/data`, `/dc-api/start`, `/dc-api/verify`, `/status`,
- * `/complete`). Same-origin fetches carry the `_interaction` cookie, which is
- * what enforces the §3.3 binding rule (the design decision recorded in
- * P2.1.1: this page must never move to another origin).
+ * `/events`, `/complete`). Same-origin fetches carry the `_interaction`
+ * cookie, which is what enforces the §3.3 binding rule (the design decision
+ * recorded in P2.1.1: this page must never move to another origin).
  *
  * P2.1 — the page feature-detects the Digital Credentials API and prefers it
- * (same-device, origin-bound); the cross-device QR + polling path (P1.6.3)
- * remains the fallback. Deliberately unstyled: the interaction UI does wallet
- * login only (§6 risk "Interaction UI scope creep").
+ * (same-device, origin-bound); the cross-device QR path remains the fallback.
+ * P2.2 — on the QR path the page listens on the same-origin WebSocket
+ * (`/interaction/:uid/events`) for status pushes; polling (P1.6.3) is the
+ * fallback whenever the socket is unavailable. Deliberately unstyled: the
+ * interaction UI does wallet login only (§6 risk "Interaction UI scope
+ * creep").
  */
 export const LOGIN_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -59,7 +62,8 @@ export const LOGIN_PAGE_HTML = `<!DOCTYPE html>
     }
 
     // Cross-device fallback (P1.6.3): fetch the QR/deep-link data — this is
-    // what creates the direct_post verification session — then poll status.
+    // what creates the direct_post verification session — then listen for the
+    // WebSocket push (P2.2), with status polling as the fallback channel.
     function startQr() {
       qrSection.hidden = false;
       if (qrStarted) return;
@@ -75,26 +79,88 @@ export const LOGIN_PAGE_HTML = `<!DOCTYPE html>
           deepLink.href = data.authorizationRequest;
           deepLink.hidden = false;
           qrStatus.textContent = 'Waiting for the wallet presentation…';
-          setTimeout(poll, 2000);
+          connectPush();
         })
         .catch(function () {
           qrStatus.textContent = 'The sign-in attempt could not be started.';
         });
     }
 
-    function poll() {
-      getJson(base + '/status', { headers: { accept: 'application/json' } })
-        .then(function (data) {
-          if (data.status === 'verified') {
-            qrStatus.textContent = 'Presentation verified — signing you in…';
-            window.location.href = completeUrl;
-          } else if (data.status === 'error') {
-            qrStatus.textContent = data.message || 'Sign-in failed.';
-          } else {
-            setTimeout(poll, 2000);
-          }
-        })
-        .catch(function () { setTimeout(poll, 5000); });
+    var finished = false;
+    var pollingActive = false;
+    var pollTimer = null;
+
+    function handleStatus(data) {
+      if (finished || !data) return;
+      if (data.status === 'verified') {
+        finished = true;
+        stopPolling();
+        qrStatus.textContent = 'Presentation verified — signing you in…';
+        window.location.href = completeUrl;
+      } else if (data.status === 'error') {
+        stopPolling();
+        qrStatus.textContent = data.message || 'Sign-in failed.';
+      }
+    }
+
+    function fetchStatus() {
+      return getJson(base + '/status', { headers: { accept: 'application/json' } });
+    }
+
+    function pollLoop(delay) {
+      pollTimer = setTimeout(function () {
+        fetchStatus()
+          .then(function (data) {
+            handleStatus(data);
+            if (pollingActive && !finished) pollLoop(2000);
+          })
+          .catch(function () {
+            if (pollingActive && !finished) pollLoop(5000);
+          });
+      }, delay);
+    }
+
+    function startPolling() {
+      if (pollingActive || finished) return;
+      pollingActive = true;
+      pollLoop(2000);
+    }
+
+    function stopPolling() {
+      pollingActive = false;
+      if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    }
+
+    // P2.2: push channel — same-origin WebSocket carrying the same JSON as
+    // /status. Polling takes over whenever the socket is unavailable, fails,
+    // or takes too long to open.
+    function connectPush() {
+      if (!('WebSocket' in window)) { startPolling(); return; }
+      var socket;
+      try {
+        var scheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        socket = new WebSocket(scheme + window.location.host + base + '/events');
+      } catch (error) {
+        startPolling();
+        return;
+      }
+      var opened = false;
+      var openGuard = setTimeout(function () { if (!opened) startPolling(); }, 4000);
+      socket.onopen = function () {
+        opened = true;
+        clearTimeout(openGuard);
+        stopPolling();
+        // catch up on anything that happened before the socket connected
+        fetchStatus().then(handleStatus).catch(function () {});
+      };
+      socket.onmessage = function (event) {
+        try { handleStatus(JSON.parse(event.data)); } catch (error) { /* ignore malformed frames */ }
+      };
+      socket.onclose = function () {
+        clearTimeout(openGuard);
+        if (!finished) startPolling();
+      };
+      socket.onerror = function () { /* onclose follows and starts polling */ };
     }
 
     // Same-device DC API path (P2.1): create a dc_api session, hand the
