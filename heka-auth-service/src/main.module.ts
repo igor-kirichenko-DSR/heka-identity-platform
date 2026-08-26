@@ -3,6 +3,7 @@ import { DatabaseModule } from '@core/database'
 import { LoggerModule } from '@core/logger'
 import { ScheduledTaskModule } from '@core/scheduled-tasks/scheduled-tasks.module'
 import { CorrelationIdMiddleware } from '@eropple/nestjs-correlation-id'
+import { MikroORM } from '@mikro-orm/core'
 import { ClassSerializerInterceptor, INestApplication, Module, ValidationPipe, VersioningType } from '@nestjs/common'
 import { APP_GUARD, Reflector } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -108,6 +109,11 @@ export class MainModule {
     this.appConfigure(app)
 
     this.swaggerConfigure(app)
+
+    // MikroORM v7 pools lazily and never flips its `connected` flag on its own,
+    // which leaves Terminus' MikroOrmHealthIndicator.pingCheck() reporting the
+    // database as down — connect explicitly so /health reflects reality.
+    await app.get(MikroORM).connect()
 
     // Start app
     const configService = app.get(ConfigService)

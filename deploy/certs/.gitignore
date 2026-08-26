@@ -1,0 +1,3 @@
+# mkcert-generated certificates live here (docs/https-local-dev.md) — never commit them.
+*
+!.gitignore
