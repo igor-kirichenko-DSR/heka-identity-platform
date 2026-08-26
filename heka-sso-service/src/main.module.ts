@@ -47,6 +47,13 @@ export class MainModule {
   public static appConfigure = (app: INestApplication) => {
     const config = app.get(ConfigService).config
 
+    // The provider already trusts X-Forwarded-* (provider.proxy = true); this
+    // covers the Nest routes (/health, /interaction, API prefix), where
+    // req.protocol and the client IP otherwise read the proxy's values.
+    if (config.app.trustProxy) {
+      app.getHttpAdapter().getInstance().set('trust proxy', true)
+    }
+
     app.use(CorrelationIdMiddleware())
 
     // The whole service is the OP (INTEGRATION.md §5-Decide-2): the provider

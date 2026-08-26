@@ -391,11 +391,19 @@ proxy-only.)
   `docker compose -f docker-compose.https.yml up` and all services are
   reachable over https via the proxy (manual smoke test).
 
-**Phase 2 — Configuration switch**
-- Env/compose scheme changes (§2.2), Keycloak realm JSON (§3.4.4).
-- Keycloak truststore (mkcert CA via `KC_TRUSTSTORE_PATHS`) and nginx network
-  aliases for the public hostnames (§2.6).
-- `app.set('trust proxy')` in both Nest services (§3.1.1, §3.4.2).
+**Phase 2 — Configuration switch** ✅ implemented
+- Env/compose scheme changes (§2.2) in the root compose only — the per-service
+  files keep their http values.
+- Keycloak realm (§3.4.4): implemented as a **separate https realm variant**
+  at `deploy/keycloak/realm-heka.json`, mounted only by the root compose, so
+  the original `heka-sso-service/keycloak/realm-heka.json` keeps serving the
+  plain-HTTP dev flow unchanged.
+- Keycloak truststore: mkcert CA copied to `deploy/certs/rootCA.pem` and
+  mounted via `KC_TRUSTSTORE_PATHS` (§2.6); nginx aliases from Phase 1 resolve
+  the hostnames. Keycloak's `extra_hosts`/`host.docker.internal` workaround
+  is gone from the root compose.
+- `app.set('trust proxy', …)` behind a new `APP_TRUST_PROXY` config flag in
+  both Nest services (§3.1.1, §3.4.2), default off.
 - Verify: sso discovery document shows https URLs; `Secure` cookies present;
   OIDC login flow through Keycloak works end-to-end; DIDComm/OID4VC endpoints
   advertise https/wss and a wallet can connect.

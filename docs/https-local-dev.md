@@ -26,6 +26,13 @@ mkcert -cert-file deploy/certs/cert.pem -key-file deploy/certs/key.pem \
   heka.localhost sso.localhost kc.localhost localhost 127.0.0.1 ::1
 ```
 
+Also copy the mkcert root CA next to the cert — the Keycloak container mounts
+it (`KC_TRUSTSTORE_PATHS`) to trust its backchannel calls to the sso issuer:
+
+```shell
+cp "$(mkcert -CAROOT)/rootCA.pem" deploy/certs/rootCA.pem
+```
+
 `deploy/certs/` is git-ignored — never commit certificates.
 
 ## 2. Build the service images
@@ -64,7 +71,8 @@ docker compose -f docker-compose.https.yml up -d
 | `https://heka.localhost/auth/health` | 200 from heka-auth-service |
 | `https://heka.localhost/api/health` | 200 from heka-identity-service |
 | `https://sso.localhost/health` | 200 from heka-sso-service |
-| `https://sso.localhost/.well-known/openid-configuration` | OIDC discovery JSON |
+| `https://sso.localhost/.well-known/openid-configuration` | discovery JSON — every URL `https://sso.localhost/...` |
+| `https://sso.localhost/auth?...` (authorize request) | `Set-Cookie` headers carry `Secure` |
 | `https://kc.localhost/` | Keycloak welcome page |
 | `https://heka.localhost/` | heka-sso-web-ui (404 until built) |
 | `http://heka.localhost/` | 301 redirect to https |
@@ -85,14 +93,21 @@ another tool) on your machine does not, either add hosts-file entries
 (`C:\Windows\System32\drivers\etc\hosts` on Windows, `/etc/hosts` elsewhere)
 or use `curl --resolve heka.localhost:443:127.0.0.1 ...`.
 
-## Notes and current limitations (Phase 1)
+## Notes and current limitations (Phase 2 applied)
 
-- **Services still advertise `http://` URLs.** Phase 1 is infrastructure only:
-  the sso issuer, agent endpoints, and Keycloak realm URLs still point at the
-  published `localhost` ports, so existing plain-HTTP flows keep working
-  side-by-side. Phase 2 of the plan switches them to the https origins.
+- **Services advertise `https://` URLs**: the sso issuer is
+  `https://sso.localhost` (Secure cookies, https discovery), the identity
+  agent endpoints are `https://heka.localhost/agent-http`,
+  `wss://heka.localhost/agent-ws`, `https://heka.localhost/openid`, and
+  Keycloak imports the https realm variant from `deploy/keycloak/`
+  (broker + RP URLs on `https://sso.localhost` / `https://heka.localhost` /
+  `https://kc.localhost`). The per-service compose files still run the
+  plain-HTTP setup with the original realm.
+- **DIDComm connections and DID documents minted before the switch** still
+  carry the old `http://localhost` endpoints — recreate test connections and
+  invitations after moving to this setup.
 - **Backend ports are still published to the host** (3000–3005, 8080, DB
-  ports) for the same reason. They are removed in Phase 5.
+  ports). They are removed in Phase 5.
 - **Port 443 already taken or privileged?** Change the nginx port mapping in
   `docker-compose.https.yml` to `'8443:443'` and use `https://heka.localhost:8443/…`.
 - **Certificates expired or hostnames changed?** Re-run the `mkcert` command

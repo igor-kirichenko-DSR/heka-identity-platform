@@ -49,6 +49,12 @@ export class MainModule {
   public static appConfigure = (app: INestApplication) => {
     const config = app.get(ConfigService).config
 
+    // Behind the TLS-terminating reverse proxy req.protocol and the client IP
+    // (Throttler rate-limit keys) come from X-Forwarded-* headers.
+    if (config.app.trustProxy) {
+      app.getHttpAdapter().getInstance().set('trust proxy', true)
+    }
+
     app.use(CorrelationIdMiddleware())
 
     app.use(bodyParser.json({ type: 'application/json', limit: config.app.requestSizeLimit }))

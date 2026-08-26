@@ -9,6 +9,7 @@ export enum AppConfigKeys {
   enableCors = 'APP_ENABLE_CORS',
   allowedOrigins = 'APP_ALLOW_ORIGINS',
   useHttps = 'APP_USE_HTTPS',
+  trustProxy = 'APP_TRUST_PROXY',
   orgId = 'ORG_ID',
 }
 
@@ -45,6 +46,9 @@ export class AppConfig {
   @IsBoolean()
   public enableCors: boolean
 
+  @IsBoolean()
+  public trustProxy: boolean
+
   @IsArray()
   @IsString({ each: true })
   public allowedOrigins: string[]
@@ -63,6 +67,7 @@ export class AppConfig {
       : appConfigDefaults.allowedOrigins
     this.requestSizeLimit = env[AppConfigKeys.requestSizeLimit] || appConfigDefaults.requestSizeLimit
     this.enableCors = env[AppConfigKeys.enableCors]?.toLowerCase() === 'true'
+    this.trustProxy = env[AppConfigKeys.trustProxy]?.toLowerCase() === 'true'
     this.orgId = env[AppConfigKeys.orgId] || appConfigDefaults.orgId
   }
 }

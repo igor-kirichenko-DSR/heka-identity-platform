@@ -10,9 +10,11 @@
 # hard error. Services are therefore defined flat here, mirroring the
 # per-service files.
 #
-# Backend ports (3000-3005, 8080) are still published to the host in Phase 1
-# so the existing plain-HTTP flows keep working (e.g. the Keycloak realm's
-# host.docker.internal:3005 backchannel URLs). They are removed in Phase 5.
+# Phase 2 applied: services advertise https URLs (sso issuer, agent endpoints,
+# Keycloak realm from deploy/keycloak/), trust the proxy's X-Forwarded-*, and
+# Keycloak trusts the mkcert CA for its backchannel calls to the issuer.
+# Backend ports (3000-3005, 8080) are still published to the host in this
+# phase; they are removed in Phase 5.
 
 name: heka-https
 
@@ -76,6 +78,7 @@ services:
       - JWT_ACCESS_EXPIRY=3600
       - JWT_REFRESH_EXPIRY=86400
       - DEMO_USER=demo
+      - APP_TRUST_PROXY=true
     ports:
       - '3004:3004'
     depends_on:
@@ -104,10 +107,12 @@ services:
     environment:
       MIKRO_ORM_HOST: identity-postgres
       WALLET_POSTGRES_HOST: identity-postgres
-      # Phase 1 keeps the http endpoint defaults; Phase 2 switches these to
-      # the public https/wss URLs (plan §2.2).
-      AGENT_HTTP_ENDPOINT: ${AGENT_HTTP_EP:-http://localhost:3001}
-      AGENT_WS_ENDPOINT: ${AGENT_WS_EP:-ws://localhost:3002}
+      # Public endpoints advertised in OOB invitations, DID documents, and
+      # OID4VCI issuer metadata (plan §2.2) — what wallets actually dial.
+      APP_ENDPOINT: https://heka.localhost/api
+      AGENT_HTTP_ENDPOINT: https://heka.localhost/agent-http
+      AGENT_WS_ENDPOINT: wss://heka.localhost/agent-ws
+      AGENT_OID4VCI_ENDPOINT: https://heka.localhost/openid
     ports:
       - '3000:3000'
       - '3001:3001'
@@ -142,11 +147,14 @@ services:
       - DB_NAME=heka-sso-service
       - DB_USER=heka
       - DB_PASSWORD=heka1
-      - OIDC_ISSUER_URL=http://localhost:3005
+      # https issuer -> node-oidc-provider marks its cookies Secure and the
+      # discovery document advertises https URLs (plan §3.4.1)
+      - OIDC_ISSUER_URL=https://sso.localhost
+      - APP_TRUST_PROXY=true
       - OIDC_COOKIE_KEYS=dev-only-cookie-key-do-not-use-in-production
       - OIDC_SUB_HMAC_SALT=dev-only-sub-hmac-salt-do-not-use-in-production
       - IDENTITY_SERVICE_BASE_URL=http://heka-identity-service:3000
-      - OIDC_CLIENTS=[{"clientId":"keycloak-broker","clientSecret":"dev-only-broker-secret-do-not-use-in-production","redirectUris":["http://localhost:8080/realms/heka/broker/heka-sso/endpoint","http://localhost:8080/realms/master/broker/heka-sso/endpoint"],"postLogoutRedirectUris":["http://localhost:8080/realms/heka/broker/heka-sso/endpoint/logout_response","http://localhost:8080/realms/master/broker/heka-sso/endpoint/logout_response"],"loginConfigId":"default"}]
+      - OIDC_CLIENTS=[{"clientId":"keycloak-broker","clientSecret":"dev-only-broker-secret-do-not-use-in-production","redirectUris":["https://kc.localhost/realms/heka/broker/heka-sso/endpoint","https://kc.localhost/realms/master/broker/heka-sso/endpoint"],"postLogoutRedirectUris":["https://kc.localhost/realms/heka/broker/heka-sso/endpoint/logout_response","https://kc.localhost/realms/master/broker/heka-sso/endpoint/logout_response"],"loginConfigId":"default"}]
       - OIDC_LOGIN_CONFIGS=[{"id":"default","verificationTemplate":"default","claimMapping":{"mdl.given_name":"given_name","mdl.family_name":"family_name","mdl.age_over_18":"age_over_18"},"subStrategy":"derived","issuerAllowlist":[]}]
       # Dev-only stub login (INTEGRATION.md P1.3) — refused in production
       - OIDC_STUB_LOGIN=true
@@ -162,7 +170,10 @@ services:
       start_period: 10s
 
   # ----------------------------------------------------------------- keycloak
-  # Lifted from heka-sso-service/docker-compose.dev.yml (plan §2.1.1).
+  # Lifted from heka-sso-service/docker-compose.dev.yml (plan §2.1.1), but
+  # importing the https realm variant from deploy/keycloak/ — all broker URLs
+  # point at https://sso.localhost, resolved to nginx via its network alias
+  # and trusted through the mkcert CA (plan §2.6).
   keycloak:
     image: quay.io/keycloak/keycloak:26.3
     command: start-dev --import-realm
@@ -171,9 +182,10 @@ services:
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
       # Trust X-Forwarded-* from nginx when accessed via https://kc.localhost
       - KC_PROXY_HEADERS=xforwarded
+      # mkcert root CA for the backchannel token/jwks/userinfo calls to the issuer
+      - KC_TRUSTSTORE_PATHS=/opt/keycloak/certs/rootCA.pem
     ports:
       - '8080:8080'
     volumes:
-      - ./heka-sso-service/keycloak:/opt/keycloak/data/import:ro
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
+      - ./deploy/keycloak:/opt/keycloak/data/import:ro
+      - ./deploy/certs/rootCA.pem:/opt/keycloak/certs/rootCA.pem:ro
