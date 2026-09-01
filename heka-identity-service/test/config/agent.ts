@@ -20,6 +20,13 @@ export default () => {
   config.didCommConfig = {
     ...config.didCommConfig,
     endpoints: [httpEndpoint, wsEndpoint],
+    // Both DIDComm parties in the tests live in this single process. Credo processes inbound messages
+    // one at a time by default, so when a handler replies to the in-process inbound transport, the
+    // nested request cannot be processed until the outer one completes, while the outer one is waiting
+    // for the nested HTTP response. That cycle is only broken by the inbound transport timeout, which
+    // costs 10 seconds per hop and logs "Error processing inbound message: Timeout has occurred".
+    // Processing messages concurrently removes the cycle altogether.
+    processDidCommMessagesConcurrently: true,
   }
 
   return config

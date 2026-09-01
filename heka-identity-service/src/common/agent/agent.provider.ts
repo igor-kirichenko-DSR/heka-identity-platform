@@ -39,7 +39,10 @@ export class Agent extends CredoAgent<AgencyModulesMap> implements OnApplication
     this.modules.didcomm.registerOutboundTransport(new DidCommHttpOutboundTransport())
     if (this.agencyConfig.httpPort) {
       this.modules.didcomm.registerInboundTransport(
-        new DidCommHttpInboundTransport({ port: this.agencyConfig.httpPort }),
+        new DidCommHttpInboundTransport({
+          port: this.agencyConfig.httpPort,
+          processedMessageListenerTimeoutMs: this.agencyConfig.inboundMessageProcessingTimeoutMs,
+        }),
       )
     }
 

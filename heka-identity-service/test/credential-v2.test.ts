@@ -1,6 +1,11 @@
 import { Server } from 'net'
 
-import { DidCommCredentialState, DidCommProofState } from '@credo-ts/didcomm'
+import {
+  DidCommCredentialEventTypes,
+  DidCommCredentialState,
+  DidCommProofEventTypes,
+  DidCommProofState,
+} from '@credo-ts/didcomm'
 import { OpenId4VcIssuanceSessionState, OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
 import { MikroORM } from '@mikro-orm/core'
 import { PostgreSqlDriver, SchemaGenerator } from '@mikro-orm/postgresql'
@@ -210,7 +215,7 @@ describe('Credential V2 tests', () => {
 
       const did = await DidUtilities.create(app, issuerToken!, DidMethod.Indy)
 
-      const [issuerConnectionRecordId, _holderConnectionRecordId] = await connectUsers(
+      const [issuerConnectionRecordId, holderConnectionRecordId] = await connectUsers(
         app,
         {
           label: 'Issuer',
@@ -249,6 +254,27 @@ describe('Credential V2 tests', () => {
       expect(offer!.offer).toBeUndefined()
       expect(offer!.state).toEqual(DidCommCredentialState.OfferSent)
       expect(offer?.id).toBeDefined()
+
+      // The offer is delivered to the holder asynchronously over DIDComm. Wait until both sides have
+      // processed it before tearing down, otherwise app shutdown races with the in-flight message.
+      await verifier.expectJson((message) => {
+        expect(message).toEqual(
+          expect.objectContaining({
+            type: DidCommCredentialEventTypes.DidCommCredentialStateChanged,
+            state: DidCommCredentialState.OfferSent,
+            details: expect.objectContaining({ connectionId: issuerConnectionRecordId }),
+          }),
+        )
+      })
+      await holderWebSocket.expectJson((message) => {
+        expect(message).toEqual(
+          expect.objectContaining({
+            type: DidCommCredentialEventTypes.DidCommCredentialStateChanged,
+            state: DidCommCredentialState.OfferReceived,
+            details: expect.objectContaining({ connectionId: holderConnectionRecordId }),
+          }),
+        )
+      })
 
       await verifier.close().expectClosed()
       await holderWebSocket.close().expectClosed()
@@ -366,7 +392,7 @@ describe('Credential V2 tests', () => {
 
       const did = await DidUtilities.create(app, verifierToken!, DidMethod.Indy)
 
-      const [verifierConnectionRecordId, _holderConnectionRecordId] = await connectUsers(
+      const [verifierConnectionRecordId, holderConnectionRecordId] = await connectUsers(
         app,
         {
           label: 'Verifier',
@@ -396,6 +422,28 @@ describe('Credential V2 tests', () => {
       expect(proof?.id).toBeDefined()
       expect(proof?.request).toBeUndefined()
       expect(proof?.state).toEqual(DidCommProofState.RequestSent)
+
+      // The proof request is delivered to the holder asynchronously over DIDComm. Wait until both sides
+      // have processed it before tearing down, otherwise app shutdown races with the in-flight message.
+      await verifier.expectJson((message) => {
+        expect(message).toEqual(
+          expect.objectContaining({
+            id: proof!.id,
+            type: DidCommProofEventTypes.ProofStateChanged,
+            state: DidCommProofState.RequestSent,
+            details: expect.objectContaining({ connectionId: verifierConnectionRecordId }),
+          }),
+        )
+      })
+      await holderWebSocket.expectJson((message) => {
+        expect(message).toEqual(
+          expect.objectContaining({
+            type: DidCommProofEventTypes.ProofStateChanged,
+            state: DidCommProofState.RequestReceived,
+            details: expect.objectContaining({ connectionId: holderConnectionRecordId }),
+          }),
+        )
+      })
 
       await verifier.close().expectClosed()
       await holderWebSocket.close().expectClosed()

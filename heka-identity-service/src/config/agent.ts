@@ -19,6 +19,14 @@ export default registerAs('agent', () => {
   const wsPort = process.env.AGENT_WS_PORT ? parseInt(process.env.AGENT_WS_PORT, 10) : 3002
   const oid4VcPort = process.env.AGENT_OID4VC_PORT ? parseInt(process.env.AGENT_OID4VC_PORT, 10) : 3003
 
+  // How long the DIDComm HTTP inbound transport waits for an inbound message to be fully processed
+  // (including sending any response message produced by its handler) before it gives up and answers
+  // the sender with an error. Slow ledger lookups on the receiving side may need more than credo's
+  // default of 10 seconds.
+  const inboundMessageProcessingTimeoutMs = process.env.AGENT_INBOUND_MESSAGE_PROCESSING_TIMEOUT_MS
+    ? parseInt(process.env.AGENT_INBOUND_MESSAGE_PROCESSING_TIMEOUT_MS, 10)
+    : 10_000
+
   const autoAcceptMediationRequests = process.env.AGENT_AUTO_ACCEPT_MEDIATION_REQUESTS
     ? process.env.AGENT_AUTO_ACCEPT_MEDIATION_REQUESTS.toLowerCase() !== 'false'
     : true
@@ -146,6 +154,7 @@ export default registerAs('agent', () => {
   return {
     httpPort,
     wsPort,
+    inboundMessageProcessingTimeoutMs,
     autoAcceptMediationRequests,
     networks,
     httpEndpoint,
