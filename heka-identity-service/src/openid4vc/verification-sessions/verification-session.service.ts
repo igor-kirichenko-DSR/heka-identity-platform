@@ -110,6 +110,10 @@ export class OpenId4VcVerificationSessionService {
     )
   }
 
+  /**
+   * Resolve the disclosed attributes of a verified authorization response, supporting
+   * both Presentation Exchange and DCQL presentations across SD-JWT, JWT VC and mdoc.
+   */
   private async getSharedAttributes(
     tenantAgent: TenantAgent,
     verificationSessionId: string,
