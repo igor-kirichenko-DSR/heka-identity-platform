@@ -10,8 +10,10 @@ import { TenantAgent } from 'common/agent'
 import {
   OpenId4VcVerificationSessionCreateRequestDto,
   OpenId4VcVerificationSessionCreateRequestResponse,
+  DisclosedAttributes,
   GetVerificationSessionByQueryDto,
   OpenId4VcVerificationSessionRecordDto,
+  SharedAttributes,
 } from './dto'
 
 @Injectable()
@@ -96,7 +98,7 @@ export class OpenId4VcVerificationSessionService {
       verificationSessionId,
     )
 
-    let sharedAttributes: Record<string, unknown> | undefined = undefined
+    let sharedAttributes: SharedAttributes = {}
 
     if (verificationSessionRecord.state === OpenId4VcVerificationSessionState.ResponseVerified) {
       sharedAttributes = await this.getSharedAttributes(tenantAgent, verificationSessionId)
@@ -108,29 +110,50 @@ export class OpenId4VcVerificationSessionService {
     )
   }
 
-  /**
-   * Resolve the disclosed attributes of a verified authorization response, supporting
-   * both Presentation Exchange and DCQL presentations across SD-JWT, JWT VC and mdoc.
-   */
   private async getSharedAttributes(
     tenantAgent: TenantAgent,
     verificationSessionId: string,
-  ): Promise<Record<string, unknown> | undefined> {
+  ): Promise<SharedAttributes> {
     const verifiedAuthorizationResponse =
       await tenantAgent.openid4vc.verifier.getVerifiedAuthorizationResponse(verificationSessionId)
 
     if (verifiedAuthorizationResponse.presentationExchange?.presentations?.length) {
-      const presentation = verifiedAuthorizationResponse.presentationExchange.presentations[0]
-      return OpenId4VcVerificationSessionService.extractAttributesFromPresentation(presentation)
-    } else if (verifiedAuthorizationResponse.dcql?.presentations) {
-      const presentationEntries = Object.values(verifiedAuthorizationResponse.dcql.presentations)[0]
-      if (presentationEntries.length) {
-        return OpenId4VcVerificationSessionService.extractAttributesFromPresentation(presentationEntries[0])
+      const presentations = verifiedAuthorizationResponse.presentationExchange.presentations
+      return {
+        sharedAttributes: OpenId4VcVerificationSessionService.mergeAttributes(
+          presentations.map((presentation) =>
+            OpenId4VcVerificationSessionService.extractAttributesFromPresentation(presentation),
+          ),
+        ),
       }
-      return undefined
+    } else if (verifiedAuthorizationResponse.dcql?.presentations) {
+      const byCredentialQuery: Record<string, DisclosedAttributes[]> = {}
+      for (const [credentialQueryId, presentations] of Object.entries(
+        verifiedAuthorizationResponse.dcql.presentations,
+      )) {
+        const attributes = presentations
+          .map((presentation) => OpenId4VcVerificationSessionService.extractAttributesFromPresentation(presentation))
+          .filter((entry): entry is DisclosedAttributes => entry !== undefined)
+        if (attributes.length) {
+          byCredentialQuery[credentialQueryId] = attributes
+        }
+      }
+
+      if (!Object.keys(byCredentialQuery).length) return {}
+      return {
+        sharedAttributes: OpenId4VcVerificationSessionService.mergeAttributes(Object.values(byCredentialQuery).flat()),
+        sharedAttributesByCredentialQuery: byCredentialQuery,
+      }
     } else {
       throw new InternalServerErrorException('Presentation is missing')
     }
+  }
+
+  /** Flatten the disclosed attributes of several presentations into one set — later entries win. */
+  private static mergeAttributes(attributes: Array<DisclosedAttributes | undefined>): DisclosedAttributes | undefined {
+    const disclosed = attributes.filter((entry): entry is DisclosedAttributes => entry !== undefined)
+    if (!disclosed.length) return undefined
+    return Object.assign({}, ...disclosed)
   }
 
   /**
@@ -150,7 +173,7 @@ export class OpenId4VcVerificationSessionService {
       origin,
     })
 
-    let sharedAttributes: Record<string, unknown> | undefined = undefined
+    let sharedAttributes: SharedAttributes = {}
     if (verificationSession.state === OpenId4VcVerificationSessionState.ResponseVerified) {
       sharedAttributes = await this.getSharedAttributes(tenantAgent, verificationSessionId)
     }

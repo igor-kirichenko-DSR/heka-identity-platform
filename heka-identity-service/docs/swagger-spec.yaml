@@ -3733,6 +3733,8 @@ components:
           type: object
         sharedAttributes:
           type: object
+        sharedAttributesByCredentialQuery:
+          type: object
       required:
         - id
         - createdAt

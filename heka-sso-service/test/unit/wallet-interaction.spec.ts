@@ -408,6 +408,57 @@ describe('wallet-login interaction', () => {
     expect(callbackUrl.searchParams.get('code')).toBeNull()
   })
 
+  test('multi-credential DCQL: each credential query maps under its own id', async () => {
+    const codeVerifier = randomBytes(32).toString('base64url')
+    const { jar, interactionPath } = await startFlow(codeVerifier)
+    await request(app).get(interactionPath).set('Cookie', jar.header()).expect(200)
+    await request(app).get(`${interactionPath}/data`).set('Cookie', jar.header()).expect(200)
+
+    // heka-identity-service keys the disclosure by credential query: 'pid' feeds the claim
+    // mapping, 'mdl' is disclosed but mapped to nothing by this login config
+    sessionsMock.getSession.mockResolvedValue({
+      id: 'vs-1',
+      state: VerificationSessionState.ResponseVerified,
+      sharedAttributes: { given_name: 'Ada', family_name: 'Lovelace', driving_privileges: ['B'] },
+      sharedAttributesByCredentialQuery: {
+        pid: [{ given_name: 'Ada', family_name: 'Lovelace' }],
+        mdl: [{ driving_privileges: ['B'] }],
+      },
+    })
+    const complete = await request(app).get(`${interactionPath}/complete`).set('Cookie', jar.header()).expect(303)
+    jar.store(complete)
+    const callbackUrl = await followTo(jar, complete.headers.location)
+    expect(callbackUrl.searchParams.get('error')).toBeNull()
+
+    const tokens = await exchangeCode(callbackUrl.searchParams.get('code'), codeVerifier)
+    const idToken = JSON.parse(Buffer.from(tokens.body.id_token.split('.')[1], 'base64url').toString())
+    expect(idToken).toMatchObject({ given_name: 'Ada', family_name: 'Lovelace' })
+    // the second credential is disclosed in full, and maps to no claim of its own
+    expect(idToken.vc_presented_attributes).toEqual({
+      given_name: 'Ada',
+      family_name: 'Lovelace',
+      driving_privileges: ['B'],
+    })
+  })
+
+  test('a credential query answered by several presentations is refused, not silently narrowed', async () => {
+    const codeVerifier = randomBytes(32).toString('base64url')
+    const { jar, interactionPath } = await startFlow(codeVerifier)
+    await request(app).get(interactionPath).set('Cookie', jar.header()).expect(200)
+    await request(app).get(`${interactionPath}/data`).set('Cookie', jar.header()).expect(200)
+
+    sessionsMock.getSession.mockResolvedValue({
+      id: 'vs-1',
+      state: VerificationSessionState.ResponseVerified,
+      sharedAttributes: { given_name: 'Grace' },
+      sharedAttributesByCredentialQuery: { pid: [{ given_name: 'Ada' }, { given_name: 'Grace' }] },
+    })
+    const complete = await request(app).get(`${interactionPath}/complete`).set('Cookie', jar.header()).expect(303)
+    jar.store(complete)
+    const callbackUrl = await followTo(jar, complete.headers.location)
+    expect(callbackUrl.searchParams.get('error')).toBe('access_denied')
+  })
+
   test('interaction API without the interaction cookie is rejected — no session leakage', async () => {
     for (const [method, path] of [
       ['get', '/interaction/some-uid/status'],

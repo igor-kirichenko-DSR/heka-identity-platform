@@ -3,7 +3,11 @@ export {
   OpenId4VcVerificationSessionCreateRequestResponse,
   OpenId4VcVerifyDcApiRequestDto,
 } from './credential-verification.dto'
-export { OpenId4VcVerificationSessionRecordDto } from './verification-session.dto'
+export {
+  DisclosedAttributes,
+  OpenId4VcVerificationSessionRecordDto,
+  SharedAttributes,
+} from './verification-session.dto'
 export { GetVerificationSessionByQueryDto } from './get-verification-session-by-query.dto'
 export {
   DifPresentationExchangeDefinitionV2,

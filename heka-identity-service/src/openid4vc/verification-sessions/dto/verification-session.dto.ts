@@ -11,6 +11,15 @@ import { OpenId4VcSiopAuthorizationResponsePayload } from './authorization-respo
  */
 export type RecordId = string
 
+/** The attributes a single presentation disclosed, by claim name. */
+export type DisclosedAttributes = Record<string, unknown>
+
+/** What a verified authorization response disclosed, as resolved from its presentations. */
+export interface SharedAttributes {
+  sharedAttributes?: DisclosedAttributes
+  sharedAttributesByCredentialQuery?: Record<string, DisclosedAttributes[]>
+}
+
 export class OpenId4VcVerificationSessionRecordDto {
   @ApiProperty()
   @IsString()
@@ -75,9 +84,23 @@ export class OpenId4VcVerificationSessionRecordDto {
   @IsOptional()
   public authorizationResponsePayload?: OpenId4VcSiopAuthorizationResponsePayload
 
+  /**
+   * The attributes disclosed by the response, flattened across every presentation it carried.
+   * A claim name disclosed by more than one credential keeps the value of the last presentation:
+   * read {@link sharedAttributesByCredentialQuery} when more than one credential was requested.
+   */
   @ApiPropertyOptional()
   @IsOptional()
-  public sharedAttributes?: Record<string, unknown>
+  public sharedAttributes?: DisclosedAttributes
+
+  /**
+   * DCQL responses only: the disclosed attributes of every presentation, keyed by the credential
+   * query id it answers. Each entry is an array — the DCQL `multiple` feature lets a wallet return
+   * several presentations for one query.
+   */
+  @ApiPropertyOptional()
+  @IsOptional()
+  public sharedAttributesByCredentialQuery?: Record<string, DisclosedAttributes[]>
 
   public constructor(params: OpenId4VcVerificationSessionRecordDto) {
     this.id = params.id
@@ -91,17 +114,19 @@ export class OpenId4VcVerificationSessionRecordDto {
     this.authorizationRequestUri = params.authorizationRequestUri
     this.authorizationResponsePayload = params.authorizationResponsePayload
     this.sharedAttributes = params.sharedAttributes
+    this.sharedAttributesByCredentialQuery = params.sharedAttributesByCredentialQuery
   }
 
   public static fromOpenId4VcVerificationSessionRecord(
     record: OpenId4VcVerificationSessionRecord,
-    sharedAttributes?: Record<string, unknown>,
+    shared: SharedAttributes = {},
   ): OpenId4VcVerificationSessionRecordDto {
     return new OpenId4VcVerificationSessionRecordDto({
       ...record,
       publicVerifierId: record.verifierId,
       authorizationResponsePayload: record.authorizationResponsePayload,
-      sharedAttributes,
+      sharedAttributes: shared.sharedAttributes,
+      sharedAttributesByCredentialQuery: shared.sharedAttributesByCredentialQuery,
     })
   }
 }

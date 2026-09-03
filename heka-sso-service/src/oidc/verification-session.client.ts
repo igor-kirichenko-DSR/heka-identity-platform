@@ -26,7 +26,14 @@ export interface VerificationSessionRecord {
   id: string
   state: VerificationSessionState
   errorMessage?: string
+  /** Everything the presentation disclosed, flattened across credentials. */
   sharedAttributes?: Record<string, unknown>
+  /**
+   * DCQL responses: the same attributes kept apart under the credential query id they answer
+   * (an array per id — DCQL `multiple` allows several presentations for one query). Absent for
+   * presentation-exchange responses.
+   */
+  sharedAttributesByCredentialQuery?: Record<string, Record<string, unknown>[]>
 }
 
 @Injectable()

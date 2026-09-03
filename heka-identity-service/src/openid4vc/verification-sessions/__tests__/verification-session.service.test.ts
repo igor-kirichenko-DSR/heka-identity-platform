@@ -18,6 +18,12 @@ describe('OpenId4VcVerificationSessionService', () => {
   const mockGetVerifiedAuthorizationResponse = vi.fn()
   const mockVerifyAuthorizationResponse = vi.fn()
 
+  const sdJwtPresentation = (claims: Record<string, unknown>) => ({
+    claimFormat: 'dc+sd-jwt',
+    header: { typ: 'vc+sd-jwt' },
+    prettyClaims: { vct: 'https://example.com/vct', cnf: {}, iss: 'did:key:z6Mk1234', iat: 123456, ...claims },
+  })
+
   const makeSessionRecord = (overrides: Record<string, unknown> = {}) =>
     verificationSessionRecordStub({
       id: 'vs-1',
@@ -202,6 +208,92 @@ describe('OpenId4VcVerificationSessionService', () => {
       expect(mockGetById).toHaveBeenCalledWith(expect.anything(), 'vs-1')
       expect(mockGetVerifiedAuthorizationResponse).toHaveBeenCalledWith('vs-1')
       expect(result.sharedAttributes).toEqual({ degree: 'Bachelor' })
+    })
+
+    test('should key dcql presentations by credential query id, keeping every credential', async () => {
+      mockGetById.mockResolvedValue(makeSessionRecord({ state: OpenId4VcVerificationSessionState.ResponseVerified }))
+
+      mockGetVerifiedAuthorizationResponse.mockResolvedValue({
+        presentationExchange: undefined,
+        dcql: {
+          presentations: {
+            pid: [sdJwtPresentation({ given_name: 'Ada', family_name: 'Lovelace' })],
+            mdl: [
+              {
+                claimFormat: 'mso_mdoc',
+                issuerClaims: {
+                  'org.iso.18013.5.1.mDL': { 'org.iso.18013.5.1': { driving_privileges: ['B'] } },
+                },
+              },
+            ],
+          },
+        },
+      })
+
+      const result = await service.getVerificationSession(tenantAgent, 'vs-1')
+
+      // every credential query is resolved, none is discarded
+      expect(result.sharedAttributesByCredentialQuery).toEqual({
+        pid: [{ given_name: 'Ada', family_name: 'Lovelace' }],
+        mdl: [{ driving_privileges: ['B'] }],
+      })
+      // …and the flattened view carries all of them
+      expect(result.sharedAttributes).toEqual({
+        given_name: 'Ada',
+        family_name: 'Lovelace',
+        driving_privileges: ['B'],
+      })
+    })
+
+    test('should keep every presentation of one credential query (dcql multiple)', async () => {
+      mockGetById.mockResolvedValue(makeSessionRecord({ state: OpenId4VcVerificationSessionState.ResponseVerified }))
+
+      mockGetVerifiedAuthorizationResponse.mockResolvedValue({
+        presentationExchange: undefined,
+        dcql: {
+          presentations: {
+            diploma: [sdJwtPresentation({ degree: 'Bachelor' }), sdJwtPresentation({ degree: 'Master' })],
+          },
+        },
+      })
+
+      const result = await service.getVerificationSession(tenantAgent, 'vs-1')
+
+      expect(result.sharedAttributesByCredentialQuery).toEqual({
+        diploma: [{ degree: 'Bachelor' }, { degree: 'Master' }],
+      })
+      // the flattened view can only hold one value per claim name — the per-query map is the full one
+      expect(result.sharedAttributes).toEqual({ degree: 'Master' })
+    })
+
+    test('should report no attributes when a dcql response carries no presentation entry', async () => {
+      mockGetById.mockResolvedValue(makeSessionRecord({ state: OpenId4VcVerificationSessionState.ResponseVerified }))
+
+      mockGetVerifiedAuthorizationResponse.mockResolvedValue({
+        presentationExchange: undefined,
+        dcql: { presentations: { pid: [] } },
+      })
+
+      const result = await service.getVerificationSession(tenantAgent, 'vs-1')
+
+      expect(result.sharedAttributes).toBeUndefined()
+      expect(result.sharedAttributesByCredentialQuery).toBeUndefined()
+    })
+
+    test('should merge every presentation of a presentation-exchange response', async () => {
+      mockGetById.mockResolvedValue(makeSessionRecord({ state: OpenId4VcVerificationSessionState.ResponseVerified }))
+
+      mockGetVerifiedAuthorizationResponse.mockResolvedValue({
+        presentationExchange: {
+          presentations: [sdJwtPresentation({ given_name: 'Ada' }), sdJwtPresentation({ degree: 'Bachelor' })],
+        },
+      })
+
+      const result = await service.getVerificationSession(tenantAgent, 'vs-1')
+
+      // presentation exchange has no credential query ids to key by, but nothing is dropped
+      expect(result.sharedAttributes).toEqual({ given_name: 'Ada', degree: 'Bachelor' })
+      expect(result.sharedAttributesByCredentialQuery).toBeUndefined()
     })
 
     test('should throw InternalServerErrorException when no presentations exist for ResponseVerified state', async () => {
