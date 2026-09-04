@@ -15,8 +15,11 @@ import {
 } from './identity-acquirer'
 import { LoginEventsService } from './login-events.service'
 import { loadPage } from './pages'
-import { VerificationSessionClient, VerificationSessionState } from './verification-session.client'
+import { VerificationSessionClient, VerificationSessionRecord, VerificationSessionState } from './verification-session.client'
 import { assertWalletAuthorizationRequest } from './wallet-uri'
+
+const prefixAttributes = (queryId: string, attributes: ClaimSet): ClaimSet =>
+  Object.fromEntries(Object.entries(attributes).map(([claim, value]) => [`${queryId}.${claim}`, value]))
 
 interface PendingLogin {
   directPostSessionId?: string
@@ -107,12 +110,12 @@ export class WalletIdentityAcquirer implements IdentityAcquirer, DirectPostLogin
     const sessionIds = [entry.dcApiSessionId, entry.directPostSessionId].filter((sessionId): sessionId is string => !!sessionId)
     if (sessionIds.length === 0) throw new Error(`no verification session started for interaction ${interactionUid}`)
 
-    let verified: { sessionId: string; sharedAttributes?: Record<string, unknown> } | undefined
+    let verified: VerificationSessionRecord | undefined
     const states: string[] = []
     for (const sessionId of sessionIds) {
       const record = await this.sessions.getSession(sessionId)
       if (record.state === VerificationSessionState.ResponseVerified) {
-        verified = { sessionId, sharedAttributes: record.sharedAttributes }
+        verified = record
         break
       }
       states.push(`${sessionId}: ${record.state}`)
@@ -124,14 +127,37 @@ export class WalletIdentityAcquirer implements IdentityAcquirer, DirectPostLogin
 
     const disclosed: ClaimSet = verified.sharedAttributes ?? {}
     if (Object.keys(disclosed).length === 0) {
-      throw new Error(`verified session ${verified.sessionId} for interaction ${interactionUid} disclosed no attributes`)
+      throw new Error(`verified session ${verified.id} for interaction ${interactionUid} disclosed no attributes`)
     }
 
-    const queryId = this.credentialQueryId(loginConfig)
-    const attributes: ClaimSet = Object.fromEntries(Object.entries(disclosed).map(([claim, value]) => [`${queryId}.${claim}`, value]))
+    const attributes = this.toAttributePaths(loginConfig, verified, disclosed, interactionUid)
 
-    this.logger.log(`Interaction ${interactionUid}: presentation verified (session ${verified.sessionId})`)
+    this.logger.log(`Interaction ${interactionUid}: presentation verified (session ${verified.id})`)
     return { attributes, amr: ['vc'], presentedAttributes: disclosed }
+  }
+
+  private toAttributePaths(
+    loginConfig: OidcLoginConfig,
+    verified: VerificationSessionRecord,
+    disclosed: ClaimSet,
+    interactionUid: string
+  ): ClaimSet {
+    const byCredentialQuery = verified.sharedAttributesByCredentialQuery
+    if (!byCredentialQuery) return prefixAttributes(this.credentialQueryId(loginConfig), disclosed)
+
+    const attributes: ClaimSet = {}
+    for (const [queryId, presentations] of Object.entries(byCredentialQuery)) {
+      // a claim mapping addresses a credential query, not a presentation within it: several
+      // presentations under one id cannot be told apart, so fail rather than pick one
+      if (presentations.length > 1) {
+        throw new Error(
+          `credential query '${queryId}' returned ${presentations.length} presentations for interaction ${interactionUid} — ` +
+            'a claim mapping cannot address them individually'
+        )
+      }
+      if (presentations.length === 1) Object.assign(attributes, prefixAttributes(queryId, presentations[0]))
+    }
+    return attributes
   }
 
   private credentialQueryId(loginConfig: OidcLoginConfig): string {

@@ -14,7 +14,7 @@ scanned, establishes an encrypted, phishing-resistant connection to a phone over
 ## How it differs from the legacy QR code flow
 
 |                 | QR / deeplink (`direct_post`)                                              | Digital Credentials API (`dc_api`)                                                       |
-|-----------------|----------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| --------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | Transport       | Wallet fetches the request via a URL, POSTs the response to `response_uri` | OS passes the request to the wallet and returns the response to the browser              |
 | Devices         | Cross-device (verifier on desktop, wallet on phone)                        | Same device, or cross-device on desktop (browser shows its own QR + Bluetooth handshake) |
 | Origin binding  | n/a                                                                        | The calling web origin is bound into the verification (anti-phishing)                    |
@@ -104,7 +104,10 @@ is validated against the calling page (anti-phishing).
 ```
 
 On success the verification session reaches `ResponseVerified` and the response includes the disclosed
-`sharedAttributes`, so the result can be shown without a follow-up `GET`.
+`sharedAttributes`, so the result can be shown without a follow-up `GET`. A DCQL request asking for more
+than one credential also gets `sharedAttributesByCredentialQuery`, which keeps each credential's
+attributes under the credential query id it answers — `sharedAttributes` flattens them all into one
+set, so a claim name disclosed by two credentials keeps only the last value there.
 
 ## Trying it out in the Web UI
 
