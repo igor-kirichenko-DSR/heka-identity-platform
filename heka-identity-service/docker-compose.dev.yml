@@ -23,8 +23,8 @@ services:
       WALLET_POSTGRES_HOST: postgres
       # iss is the browser-facing Keycloak URL (KC_HOSTNAME in heka-sso-service/docker-compose.dev.yml);
       # the JWKS is fetched through the host gateway because localhost inside the container is the container.
-      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:-http://localhost:8080/realms/heka}
-      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://host.docker.internal:8080/realms/heka/protocol/openid-connect/certs}
+      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:-http://localhost:8080/realms/heka-platform}
+      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://host.docker.internal:8080/realms/heka-platform/protocol/openid-connect/certs}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-heka-identity-service}
       EXPRESS_PORT: ${EXPRESS_PORT:-3000}
       AGENT_HTTP_ENDPOINT: ${AGENT_HTTP_EP:-http://${HOST_IP:-172.17.0.1}:3001}
