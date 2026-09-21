@@ -26,6 +26,12 @@ services:
       OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:-http://localhost:8080/realms/heka-platform}
       OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://host.docker.internal:8080/realms/heka-platform/protocol/openid-connect/certs}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-heka-identity-service}
+      # Demo-token broker for the web UI's public demo pages (docs/setup.md#demo-token-broker); the
+      # token endpoint is reached through the host gateway like the JWKS. Dev secret of the shipped realm.
+      DEMO_TOKEN_URL: ${DEMO_TOKEN_URL:-http://host.docker.internal:8080/realms/heka-platform/protocol/openid-connect/token}
+      DEMO_CLIENT_ID: ${DEMO_CLIENT_ID:-heka-demo}
+      DEMO_CLIENT_SECRET: ${DEMO_CLIENT_SECRET:-dev-only-heka-demo-secret-do-not-use-in-production}
+      DEMO_TOKEN_PARAMS: ${DEMO_TOKEN_PARAMS:-}
       EXPRESS_PORT: ${EXPRESS_PORT:-3000}
       AGENT_HTTP_ENDPOINT: ${AGENT_HTTP_EP:-http://${HOST_IP:-172.17.0.1}:3001}
       AGENT_WS_ENDPOINT: ${AGENT_WS_EP:-ws://${HOST_IP:-172.17.0.1}:3002}

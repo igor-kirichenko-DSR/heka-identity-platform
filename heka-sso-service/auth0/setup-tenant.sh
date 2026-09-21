@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Creates the heka-identity-service recipe in an Auth0 tenant with the Auth0 CLI (https://github.com/auth0/auth0-cli):
-# API, SPA application for the web UI, machine-to-machine application for heka-sso-service, Heka roles,
+# API, SPA application for the web UI, machine-to-machine applications for heka-sso-service and for the
+# identity service's demo-token broker (heka-demo), Heka roles,
 # the two Actions with their trigger bindings, a username/password connection that accepts usernames,
 # and (optionally) the dev `demo` user. Re-running is safe: existing resources are reused by name.
 #
@@ -25,7 +26,8 @@ WEB_UI_ORIGIN="${WEB_UI_ORIGIN:-http://localhost:8000}"
 DB_CONNECTION="${DB_CONNECTION:-Username-Password-Authentication}"
 ACTION_RUNTIME="${ACTION_RUNTIME:-node22}"
 CREATE_DEMO_USER="${CREATE_DEMO_USER:-true}"
-DEMO_USER_HEKA_UID="d3a1c2b4-5e6f-4a7b-8c9d-0e1f2a3b4c5d" # same fixed id as in the Keycloak realm
+DEMO_USER_HEKA_UID="d3a1c2b4-5e6f-4a7b-8c9d-0e1f2a3b4c5d"    # same fixed id as the `demo` user in the Keycloak realm
+DEMO_ACCOUNT_HEKA_UID="e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9" # same fixed id as the `heka-demo` service account there
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 export AUTH0_CLI_AGENT_MODE=1 # JSON output, no prompts
@@ -91,6 +93,29 @@ fi
 # Grant it the API (no scopes; the role comes from the application metadata via the Action).
 if [ "$(api get client-grants --query "client_id=${M2M_ID}" | json 'const a=JSON.parse(require("fs").readFileSync(0,"utf8"));console.log(a.some(g=>g.audience===process.argv[1]))' "$HEKA_AUDIENCE")" != "true" ]; then
   api post client-grants --data "{\"client_id\":\"${M2M_ID}\",\"audience\":\"${HEKA_AUDIENCE}\",\"scope\":[]}" >/dev/null
+  echo "   client grant created"
+else
+  echo "   client grant exists"
+fi
+
+# --- 4b. Machine-to-machine application for the identity service's demo-token broker ----
+# The web UI's public demo pages act as this account (GET /demo/token). Fixed heka_uid = the id of
+# the heka-demo service account in the Keycloak realm, so the demo tenant/DID is the same on both.
+echo "== Application heka-demo (M2M)"
+DEMO_ID="$(find_app heka-demo)"
+if [ -z "$DEMO_ID" ]; then
+  DEMO_JSON="$(auth0 apps create --name heka-demo --type m2m --description "Heka demo service account (identity service demo-token broker)" \
+    --metadata "heka_role=Admin" --metadata "heka_uid=${DEMO_ACCOUNT_HEKA_UID}" --metadata "heka_name=demo" --reveal-secrets --json 2>/dev/null)"
+  DEMO_ID="$(printf '%s' "$DEMO_JSON" | json 'console.log(JSON.parse(require("fs").readFileSync(0,"utf8")).client_id)')"
+  DEMO_SECRET="$(printf '%s' "$DEMO_JSON" | json 'console.log(JSON.parse(require("fs").readFileSync(0,"utf8")).client_secret)')"
+  echo "   created ${DEMO_ID}"
+else
+  DEMO_SECRET="(existing application: read it in the dashboard)"
+  api patch "clients/${DEMO_ID}" --data "{\"client_metadata\":{\"heka_role\":\"Admin\",\"heka_uid\":\"${DEMO_ACCOUNT_HEKA_UID}\",\"heka_name\":\"demo\"}}" >/dev/null
+  echo "   exists ${DEMO_ID}"
+fi
+if [ "$(api get client-grants --query "client_id=${DEMO_ID}" | json 'const a=JSON.parse(require("fs").readFileSync(0,"utf8"));console.log(a.some(g=>g.audience===process.argv[1]))' "$HEKA_AUDIENCE")" != "true" ]; then
+  api post client-grants --data "{\"client_id\":\"${DEMO_ID}\",\"audience\":\"${HEKA_AUDIENCE}\",\"scope\":[]}" >/dev/null
   echo "   client grant created"
 else
   echo "   client grant exists"
@@ -197,4 +222,10 @@ heka-sso-service (phase 4)
   IDENTITY_SERVICE_CLIENT_ID=${M2M_ID}
   IDENTITY_SERVICE_CLIENT_SECRET=${M2M_SECRET}
   IDENTITY_SERVICE_TOKEN_PARAMS={"audience":"${HEKA_AUDIENCE}"}
+
+heka-identity-service demo-token broker (phase 6)
+  DEMO_TOKEN_URL=https://${DOMAIN}/oauth/token
+  DEMO_CLIENT_ID=${DEMO_ID}
+  DEMO_CLIENT_SECRET=${DEMO_SECRET}
+  DEMO_TOKEN_PARAMS={"audience":"${HEKA_AUDIENCE}"}
 EOF

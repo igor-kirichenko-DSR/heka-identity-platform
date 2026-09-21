@@ -18,7 +18,7 @@ import {
 // `demoUser.did` is sourced from an env var that is empty in tests; mock it so the
 // `useDemo` branch resolves a stable verifier id instead of throwing "User ID is not set".
 jest.mock('@/const/user', () => ({
-  demoUser: { did: 'did:key:z6MkDemoUser', accessToken: '' },
+  demoUser: { did: 'did:key:z6MkDemoUser' },
 }));
 
 const makeApi = (postResponse: unknown): AxiosInstance =>

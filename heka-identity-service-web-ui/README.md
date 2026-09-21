@@ -37,13 +37,13 @@ The application structure is inspired by [Feature-Sliced Design](https://feature
 
 ### Creation of Pre-Defined Demo User
 
-As mentioned above, **Demo** flow can be run under an unauthorized user, but you must perform the next preparation
-steps before running or deploying the application:
+As mentioned above, **Demo** flow can be run under an unauthorized user. The pages act as a dedicated demo service account whose short-lived access token they fetch at runtime from the identity service's **demo-token broker** (`GET /demo/token`); nothing secret is baked into the bundle. Before running or deploying the application:
 
-- Create the `demo` account at the OpenID Connect provider (the shipped Keycloak realm and the Auth0 recipe already contain it, see [heka-sso-service/keycloak](../heka-sso-service/keycloak/README.md) and [heka-sso-service/auth0](../heka-sso-service/auth0/README.md)).
-- Obtain an access token for it and put its DID and token into `REACT_APP_DEMO_USER_DID` / `REACT_APP_DEMO_USER_ACCESS_TOKEN` in [.env](./.env).
+1. Create the demo service account at the OpenID Connect provider. The shipped Keycloak realm already contains the `heka-demo` client and the Auth0 tenant script creates the `heka-demo` application, see [heka-sso-service/keycloak](../heka-sso-service/keycloak/README.md) and [heka-sso-service/auth0](../heka-sso-service/auth0/README.md).
+2. Enable the broker in the identity service with `DEMO_TOKEN_URL`, `DEMO_CLIENT_ID` and `DEMO_CLIENT_SECRET` (plus `DEMO_TOKEN_PARAMS={"audience":"..."}` for Auth0), see [Demo token broker](../heka-identity-service/docs/setup.md#demo-token-broker).
+3. Run `yarn prepare-demo-user` with the identity service up. [`scripts/prepare-demo-user.ts`](./scripts/prepare-demo-user.ts) takes a token from the broker, calls `/prepare-wallet` (demo schemas, logos, DID) and writes the DID into `REACT_APP_DEMO_USER_DID` in [.env](./.env). Set `DEMO_ACCESS_TOKEN` to use another token instead of the broker's; the DID then belongs to that token's tenant.
 
-> **Note:** [`scripts/prepare-demo-user.ts`](./scripts/prepare-demo-user.ts) still targets the retired heka-auth-service; the demo-token broker that replaces the build-time token is phase 6 of [`docs/keycloak-replacement-for-auth-service.md`](../docs/keycloak-replacement-for-auth-service.md).
+The DID must belong to the tenant of the account the broker hands out, which is why the script uses the broker's token by default. Re-run the script after switching providers unless both carry the same Heka user id for the demo account (the shipped recipes do).
 
 ## Configuration
 
@@ -58,8 +58,7 @@ The Web UI is configured via environment variables read by webpack at build time
 | `REACT_APP_OIDC_SCOPE`              | _(profile default)_     | Scope override. Keycloak profile: `openid profile`; Auth0 and generic: `openid profile offline_access` (refresh tokens).                                                                                            |
 | `REACT_APP_OIDC_AUDIENCE`           | _(empty)_               | Auth0 only: API identifier sent as `audience` (`https://heka-identity`); without it Auth0 issues an opaque access token that the identity service cannot verify.                                                   |
 | `REACT_APP_AUTH_ACCOUNT_URL`        | _(empty)_               | Account page opened by "Change password" for profiles without an in-flow password change (Auth0, generic). Keycloak uses its `UPDATE_PASSWORD` action and needs nothing here.                                      |
-| `REACT_APP_DEMO_USER_DID`           | _(empty)_               | DID of the pre-provisioned demo user — see [Creation of Pre-Defined Demo User](#creation-of-pre-defined-demo-user).                                                                                                |
-| `REACT_APP_DEMO_USER_ACCESS_TOKEN`  | _(empty)_               | Access token for the demo user, used by the public demo pages.                                                                                                                                                     |
+| `REACT_APP_DEMO_USER_DID`           | _(empty)_               | DID of the pre-provisioned demo account, written by `yarn prepare-demo-user` — see [Creation of Pre-Defined Demo User](#creation-of-pre-defined-demo-user). Its access token is fetched at runtime from the identity service's demo-token broker. |
 
 The Web UI signs users in at the OpenID Connect provider (Authorization Code + PKCE via `oidc-client-ts`), keeps the session in the browser's session storage, renews it with the refresh token, and calls the [Heka Identity Service](../heka-identity-service/README.md) with the access token. The identity service must be configured for the same provider (its `OIDC_ISSUER_URL` / `OIDC_AUDIENCE`, see [Authentication (OIDC)](../heka-identity-service/docs/setup.md#authentication-oidc)). Registration and password changes happen on the provider's own pages: the sign-in page offers "Create account" when the profile supports it (Keycloak via `prompt=create`, Auth0 via `screen_hint=signup`), and the profile page offers "Change password" when the profile has a flow for it. The provider-specific code lives in [`src/shared/auth/profiles`](./src/shared/auth/profiles); everything else is plain OIDC.
 
