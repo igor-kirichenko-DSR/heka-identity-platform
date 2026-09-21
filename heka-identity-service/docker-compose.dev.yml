@@ -21,6 +21,8 @@ services:
     environment:
       MIKRO_ORM_HOST: postgres
       WALLET_POSTGRES_HOST: postgres
+      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:-http://host.docker.internal:8080/realms/heka}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-heka-identity-service}
       EXPRESS_PORT: ${EXPRESS_PORT:-3000}
       AGENT_HTTP_ENDPOINT: ${AGENT_HTTP_EP:-http://${HOST_IP:-172.17.0.1}:3001}
       AGENT_WS_ENDPOINT: ${AGENT_WS_EP:-ws://${HOST_IP:-172.17.0.1}:3002}
