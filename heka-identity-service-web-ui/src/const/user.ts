@@ -2,12 +2,14 @@ export const connectionLabel = 'Agency Demo';
 
 export const mainDidMethod = 'key';
 
-export const userRole = 'Admin';
-
+/**
+ * Pre-provisioned demo account used by the public demo pages without signing in.
+ * The access token is baked in at build time; the demo-token broker (plan phase 6)
+ * replaces it with a short-lived token fetched at runtime.
+ */
 export const demoUser = {
   did: process.env.REACT_APP_DEMO_USER_DID ?? '',
   accessToken: process.env.REACT_APP_DEMO_USER_ACCESS_TOKEN ?? '',
-  refreshToken: process.env.REACT_APP_DEMO_USER_REFRESH_TOKEN ?? '',
 };
 
 export const baseDisplayMetadata = {

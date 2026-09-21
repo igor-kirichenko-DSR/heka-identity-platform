@@ -40,12 +40,10 @@ The application structure is inspired by [Feature-Sliced Design](https://feature
 As mentioned above, **Demo** flow can be run under an unauthorized user, but you must perform the next preparation
 steps before running or deploying the application:
 
-- Update values of predefined constants if needed: [authServiceEndpoint, agencyEndpoint, userCredentials](./scripts/prepare-demo-user.ts)
-- Initialize Demo user running the following command:
-  ```
-  npx ts-node  scripts/prepare-demo-user.ts
-  ```
-- Update `REACT_APP_DEMO_*` environment variables in [.env](./.env) file with generated values.
+- Create the `demo` account at the OpenID Connect provider (the shipped Keycloak realm and the Auth0 recipe already contain it, see [heka-sso-service/keycloak](../heka-sso-service/keycloak/README.md) and [heka-sso-service/auth0](../heka-sso-service/auth0/README.md)).
+- Obtain an access token for it and put its DID and token into `REACT_APP_DEMO_USER_DID` / `REACT_APP_DEMO_USER_ACCESS_TOKEN` in [.env](./.env).
+
+> **Note:** [`scripts/prepare-demo-user.ts`](./scripts/prepare-demo-user.ts) still targets the retired heka-auth-service; the demo-token broker that replaces the build-time token is phase 6 of [`docs/keycloak-replacement-for-auth-service.md`](../docs/keycloak-replacement-for-auth-service.md).
 
 ## Configuration
 
@@ -54,12 +52,16 @@ The Web UI is configured via environment variables read by webpack at build time
 | Variable                            | Default                 | Description                                                                                                                                                                                                        |
 | ----------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `REACT_APP_AGENCY_ENDPOINT`         | `http://localhost:3000` | Heka Identity Service base URL.                                                                                                                                                                                    |
-| `REACT_APP_AUTH_SERVICE_ENDPOINT`   | `http://localhost:3004` | Heka Auth Service base URL. JWT login and token refresh go here.                                                                                                                                                   |
-| `REACT_APP_DEMO_USER_DID`           | _(empty)_               | DID of the pre-provisioned demo user. Filled in by `scripts/prepare-demo-user.ts` — see [Creation of Pre-Defined Demo User](#creation-of-pre-defined-demo-user).                                                   |
-| `REACT_APP_DEMO_USER_ACCESS_TOKEN`  | _(empty)_               | JWT access token for the demo user. Filled in by the script above.                                                                                                                                                 |
-| `REACT_APP_DEMO_USER_REFRESH_TOKEN` | _(empty)_               | Refresh token for the demo user. Filled in by the script above.                                                                                                                                                    |
+| `REACT_APP_AUTH_PROVIDER`           | `keycloak`              | Provider profile: `keycloak`, `auth0` or `generic`. Only the provider's quirks depend on it (sign-up entry, password change, extra authorize parameters); the OIDC flow is the same.                                |
+| `REACT_APP_OIDC_AUTHORITY`          | _(required)_            | Issuer URL of the OpenID Connect provider, e.g. `http://localhost:8080/realms/heka` or `https://<tenant>.<region>.auth0.com/`.                                                                                     |
+| `REACT_APP_OIDC_CLIENT_ID`          | _(required)_            | Public client registered for this web UI (`heka-identity-web-ui` in the shipped Keycloak realm; the SPA application's client id in Auth0).                                                                          |
+| `REACT_APP_OIDC_SCOPE`              | _(profile default)_     | Scope override. Keycloak profile: `openid profile`; Auth0 and generic: `openid profile offline_access` (refresh tokens).                                                                                            |
+| `REACT_APP_OIDC_AUDIENCE`           | _(empty)_               | Auth0 only: API identifier sent as `audience` (`https://heka-identity`); without it Auth0 issues an opaque access token that the identity service cannot verify.                                                   |
+| `REACT_APP_AUTH_ACCOUNT_URL`        | _(empty)_               | Account page opened by "Change password" for profiles without an in-flow password change (Auth0, generic). Keycloak uses its `UPDATE_PASSWORD` action and needs nothing here.                                      |
+| `REACT_APP_DEMO_USER_DID`           | _(empty)_               | DID of the pre-provisioned demo user — see [Creation of Pre-Defined Demo User](#creation-of-pre-defined-demo-user).                                                                                                |
+| `REACT_APP_DEMO_USER_ACCESS_TOKEN`  | _(empty)_               | Access token for the demo user, used by the public demo pages.                                                                                                                                                     |
 
-The Web UI authenticates against [Heka Auth Service](../heka-auth-service/README.md) for login and token refresh, and calls the [Heka Identity Service](../heka-identity-service/README.md) with the resulting JWT. Both services must be running and reachable from the browser at the configured endpoints.
+The Web UI signs users in at the OpenID Connect provider (Authorization Code + PKCE via `oidc-client-ts`), keeps the session in the browser's session storage, renews it with the refresh token, and calls the [Heka Identity Service](../heka-identity-service/README.md) with the access token. The identity service must be configured for the same provider (its `OIDC_ISSUER_URL` / `OIDC_AUDIENCE`, see [Authentication (OIDC)](../heka-identity-service/docs/setup.md#authentication-oidc)). Registration and password changes happen on the provider's own pages: the sign-in page offers "Create account" when the profile supports it (Keycloak via `prompt=create`, Auth0 via `screen_hint=signup`), and the profile page offers "Change password" when the profile has a flow for it. The provider-specific code lives in [`src/shared/auth/profiles`](./src/shared/auth/profiles); everything else is plain OIDC.
 
 ### Digital Credentials API (DC API)
 
@@ -83,18 +85,19 @@ Cross-device on desktop Chrome may require the `chrome://flags#web-identity-digi
 
 - [Heka Identity Service](https://github.com/hiero-ledger/heka-identity-platform/tree/main/heka-identity-service) is running
   on `http://localhost:3000`
-- [Heka Auth Service](https://github.com/hiero-ledger/heka-identity-platform/tree/main/heka-auth-service) is running
-  on `http://localhost:3004`
+- An OpenID Connect provider with the Heka recipe, e.g. the Keycloak `heka` realm from
+  [heka-sso-service](../heka-sso-service/keycloak/README.md) on `http://localhost:8080`
+  (`docker compose -f docker-compose.dev.yml up -d keycloak` in `heka-sso-service`)
 - Mobile phone with installed [Heka Wallet](https://github.com/hiero-ledger/heka-identity-platform/tree/main/heka-wallet)
-
-> Update [api](./src/shared/api/config/api.ts) constants if you change one of service endpoints.
 
 ### How to Start
 
-- Update [environment variables defining the endpoints of Agency and Auth services](./.env) if needed
+- Update [environment variables defining the identity service and the OpenID Connect provider](./.env) if needed
   ```
   REACT_APP_AGENCY_ENDPOINT=http://localhost:3000
-  REACT_APP_AUTH_SERVICE_ENDPOINT=http://localhost:3004
+  REACT_APP_AUTH_PROVIDER=keycloak
+  REACT_APP_OIDC_AUTHORITY=http://localhost:8080/realms/heka
+  REACT_APP_OIDC_CLIENT_ID=heka-identity-web-ui
   ```
 - Install dependencies:
   ```
@@ -108,11 +111,14 @@ Cross-device on desktop Chrome may require the `chrome://flags#web-identity-digi
 
 ## How to Deploy
 
-- Update [environment variables defining the endpoints of Agency and Auth services](./.env) if needed
+- Update [environment variables defining the identity service and the OpenID Connect provider](./.env) if needed
   ```
   REACT_APP_AGENCY_ENDPOINT=http://localhost:3000
-  REACT_APP_AUTH_SERVICE_ENDPOINT=http://localhost:3004
+  REACT_APP_AUTH_PROVIDER=keycloak
+  REACT_APP_OIDC_AUTHORITY=http://localhost:8080/realms/heka
+  REACT_APP_OIDC_CLIENT_ID=heka-identity-web-ui
   ```
+  The web UI origin must be registered at the provider as redirect URI, post-logout redirect URI and web origin (the shipped realm and the Auth0 script register `http://localhost:8000`).
 - Prepare Demo user as described [above](#creation-of-pre-defined-demo-user)
 - Build package
   ```
