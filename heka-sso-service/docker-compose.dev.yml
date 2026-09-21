@@ -28,6 +28,9 @@ services:
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      # Pin the issuer (iss in every token) to the browser-facing URL, whatever host name a
+      # caller uses (host.docker.internal from containers, localhost from the host).
+      - KC_HOSTNAME=${KC_HOSTNAME:-http://localhost:8080}
     ports:
       - '8080:8080'
     volumes:
