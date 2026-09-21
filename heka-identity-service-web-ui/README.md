@@ -53,7 +53,7 @@ The Web UI is configured via environment variables read by webpack at build time
 | ----------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `REACT_APP_AGENCY_ENDPOINT`         | `http://localhost:3000` | Heka Identity Service base URL.                                                                                                                                                                                    |
 | `REACT_APP_AUTH_PROVIDER`           | `keycloak`              | Provider profile: `keycloak`, `auth0` or `generic`. Only the provider's quirks depend on it (sign-up entry, password change, extra authorize parameters); the OIDC flow is the same.                                |
-| `REACT_APP_OIDC_AUTHORITY`          | _(required)_            | Issuer URL of the OpenID Connect provider, e.g. `http://localhost:8080/realms/heka` or `https://<tenant>.<region>.auth0.com/`.                                                                                     |
+| `REACT_APP_OIDC_AUTHORITY`          | _(required)_            | Issuer URL of the OpenID Connect provider, e.g. `http://localhost:8080/realms/heka-platform` or `https://<tenant>.<region>.auth0.com/`.                                                                                     |
 | `REACT_APP_OIDC_CLIENT_ID`          | _(required)_            | Public client registered for this web UI (`heka-identity-web-ui` in the shipped Keycloak realm; the SPA application's client id in Auth0).                                                                          |
 | `REACT_APP_OIDC_SCOPE`              | _(profile default)_     | Scope override. Keycloak profile: `openid profile`; Auth0 and generic: `openid profile offline_access` (refresh tokens).                                                                                            |
 | `REACT_APP_OIDC_AUDIENCE`           | _(empty)_               | Auth0 only: API identifier sent as `audience` (`https://heka-identity`); without it Auth0 issues an opaque access token that the identity service cannot verify.                                                   |
@@ -85,7 +85,7 @@ Cross-device on desktop Chrome may require the `chrome://flags#web-identity-digi
 
 - [Heka Identity Service](https://github.com/hiero-ledger/heka-identity-platform/tree/main/heka-identity-service) is running
   on `http://localhost:3000`
-- An OpenID Connect provider with the Heka recipe, e.g. the Keycloak `heka` realm from
+- An OpenID Connect provider with the Heka recipe, e.g. the Keycloak `heka-platform` realm from
   [heka-sso-service](../heka-sso-service/keycloak/README.md) on `http://localhost:8080`
   (`docker compose -f docker-compose.dev.yml up -d keycloak` in `heka-sso-service`)
 - Mobile phone with installed [Heka Wallet](https://github.com/hiero-ledger/heka-identity-platform/tree/main/heka-wallet)
@@ -96,7 +96,7 @@ Cross-device on desktop Chrome may require the `chrome://flags#web-identity-digi
   ```
   REACT_APP_AGENCY_ENDPOINT=http://localhost:3000
   REACT_APP_AUTH_PROVIDER=keycloak
-  REACT_APP_OIDC_AUTHORITY=http://localhost:8080/realms/heka
+  REACT_APP_OIDC_AUTHORITY=http://localhost:8080/realms/heka-platform
   REACT_APP_OIDC_CLIENT_ID=heka-identity-web-ui
   ```
 - Install dependencies:
@@ -115,7 +115,7 @@ Cross-device on desktop Chrome may require the `chrome://flags#web-identity-digi
   ```
   REACT_APP_AGENCY_ENDPOINT=http://localhost:3000
   REACT_APP_AUTH_PROVIDER=keycloak
-  REACT_APP_OIDC_AUTHORITY=http://localhost:8080/realms/heka
+  REACT_APP_OIDC_AUTHORITY=http://localhost:8080/realms/heka-platform
   REACT_APP_OIDC_CLIENT_ID=heka-identity-web-ui
   ```
   The web UI origin must be registered at the provider as redirect URI, post-logout redirect URI and web origin (the shipped realm and the Auth0 script register `http://localhost:8000`).

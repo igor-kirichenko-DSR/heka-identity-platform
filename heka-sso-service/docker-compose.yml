@@ -33,7 +33,7 @@ services:
       - OIDC_COOKIE_KEYS=dev-only-cookie-key-do-not-use-in-production
       - OIDC_SUB_HMAC_SALT=dev-only-sub-hmac-salt-do-not-use-in-production
       - IDENTITY_SERVICE_BASE_URL=${IDENTITY_SERVICE_BASE_URL:-http://host.docker.internal:3000}
-      - IDENTITY_SERVICE_TOKEN_URL=${IDENTITY_SERVICE_TOKEN_URL:-http://host.docker.internal:8080/realms/heka/protocol/openid-connect/token}
+      - IDENTITY_SERVICE_TOKEN_URL=${IDENTITY_SERVICE_TOKEN_URL:-http://host.docker.internal:8080/realms/heka-platform/protocol/openid-connect/token}
       - IDENTITY_SERVICE_CLIENT_ID=${IDENTITY_SERVICE_CLIENT_ID:-heka-sso-service}
       - IDENTITY_SERVICE_CLIENT_SECRET=${IDENTITY_SERVICE_CLIENT_SECRET:-dev-only-heka-sso-service-secret-do-not-use-in-production}
       - IDENTITY_SERVICE_PUBLIC_VERIFIER_ID=${IDENTITY_SERVICE_PUBLIC_VERIFIER_ID:?set it to the heka-identity-service public verifier id the bridge creates verification sessions under}

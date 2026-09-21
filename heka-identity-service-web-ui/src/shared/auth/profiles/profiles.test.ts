@@ -5,7 +5,7 @@ import { providerNames, resolveProfile } from './index';
 
 const baseConfig: AuthConfig = {
   provider: 'keycloak',
-  authority: 'http://localhost:8080/realms/heka',
+  authority: 'http://localhost:8080/realms/heka-platform',
   clientId: 'heka-identity-web-ui',
 };
 

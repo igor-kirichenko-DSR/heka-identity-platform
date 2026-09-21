@@ -7,7 +7,7 @@ export type AuthProviderName = 'keycloak' | 'auth0' | 'generic';
 export interface AuthConfig {
   /** Selects the provider profile (sign-up entry, password change, extra authorize params). */
   provider: string;
-  /** Issuer URL: the OIDC discovery base, e.g. `http://localhost:8080/realms/heka` or `https://<tenant>.auth0.com/`. */
+  /** Issuer URL: the OIDC discovery base, e.g. `http://localhost:8080/realms/heka-platform` or `https://<tenant>.auth0.com/`. */
   authority?: string;
   /** Public (PKCE) client id registered for this web UI. */
   clientId?: string;
