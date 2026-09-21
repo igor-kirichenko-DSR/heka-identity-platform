@@ -54,7 +54,7 @@ HS256 JWT signed with shared `JWT_SECRET`; `iss` = `Heka`, `aud` = `Heka Identit
 
 ### 3.2 heka-sso-service
 
-One touchpoint: `src/oidc/identity-service-token.provider.ts` logs a service account into heka-auth-service, caches the access token and re-acquires it before expiry; used by `verification-session.client.ts` and `identity-service-events.client.ts`. `IDENTITY_SERVICE_AUTH_TOKEN` is a static override for tests. Config validation lives in `oidc.config.ts`. The bridge already runs Keycloak 26.3 in `docker-compose.dev.yml` with `keycloak/realm-heka.json`, and heka-sso-web-ui already supports both Keycloak and Auth0 as brokering IdPs.
+One touchpoint: `src/oidc/identity-service-token.provider.ts` logs a service account into heka-auth-service, caches the access token and re-acquires it before expiry; used by `verification-session.client.ts` and `identity-service-events.client.ts`. `IDENTITY_SERVICE_AUTH_TOKEN` is a static override for tests. Config validation lives in `oidc.config.ts`. The bridge already runs Keycloak 26.3 in `docker-compose.dev.yml` with `keycloak/realm-heka.json` (the OID4VP SSO demo realm), and heka-sso-web-ui already supports both Keycloak and Auth0 as brokering IdPs.
 
 ### 3.3 heka-identity-service (resource server)
 
@@ -89,7 +89,7 @@ Two rules follow:
 
 | Variable | Default | Description |
 |---|---|---|
-| `OIDC_ISSUER_URL` | required | Exact `iss` value, e.g. `http://localhost:8080/realms/heka` or `https://<tenant>.eu.auth0.com/` (Auth0 issuers end with a slash). Discovery is fetched from `${OIDC_ISSUER_URL}/.well-known/openid-configuration`. |
+| `OIDC_ISSUER_URL` | required | Exact `iss` value, e.g. `http://localhost:8080/realms/heka-platform` or `https://<tenant>.eu.auth0.com/` (Auth0 issuers end with a slash). Discovery is fetched from `${OIDC_ISSUER_URL}/.well-known/openid-configuration`. |
 | `OIDC_JWKS_URI` | from discovery | Override for air-gapped or test setups. |
 | `OIDC_AUDIENCE` | required | Accepted `aud` value (array `aud` accepted if it contains it). |
 | `OIDC_ALGORITHMS` | `RS256` | Allowed signature algorithms. HMAC algorithms are never allowed. |
@@ -212,16 +212,19 @@ The service-account user must carry the Heka claims (role `Verifier` + `org_id`,
 
 Each recipe produces the same contract: `aud` contains the configured audience; claims for user id, one role, name, org id.
 
-### 8.1 Keycloak (extend `heka-sso-service/keycloak/realm-heka.json`)
+### 8.1 Keycloak (`heka-sso-service/keycloak/realm-heka-platform.json`)
+
+The platform gets its **own realm, `heka-platform`**, next to the existing `heka` realm of the OID4VP SSO demo; both files are imported by the same dev Keycloak. They are separate security domains: the `heka` realm holds users federated from the `heka-sso` wallet IdP for a demo relying party, the `heka-platform` realm holds the identity-service operators. Sharing one realm would give every brokered wallet user the default group (and so the `Admin` role) of the platform, would let one Keycloak SSO cookie log a password-authenticated operator into the demo RP without a credential presentation (and a wallet user into the platform UI without a password), and would force one set of realm-wide settings (registration, password policy, email handling, theme, token lifetimes) on both. In production the demo realm stands in for a customer's IdP while the platform realm is Heka's own, so the split also mirrors the intended topology.
 
 | Item | Detail |
 |---|---|
 | Client `heka-identity-service` (bearer-only) | Client roles `Admin`, `OrgAdmin`, `OrgManager`, `OrgMember`, `Issuer`, `Verifier`, `User`. |
-| Client scope `heka-identity` (default for the two clients below) | Mappers: User Client Role → `roles` (multivalued, access token); User Property `username` → `name`; User Attribute `org_id` → `org_id`; User Attribute `heka_uid` → `heka_uid`; Audience `heka-identity-service`. |
+| Protocol mappers on the two clients below | User Client Role → `roles` (multivalued, access token); User Attribute `org_id` → `org_id`; User Property `id` → `heka_uid` (in Keycloak the Heka user id is the Keycloak user id, which imports preserve, so the claim is always present); Audience `heka-identity-service`. They sit on the clients rather than in a custom client scope because a `clientScopes` array in an imported realm file suppresses Keycloak's built-in scopes (`profile`, `email`, `basic`, …). The display name needs no mapper: the built-in `profile` scope emits `name` / `preferred_username`, which the identity service's default fallback list reads. |
 | Client `heka-identity-web-ui` | Public, Standard flow, PKCE S256, no direct grants, redirect URIs / Web Origins for the UI origin; refresh-token rotation on. |
-| Client `heka-sso-service` | Confidential, Service accounts on; service-account user has one client role and the attributes. |
-| Realm | `registrationAllowed: true`; password policy `length(7) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)`; default role `heka-identity-service.Admin` for self-registered users (today's behaviour; revisit); User Profile: username + password, email optional. `KC_HOSTNAME` fixed in dev compose so `iss` is stable. |
-| Identity-service env | `OIDC_ISSUER_URL=http://localhost:8080/realms/heka`, `OIDC_AUDIENCE=heka-identity-service`, claim paths at defaults plus `OIDC_CLAIM_USER_ID=heka_uid`. |
+| Client `heka-sso-service` | Confidential, Service accounts on; service-account user holds `Admin` (same tenant shape as today's `demo` account; dev secret in the realm file). |
+| User `demo` (dev only) | Fixed id, password `Password1234!`, role `Admin`: the account `prepare-demo-user` used to create in heka-auth-service, so the dev chain has a login before phase 5. |
+| Realm | `registrationAllowed: true`; password policy `length(7) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)`; refresh-token rotation on; default group `heka-users` carrying `heka-identity-service.Admin`, so every new user (self-registered included) is an `Admin` of their own tenant, as with heka-auth-service (a default-role composite cannot be used: an imported `roles.realm` entry suppresses Keycloak's built-in realm roles). Because the identity service requires exactly one role, a user must leave the group before getting an org role (documented in `heka-sso-service/keycloak/README.md`). User Profile unchanged (email optional, unmanaged attributes allowed, so `org_id` can be set per user). `KC_HOSTNAME` fixed in dev compose so `iss` is stable; a containerised identity service keeps `OIDC_ISSUER_URL` at the browser-facing value and sets `OIDC_JWKS_URI` through `host.docker.internal`. |
+| Identity-service env | `OIDC_ISSUER_URL=http://localhost:8080/realms/heka-platform`, `OIDC_AUDIENCE=heka-identity-service`, claim paths at defaults plus `OIDC_CLAIM_USER_ID=heka_uid`. |
 | Password change | AIA `kc_action=UPDATE_PASSWORD`. |
 | Import | Partial import with preserved `id`, attribute `heka_uid` = same id, argon2 credential with explicit parameters (m=65536, t=3, p=4, hashLength 32, argon2id v1.3); verify one user first; fallback `requiredActions: ["UPDATE_PASSWORD"]`. |
 
@@ -289,7 +292,7 @@ None of these blocks the plan.
 | Phase | Deliverable | Done when |
 |---|---|---|
 | 1. Identity service — **done 2026-09-21** | `OIDC_*` config (`src/config/oidc.ts`), `TokenVerifier` (jose, lazy discovery, JWKS) and `mapClaims` (`src/common/auth/`), guard rewritten without passport, gateway unchanged (goes through `AuthService`), `passport-jwt`/`@nestjs/jwt`/`jsonwebtoken` removed, unit tests with Keycloak- and Auth0-shaped payloads, e2e tests moved to RS256 with an inline test JWKS, `docs/setup.md` "Authentication (OIDC)". | All tests green; a real Keycloak token and a real Auth0 token are both accepted with only env changes (real-provider check happens in phases 2 and 3). |
-| 2. Keycloak recipe | Realm additions (8.1), `KC_HOSTNAME`, `heka-sso-service/keycloak/README.md`. | Dev compose imports the realm; token from `heka-identity-web-ui` decodes with the contract claims and is accepted by phase 1. |
+| 2. Keycloak recipe — **done 2026-09-21** | Separate realm (8.1) in `heka-sso-service/keycloak/realm-heka-platform.json`, `KC_HOSTNAME` pinned in the SSO dev compose, `OIDC_ISSUER_URL`/`OIDC_JWKS_URI` split in the identity-service dev compose, `heka-sso-service/keycloak/README.md`. | Verified against Keycloak 26.3 with `--import-realm`: a Client Credentials token for `heka-sso-service` and a `demo` user token from the `heka-identity-web-ui` code flow both carry `aud`, `roles: ["Admin"]`, `heka_uid`, `preferred_username`, and both are accepted by the phase-1 `TokenVerifier` through discovery; a wrong audience is rejected. |
 | 3. Auth0 recipe | Tenant setup doc (8.2), two Actions as files under `docs/auth0/` or `heka-sso-service/auth0/`, env examples. | Same check as phase 2 against an Auth0 tenant. |
 | 4. SSO service | Generic client-credentials provider, config validation, tests, README/env/compose. | Bridge creates a verification session against the identity service on Keycloak and on Auth0. |
 | 5. Web UI | `src/shared/auth/*` with profiles, page changes, `api.ts` wiring, demo pages on the broker, README/`.env.example`. | Sign in, sign up, refresh, change password, sign out, issuance and verification flows pass on Keycloak and on Auth0. |

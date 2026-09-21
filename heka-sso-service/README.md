@@ -240,7 +240,7 @@ To run the service in Docker:
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-`docker-compose.dev.yml` builds the image and brings up Keycloak with the `heka` realm; it uses the
+`docker-compose.dev.yml` builds the image and brings up Keycloak with the `heka` realm (plus the `heka-platform` realm that heka-identity-service uses, see [keycloak/README.md](keycloak/README.md)); it uses the
 dev-only stub login, so no wallet is involved. `docker-compose.yml` runs the published image against
 a real wallet login and needs the verifier heka-identity-service creates sessions under:
 
