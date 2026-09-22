@@ -6,7 +6,7 @@
 
 See [INTEGRATION.md](docs/INTEGRATION.md) for the design, platform decisions, and the phased implementation plan. The current state is the **Phase 0 scaffold**: platform component skeleton (config, logging, health, database/migrations, Docker, CI) — the OP core, adapter, and wallet-login interaction land in Phase 1.
 
-This service does not depend on heka-auth-service. It calls heka-identity-service with a token obtained through an OAuth 2.0 Client Credentials grant from the OIDC provider the identity service trusts (the `heka-sso-service` client in the [Keycloak `heka` realm](keycloak/README.md), or the M2M application of the [Auth0 recipe](auth0/README.md)); see [`docs/keycloak-replacement-for-auth-service.md`](../docs/keycloak-replacement-for-auth-service.md) at the repository root. Both provider recipes for the platform live in this repository folder because the SSO demo already ships the Keycloak realm.
+This service calls heka-identity-service with a token obtained through an OAuth 2.0 Client Credentials grant from the OIDC provider the identity service trusts (the `heka-sso-service` client in the [Keycloak `heka-platform` realm](keycloak/README.md), or the M2M application of the [Auth0 recipe](auth0/README.md)); see [`docs/keycloak-replacement-for-auth-service.md`](../docs/keycloak-replacement-for-auth-service.md) at the repository root. Both provider recipes for the platform live in this repository folder because the SSO demo already ships the Keycloak realm.
 
 ## Quick Start
 
