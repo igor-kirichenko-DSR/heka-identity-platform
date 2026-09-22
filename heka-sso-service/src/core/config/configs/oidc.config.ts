@@ -78,6 +78,7 @@ const knownDefaultSecrets = new Set([
   'dev-only-sub-hmac-salt-do-not-use-in-production',
   'dev-only-broker-secret-do-not-use-in-production',
   'dev-only-heka-sso-service-secret-do-not-use-in-production', // client secret in keycloak/realm-heka.json
+  'dev-only-heka-demo-secret-do-not-use-in-production', // heka-demo client secret in keycloak/realm-heka-platform.json
   'Password1234!', // the platform's demo-user password (prepare-demo-user.ts)
   'test',
   'secret',

@@ -192,6 +192,78 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "heka-demo",
+      "name": "Heka demo service account",
+      "description": "Confidential client whose Client Credentials token the identity service demo-token broker (GET /demo/token) hands to the public demo pages of the web UI.",
+      "enabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "clientAuthenticatorType": "client-secret",
+      "secret": "dev-only-heka-demo-secret-do-not-use-in-production",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "heka roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "heka-identity-service",
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "heka org_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "org_id",
+            "claim.name": "org_id",
+            "jsonType.label": "String",
+            "multivalued": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "heka_uid",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "id",
+            "claim.name": "heka_uid",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "heka audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "heka-identity-service",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "roles": {
@@ -274,6 +346,15 @@
       "username": "service-account-heka-sso-service",
       "enabled": true,
       "serviceAccountClientId": "heka-sso-service",
+      "clientRoles": {
+        "heka-identity-service": ["Admin"]
+      }
+    },
+    {
+      "id": "e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9",
+      "username": "service-account-heka-demo",
+      "enabled": true,
+      "serviceAccountClientId": "heka-demo",
       "clientRoles": {
         "heka-identity-service": ["Admin"]
       }
