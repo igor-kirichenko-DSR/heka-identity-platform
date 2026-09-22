@@ -1,0 +1,14 @@
+# CodeQL configuration used by .github/workflows/codeql-analysis.yml
+name: 'Heka Identity Platform CodeQL config'
+
+paths:
+  - heka-identity-service
+  - heka-auth-service
+  - heka-sso-service
+
+paths-ignore:
+  - '**/node_modules'
+  - '**/dist'
+  - '**/coverage'
+  - '**/.yarn'
+  - 'heka-identity-service/indy-besu-vdr-pkg'
