@@ -47,7 +47,7 @@ The DID must belong to the tenant of the account the broker hands out, which is 
 
 ## Configuration
 
-The Web UI is configured via environment variables read by webpack at build time. Set them in the `.env` file at the package root.
+The Web UI is configured via environment variables read by webpack at build time. Copy [.env.example](./.env.example) to `.env` at the package root and set them there.
 
 | Variable                            | Default                 | Description                                                                                                                                                                                                        |
 | ----------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
