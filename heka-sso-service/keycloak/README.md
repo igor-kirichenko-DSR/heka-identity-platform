@@ -51,6 +51,21 @@ heka-identity-service derives the tenant from `(role, sub, org_id)` and requires
 
 To stop handing out `Admin` by default, remove `/heka-users` from Realm settings → User registration → Default groups.
 
+## Migrating users from heka-auth-service
+
+`yarn export-users --target keycloak --out users.keycloak.json` in [`heka-auth-service`](../../heka-auth-service/README.md#exporting-users-to-the-oidc-provider) writes a partial-import file: every account keeps its UUID as the Keycloak user id (which the `heka_uid` mapper copies into tokens, so the identity-service tenant is unchanged), gets the attribute `heka_uid`, its argon2id password hash in the form of the built-in `argon2` provider (`secretData` = hash and salt, `credentialData` = iterations, memory, parallelism, hash length, type `id`, version `1.3`), and either the `heka-users` group (`Admin`) or the matching client role of `heka-identity-service` plus the `org_id` attribute. `ifResourceExists` is `SKIP`, so re-running never overwrites.
+
+Import it with an admin token (or Realm settings → Action → Partial import in the console):
+
+```sh
+TOKEN=$(curl -s -X POST http://localhost:8080/realms/master/protocol/openid-connect/token \
+  -d client_id=admin-cli -d username=admin -d password=admin -d grant_type=password | jq -r .access_token)
+curl -s -X POST http://localhost:8080/admin/realms/heka-platform/partialImport \
+  -H "Authorization: Bearer $TOKEN" -H 'content-type: application/json' --data-binary @users.keycloak.json
+```
+
+The response lists every user as `ADDED` or `SKIPPED`. Try one account first (`--user <name>`) and log in with it through the web UI; if the password is refused, export again with `--without-passwords` (the users then carry the `UPDATE_PASSWORD` required action and need a temporary password set by an administrator). Verified on 2026-09-21 against Keycloak 26.3: an imported user logged in with the old password and received a token with `heka_uid` equal to the original id and `roles: ["Admin"]`.
+
 ## Trying it out
 
 Start Keycloak (the theme builder runs first and needs network access on the first run):

@@ -23,6 +23,7 @@
     "migration:list": "npx mikro-orm migration:list",
     "migration:pending": "npx mikro-orm migration:pending",
     "migration:fresh": "npx mikro-orm migration:fresh",
+    "export-users": "ts-node -r tsconfig-paths/register scripts/export-users.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

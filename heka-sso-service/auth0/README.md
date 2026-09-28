@@ -63,7 +63,16 @@ Users with neither get `HEKA_DEFAULT_ROLE` (`Admin`, what the web UI used to reg
 
 ## Migrating users from heka-auth-service
 
-Bulk import (User Management → Users → Import Users, or the Management API job) with, per user: `user_id` = the old UUID (Auth0 stores it as `auth0|<uuid>`), `username`, `app_metadata: { heka_uid: <uuid>, heka_role: <role>, org_id? }`, and `custom_password_hash: { algorithm: "argon2", hash: { value: "<encoded argon2id hash>" } }`. Auth0 **requires an email per imported user**; heka-auth-service accounts have none, so synthesize one (e.g. `<name>@heka.invalid`, `email_verified: false`). Login by username keeps working because the connection requires usernames; password reset only works once a real email is set.
+`yarn export-users --target auth0 --out users.auth0.json` in [`heka-auth-service`](../../heka-auth-service/README.md#exporting-users-to-the-oidc-provider) writes the bulk-import file with, per user: `user_id` = the old UUID (Auth0 stores it as `auth0|<uuid>`), `username`, `app_metadata: { heka_uid: <uuid>, heka_role: <role>, org_id? }`, and `custom_password_hash: { algorithm: "argon2", hash: { value: "<encoded argon2id hash>" } }`. Auth0 **requires an email per imported user**; heka-auth-service accounts have none, so the script synthesizes `<name>@heka.invalid` (`--email-domain` changes the domain) with `email_verified: false`. Login by username keeps working because the connection requires usernames; password reset only works once a real email is set.
+
+Import with the CLI (User Management → Users → Import Users in the dashboard does the same); files are limited to 500 KB per job:
+
+```sh
+auth0 users import -c Username-Password-Authentication --users "$(cat users.auth0.json)" --upsert=false --email-results=false --no-input
+auth0 api get jobs/<job id>          # until status is "completed"; summary lists inserted / failed
+```
+
+Try one account first (`--user <name>` on the export) and log in with it through the web UI. Verified on 2026-09-21 against the dev tenant: an imported user logged in with the old password (password-realm grant enabled only for the check), a wrong password was refused, and the access token carried `https://heka/heka_uid` equal to the original id and `https://heka/roles: ["Admin"]`.
 
 ## Checking a token
 

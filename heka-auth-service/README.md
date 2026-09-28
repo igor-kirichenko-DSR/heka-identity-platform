@@ -121,6 +121,33 @@ Tokens issued by this service include the claims `sub`, `roles[]`, `name`, and o
 |------------|-----------|--------------------------------------------------------------------------|
 | `NODE_ENV` | _(unset)_ | When set to `production`, switches the logger to non-pretty JSON output. |
 
+## Exporting users to the OIDC provider
+
+heka-auth-service is being replaced by a third-party OpenID Connect provider (plan: [`docs/keycloak-replacement-for-auth-service.md`](../docs/keycloak-replacement-for-auth-service.md), sections 8 and 10). `scripts/export-users.ts` reads `auth_user` with the service's own `DB_*` settings and writes the provider's import format, so users keep their **id, username, role and password**:
+
+```bash
+yarn export-users --target keycloak --out users.keycloak.json
+yarn export-users --target auth0 --out users.auth0.json
+```
+
+| Flag                  | Default                | Description                                                                                                                      |
+|-----------------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| `--target`            | _(required)_           | `keycloak` (partial-import JSON with `ifResourceExists: SKIP`) or `auth0` (bulk-import JSON).                                     |
+| `--out`               | _(stdout)_             | Output file.                                                                                                                     |
+| `--org-id`            | `ORG_ID`               | `org_id` given to users with an organization role (`OrgAdmin`, `OrgManager`, `OrgMember`, `Issuer`, `Verifier`), as the tokens carried it. |
+| `--user`              | _(all users)_          | Export a single account, e.g. to verify the import with one user first.                                                          |
+| `--without-passwords` | off                    | Leave the password hashes out. Keycloak users then get the `UPDATE_PASSWORD` required action; on both providers an administrator has to set a temporary password or trigger a reset. |
+| `--email-domain`      | `heka.invalid`         | Auth0 only: domain of the synthesized e-mail addresses (Auth0 requires one per user; accounts here have none).                    |
+
+What the files contain, per user: the original UUID as the provider's user id **and** as `heka_uid` (Keycloak: user attribute; Auth0: `app_metadata.heka_uid`), so heka-identity-service derives the same tenant as before and existing schemas and DIDs stay reachable; the role (Keycloak: `Admin` users join the `heka-users` default group, other roles become the matching client role of `heka-identity-service`; Auth0: `app_metadata.heka_role`); and the argon2id password hash (Keycloak: split into `secretData` / `credentialData` for its built-in `argon2` provider; Auth0: the encoded string as `custom_password_hash`).
+
+Import:
+
+- **Keycloak** (realm `heka-platform`): `POST /admin/realms/heka-platform/partialImport` with the file as body and an admin token, or Realm settings → Action → Partial import in the console. Existing usernames are skipped. See [`heka-sso-service/keycloak/README.md`](../heka-sso-service/keycloak/README.md#migrating-users-from-heka-auth-service).
+- **Auth0**: `auth0 users import -c Username-Password-Authentication --users "$(cat users.auth0.json)" --upsert=false --email-results=false --no-input`, then poll the job with `auth0 api get jobs/<id>`; files are limited to 500 KB per job. See [`heka-sso-service/auth0/README.md`](../heka-sso-service/auth0/README.md#migrating-users-from-heka-auth-service).
+
+Verified on 2026-09-21 with one account on each provider: the imported user logged in with the old password, a wrong password was refused, and the access token carried the original id as `heka_uid` and the role `Admin`.
+
 ## Migrations
 
 Database schema is managed via migrations stored in `./migrations`. Run `yarn migration:up` before the first start and after pulling changes that include new migrations.
