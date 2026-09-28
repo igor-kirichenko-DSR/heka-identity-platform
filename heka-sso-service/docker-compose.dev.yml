@@ -62,8 +62,8 @@ services:
       - OIDC_COOKIE_KEYS=dev-only-cookie-key-do-not-use-in-production
       - OIDC_SUB_HMAC_SALT=dev-only-sub-hmac-salt-do-not-use-in-production
       - IDENTITY_SERVICE_BASE_URL=http://localhost:3000
-      # Service-account token from the in-network Keycloak (client heka-sso-service in keycloak/realm-heka.json)
-      - IDENTITY_SERVICE_TOKEN_URL=http://keycloak:8080/realms/heka/protocol/openid-connect/token
+      # Service-account token from the in-network Keycloak (client heka-sso-service in keycloak/realm-heka-platform.json)
+      - IDENTITY_SERVICE_TOKEN_URL=http://keycloak:8080/realms/heka-platform/protocol/openid-connect/token
       - IDENTITY_SERVICE_CLIENT_ID=heka-sso-service
       - IDENTITY_SERVICE_CLIENT_SECRET=dev-only-heka-sso-service-secret-do-not-use-in-production
       - OIDC_CLIENTS=[{"clientId":"keycloak-broker","clientSecret":"dev-only-broker-secret-do-not-use-in-production","redirectUris":["http://localhost:8080/realms/heka/broker/heka-sso/endpoint","http://localhost:8080/realms/master/broker/heka-sso/endpoint"],"postLogoutRedirectUris":["http://localhost:8080/realms/heka/broker/heka-sso/endpoint/logout_response","http://localhost:8080/realms/master/broker/heka-sso/endpoint/logout_response"],"loginConfigId":"default"}]

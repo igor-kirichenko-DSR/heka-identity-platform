@@ -52,7 +52,7 @@ describe('mapClaims', () => {
 
   describe('Keycloak-shaped tokens', () => {
     const keycloakPayload = {
-      iss: 'http://localhost:8080/realms/heka',
+      iss: 'http://localhost:8080/realms/heka-platform',
       aud: ['heka-identity-service', 'account'],
       sub: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
       typ: 'Bearer',
