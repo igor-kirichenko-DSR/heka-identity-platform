@@ -1,13 +1,14 @@
 # Keycloak realms
 
-`docker-compose.dev.yml` starts Keycloak with `start-dev --import-realm`, which imports every file in this directory on every start. A realm that already exists in the Keycloak database is **not** overwritten; delete the `keycloak` container to re-import. Two realms are defined:
+`docker-compose.dev.yml` starts Keycloak with `start-dev --import-realm`, which imports every file in this directory on every start. A realm that already exists in the Keycloak database is **not** overwritten; delete the `keycloak` container to re-import. Three realms are defined:
 
 | File                        | Realm           | Purpose                                                                                                                                                                                            |
 | --------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `realm-heka.json`           | `heka`          | The **OID4VP SSO demo**: identity provider `heka-sso` brokering to heka-sso-service, test relying party `heka-sso-web-ui`, login theme `heka`. Users are federated wallet holders.                       |
 | `realm-heka-platform.json`  | `heka-platform` | The **OIDC provider for heka-identity-service** (platform-wide replacement of heka-auth-service; plan in [`docs/keycloak-replacement-for-auth-service.md`](../../docs/keycloak-replacement-for-auth-service.md)). Users are platform operators. |
+| `realm-heka-wallet.json`    | `heka-wallet`   | The **OIDC provider for the Heka Wallet mobile app** (`ENABLE_EXTERNAL_AUTH`): public native client `heka-wallet`, self-registration, login theme `heka`. Users are wallet holders with a username and password.                        |
 
-They are deliberately separate realms. A realm is Keycloak's isolation boundary for users, sessions, roles and settings, and the two populations must not share them: the platform realm hands every new user the `Admin` role through a default group, which must not apply to users brokered from a wallet; a single realm would also share the SSO cookie, so a password login into the platform UI would open the demo RP without a credential presentation and vice versa; and registration, password policy, email handling, theme and token lifetimes are realm-wide. In a real deployment the `heka` realm stands in for a customer's IdP, while `heka-platform` is Heka's own.
+They are deliberately separate realms. A realm is Keycloak's isolation boundary for users, sessions, roles and settings, and the two populations must not share them: the platform realm hands every new user the `Admin` role through a default group, which must not apply to users brokered from a wallet; a single realm would also share the SSO cookie, so a password login into the platform UI would open the demo RP without a credential presentation and vice versa; and registration, password policy, email handling, theme and token lifetimes are realm-wide. The wallet realm is separate for the same reasons, plus one of its own: the `heka` realm only logs users in through the `heka-sso` broker, which requires presenting a credential from a wallet, so the wallet itself cannot authenticate against it. In a real deployment the `heka` realm stands in for a customer's IdP, while `heka-platform` and `heka-wallet` are Heka's own.
 
 Everything in these files is **dev configuration**: the client secrets, the `demo` user password and the bootstrap admin (`admin` / `admin`, set in the compose file) must be replaced in any real deployment.
 
@@ -29,6 +30,23 @@ The display name comes from the built-in `profile` scope (`name`, or `preferred_
 Why no custom client scope and no default-role composite: with `--import-realm`, a `clientScopes` array in the file suppresses the creation of Keycloak's built-in scopes (`profile`, `email`, `basic`, …), and a `roles.realm` array suppresses the built-in realm roles (`offline_access`, `uma_authorization`), which then breaks the import. Mappers on the clients and a default group give the same tokens without touching either section.
 
 The `heka-sso` relationship differs per realm: in `heka` the bridge is an **identity provider** that Keycloak brokers to; in `heka-platform` heka-sso-service is a **client** that obtains tokens for calling heka-identity-service. If the platform UI should ever offer "Sign in with wallet", add the `heka-sso` identity provider to `heka-platform` as well; that does not require sharing users between the realms.
+
+## What the `heka-wallet` realm contains
+
+| Item                                     | Purpose                                                                                                                                                                                                                                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Client `heka-wallet`                     | Public native client for the mobile app (react-native-app-auth): Authorization Code + PKCE (S256), refresh tokens, redirect URI `com.heka.wallet.auth:/oauthredirect` (the `appAuthRedirectScheme` of the Android build). No secret, so token revocation on logout sends only `client_id`.         |
+| Protocol mapper `user_id`                | Copies the Keycloak user id into a `user_id` claim in tokens and the userinfo response, which is the field the wallet's `UserInfo` type expects next to the built-in `name` and `email`.                                                                                                          |
+| Realm settings                           | Self-registration on; the same password policy and refresh-token rotation as `heka-platform`; login theme `heka`.                                                                                                                                                                                 |
+| User `wallet-demo` / `Password1234!`     | Dev-only account with a fixed id (`7c2e9f4a-1b3d-4e5f-8a6b-9c0d1e2f3a4b`).                                                                                                                                                                                                                        |
+
+The wallet is configured through `OAUTH_STORE_CONFIG` in `heka-wallet/app/.env` (one line; the react-native-config parser does not support multi-line values):
+
+```
+OAUTH_STORE_CONFIG={"oauthConfig":{"clientId":"heka-wallet","redirectUrl":"com.heka.wallet.auth:/oauthredirect","scopes":["openid","profile","email"],"serviceConfiguration":{"authorizationEndpoint":"http://localhost:8080/realms/heka-wallet/protocol/openid-connect/auth","tokenEndpoint":"http://localhost:8080/realms/heka-wallet/protocol/openid-connect/token","revocationEndpoint":"http://localhost:8080/realms/heka-wallet/protocol/openid-connect/revoke"},"dangerouslyAllowInsecureHttpRequests":true},"userInfoEndpoint":"http://localhost:8080/realms/heka-wallet/protocol/openid-connect/userinfo","accountDeletionURL":"http://localhost:8080/realms/heka-wallet/account"}
+```
+
+The login page opens in the device browser, so `localhost` must reach the host: run `adb reverse tcp:8080 tcp:8080` for an Android emulator or a USB-connected device. `KC_HOSTNAME` pins the issuer to `http://localhost:8080`, so the endpoints above must not be rewritten to `10.0.2.2`. `dangerouslyAllowInsecureHttpRequests` is required because the dev Keycloak is plain `http`: without it AppAuth on Android aborts the token request with "only https connections are permitted", which crashes the app. Drop it for any `https` deployment.
 
 ## heka-identity-service settings
 
@@ -100,4 +118,4 @@ Decode the access token (e.g. `jwt.io`) and check `aud` is `heka-identity-servic
 
 ## Admin console
 
-`http://localhost:8080/admin/` with `admin` / `admin`; pick the realm (`heka` or `heka-platform`) in the top-left selector. Anything changed there is lost when the `keycloak` container is recreated unless it is exported back into the matching realm file.
+`http://localhost:8080/admin/` with `admin` / `admin`; pick the realm (`heka`, `heka-platform` or `heka-wallet`) in the top-left selector. Anything changed there is lost when the `keycloak` container is recreated unless it is exported back into the matching realm file.
