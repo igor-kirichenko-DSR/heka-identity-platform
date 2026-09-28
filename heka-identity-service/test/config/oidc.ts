@@ -26,7 +26,7 @@ export async function getTestJwks(): Promise<JSONWebKeySet> {
 }
 
 // Inline JWKS: no discovery, no network. The claim paths are the defaults so that
-// tokens shaped like heka-auth-service / Keycloak tokens are accepted unchanged.
+// tokens shaped like Keycloak tokens (`roles`, `name`, `org_id` at the top level) are accepted unchanged.
 export default async (): Promise<OidcConfig> => ({
   issuerUrl: testOidcIssuer,
   audience: testOidcAudience,
