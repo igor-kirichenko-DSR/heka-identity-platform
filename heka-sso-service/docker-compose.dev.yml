@@ -21,13 +21,16 @@ services:
       - ../demo/heka-keycloak-theme:/theme
       - keycloak-theme-node-modules:/theme/node_modules
       - keycloak-theme:/out
-  # Keycloak with the pre-configured `heka` realm
+  # Keycloak with two pre-configured realms: `heka` (OID4VP SSO demo) and `heka-platform` (OIDC provider for heka-identity-service)
   keycloak:
     image: quay.io/keycloak/keycloak:26.3
     command: start-dev --import-realm --spi-theme-static-max-age=-1 --spi-theme-cache-themes=false --spi-theme-cache-templates=false
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      # Pin the issuer (iss in every token) to the browser-facing URL, whatever host name a
+      # caller uses (host.docker.internal from containers, localhost from the host).
+      - KC_HOSTNAME=${KC_HOSTNAME:-http://localhost:8080}
     ports:
       - '8080:8080'
     volumes:
