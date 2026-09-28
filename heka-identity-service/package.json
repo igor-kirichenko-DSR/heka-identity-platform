@@ -65,6 +65,7 @@
     "@nestjs/serve-static": "^5.0.5",
     "@nestjs/swagger": "^11.4.4",
     "@nestjs/terminus": "^11.1.1",
+    "@nestjs/throttler": "^6.7.0",
     "@nestjs/websockets": "^11.1.24",
     "@openwallet-foundation/askar-nodejs": "0.6.0",
     "@openwallet-foundation/askar-shared": "0.6.0",

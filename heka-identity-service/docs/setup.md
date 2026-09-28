@@ -308,6 +308,23 @@ The `tenantId` is **not** a JWT claim — it is derived internally from `(role, 
 
 The full migration plan, including the web UI and SSO service sides, is in [docs/keycloak-replacement-for-auth-service.md](../../docs/keycloak-replacement-for-auth-service.md) at the repository root.
 
+### Demo token broker
+
+The web UI's public demo pages (Demo, Age verification) run without a signed-in user. Instead of a long-lived token baked into the web bundle, they call `GET /demo/token` on this service, which returns a short-lived access token of a dedicated **demo service account** obtained with an OAuth 2.0 Client Credentials grant from the OIDC provider above (`{ "access_token", "token_type": "Bearer", "expires_in" }`). The token is cached and re-acquired a minute before it expires, so the provider sees one grant per token lifetime however many browsers open the demo. The endpoint is optional: it answers `404` until all three required settings are present, and `502` when the provider does not issue a token.
+
+| Variable                  | Default              | Description                                                                                                                                                                     |
+| ------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEMO_TOKEN_URL`          | _(unset: disabled)_  | Provider token endpoint, e.g. `http://localhost:8080/realms/heka-platform/protocol/openid-connect/token` or `https://<tenant>.<region>.auth0.com/oauth/token`.                   |
+| `DEMO_CLIENT_ID`          | _(unset: disabled)_  | Confidential client with a service account that carries the demo tenant's claims: `heka-demo` in the shipped Keycloak realm, the `heka-demo` application's client id in Auth0. |
+| `DEMO_CLIENT_SECRET`      | _(unset: disabled)_  | Its secret. Production refuses the dev secret of the shipped realm and secrets shorter than 16 characters.                                                                       |
+| `DEMO_CLIENT_AUTH_METHOD` | `client_secret_post` | `client_secret_post` or `client_secret_basic`.                                                                                                                                  |
+| `DEMO_TOKEN_PARAMS`       | _(none)_             | Extra form fields for the token request as a JSON object, e.g. `{"audience":"https://heka-identity"}` for Auth0.                                                                |
+| `DEMO_TOKEN_RATE_LIMIT`   | `30`                 | Requests per minute per client IP accepted by `GET /demo/token` (`429` above it). Only this endpoint is rate-limited.                                                            |
+
+Anyone can call the endpoint, as anyone could read the bundled token before, so keep the demo account on the minimum role it needs and keep the provider's access-token lifetime for that client short (minutes). The three settings must be set together; a partial set is a startup error. Behind a reverse proxy set Express `trust proxy` so the rate limit sees client addresses rather than the proxy's.
+
+The demo account is created by the provider recipe: the Keycloak realm ships the `heka-demo` client with a service-account user of fixed id `e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9`, and `setup-tenant.sh` creates an Auth0 machine-to-machine application `heka-demo` whose metadata carries the same `heka_uid`, so the demo tenant and its DID are the same on both providers. The web UI's `yarn prepare-demo-user` then obtains a token from the broker, prepares that tenant's wallet through `/prepare-wallet` and records the DID for the build (see the [web UI README](../../heka-identity-service-web-ui/README.md#creation-of-pre-defined-demo-user)).
+
 ### Ledger / DID methods
 
 | Variable      | Default           | Description                                                                                         |

@@ -3,13 +3,12 @@ export const connectionLabel = 'Agency Demo';
 export const mainDidMethod = 'key';
 
 /**
- * Pre-provisioned demo account used by the public demo pages without signing in.
- * The access token is baked in at build time; the demo-token broker (plan phase 6)
- * replaces it with a short-lived token fetched at runtime.
+ * Pre-provisioned demo account used by the public demo pages without signing in. Only its DID
+ * is known at build time (written by scripts/prepare-demo-user.ts); the access token is fetched
+ * at runtime from the identity service's demo-token broker (shared/api/config/demoToken.ts).
  */
 export const demoUser = {
   did: process.env.REACT_APP_DEMO_USER_DID ?? '',
-  accessToken: process.env.REACT_APP_DEMO_USER_ACCESS_TOKEN ?? '',
 };
 
 export const baseDisplayMetadata = {

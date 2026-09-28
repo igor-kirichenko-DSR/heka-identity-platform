@@ -1974,6 +1974,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nestjs/throttler@npm:^6.7.0":
+  version: 6.7.0
+  resolution: "@nestjs/throttler@npm:6.7.0"
+  peerDependencies:
+    "@nestjs/common": ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
+    "@nestjs/core": ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
+    reflect-metadata: ^0.1.13 || ^0.2.0
+  checksum: 10c0/c9ce5db41c75cbefb30c665933db308a3f008a2b9e0875ef8f80c03303151f96f130c6824f2f870a40268724efbad69bb9edb235ca73fdea7278103638a44c42
+  languageName: node
+  linkType: hard
+
 "@nestjs/websockets@npm:^11.1.24":
   version: 11.1.24
   resolution: "@nestjs/websockets@npm:11.1.24"
@@ -6047,6 +6058,7 @@ __metadata:
     "@nestjs/swagger": "npm:^11.4.4"
     "@nestjs/terminus": "npm:^11.1.1"
     "@nestjs/testing": "npm:^11.1.5"
+    "@nestjs/throttler": "npm:^6.7.0"
     "@nestjs/websockets": "npm:^11.1.24"
     "@openwallet-foundation/askar-nodejs": "npm:0.6.0"
     "@openwallet-foundation/askar-shared": "npm:0.6.0"

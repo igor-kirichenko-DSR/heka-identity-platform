@@ -18,7 +18,8 @@ Everything in these files is **dev configuration**: the client secrets, the `dem
 | Client `heka-identity-service`      | Bearer-only resource server. Owns the client roles `Admin`, `OrgAdmin`, `OrgManager`, `OrgMember`, `Issuer`, `Verifier`, `User` and is the audience (`aud`) of accepted tokens. Never logs in.                                                                                                     |
 | Client `heka-identity-web-ui`       | Public SPA client for heka-identity-service-web-ui: Authorization Code + PKCE (S256), refresh tokens, redirect URIs and web origins for `http://localhost:8000`.                                                                                                                                     |
 | Client `heka-sso-service`           | Confidential client with a service account; heka-sso-service obtains its identity-service token with Client Credentials. Its service-account user holds the `Admin` role. Dev secret: `dev-only-heka-sso-service-secret-do-not-use-in-production`.                                               |
-| Protocol mappers (on both clients)  | Add the identity-service claim contract to tokens: `roles` (client roles of `heka-identity-service`, array), `org_id` (user attribute), `heka_uid` (the Keycloak user id, a copy of `sub`), and `aud: heka-identity-service`. Kept on the clients rather than in a custom client scope, see below. |
+| Client `heka-demo`                  | Confidential client with a service account for the identity service's demo-token broker (`GET /demo/token`, enabled there with `DEMO_*`): the public demo pages of the web UI act as this account. Its service-account user has the fixed id `e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9` (so `heka_uid`, and with it the demo tenant and DID, survive a re-import) and holds the `Admin` role. Dev secret: `dev-only-heka-demo-secret-do-not-use-in-production`. |
+| Protocol mappers (on the three token-requesting clients) | Add the identity-service claim contract to tokens: `roles` (client roles of `heka-identity-service`, array), `org_id` (user attribute), `heka_uid` (the Keycloak user id, a copy of `sub`), and `aud: heka-identity-service`. Kept on the clients rather than in a custom client scope, see below. |
 | Group `heka-users` (default group)  | Carries `heka-identity-service.Admin`. Every new user (self-registration included) joins it, so they can use the web UI as an administrator of their own tenant, which is what heka-auth-service did. See [Roles](#roles) before assigning any other role.                                          |
 | Realm settings                      | Self-registration on; password policy `length(7) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)` (the heka-auth-service rules); refresh-token rotation (`revokeRefreshToken`); login theme `heka` (shared with the demo realm, it is a plain username/password page with Heka branding). |
 | User `demo` / `Password1234!`       | Dev-only account with a fixed id (`d3a1c2b4-5e6f-4a7b-8c9d-0e1f2a3b4c5d`), matching the demo user the web UI's `prepare-demo-user` script used to create in heka-auth-service. Member of `heka-users`.                                                                                                  |
@@ -63,6 +64,14 @@ Service-account token for heka-sso-service (Client Credentials):
 ```sh
 curl -s -X POST http://localhost:8080/realms/heka-platform/protocol/openid-connect/token \
   -u heka-sso-service:dev-only-heka-sso-service-secret-do-not-use-in-production \
+  -d grant_type=client_credentials
+```
+
+Demo service-account token (what the identity service's demo-token broker obtains when configured with `DEMO_TOKEN_URL=http://localhost:8080/realms/heka-platform/protocol/openid-connect/token`, `DEMO_CLIENT_ID=heka-demo`, `DEMO_CLIENT_SECRET=dev-only-heka-demo-secret-do-not-use-in-production`):
+
+```sh
+curl -s -X POST http://localhost:8080/realms/heka-platform/protocol/openid-connect/token \
+  -u heka-demo:dev-only-heka-demo-secret-do-not-use-in-production \
   -d grant_type=client_credentials
 ```
 

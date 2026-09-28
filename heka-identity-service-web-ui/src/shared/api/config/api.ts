@@ -1,7 +1,6 @@
 import { Mutex } from 'async-mutex';
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-import { demoUser } from '@/const/user';
 import {
   dropSession,
   getSessionAccessToken,
@@ -15,11 +14,10 @@ export const $agencyApi = axios.create({
 });
 
 /**
- * Bearer token for identity-service calls: the signed-in OIDC session, or the demo user's
- * token so the public demo pages work without signing in.
+ * Bearer token for identity-service calls: the signed-in OIDC session. The public demo pages
+ * use the demo client instead (demoApi.ts), which authenticates with the demo-token broker.
  */
-export const currentAccessToken = (): string | null =>
-  getSessionAccessToken() ?? (demoUser.accessToken || null);
+export const currentAccessToken = (): string | null => getSessionAccessToken();
 
 const setAuthHeader = (config: InternalAxiosRequestConfig) => {
   // A retry after a token renewal already carries the fresh token.
@@ -66,7 +64,7 @@ const handleApiError = async (api: AxiosInstance, error: unknown) => {
 
   try {
     if (error.response.status === 401) {
-      // Only a signed-in session can be renewed; the demo token is static.
+      // Only a signed-in session can be renewed.
       if (!getSessionAccessToken()) {
         console.warn('[API] Unauthorized without a signed-in session:', {
           url: originalConfig.url,
