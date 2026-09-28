@@ -47,7 +47,7 @@ steps before running or deploying the application:
 
 ## Configuration
 
-The Web UI is configured via environment variables read by webpack at build time. Set them in the `.env` file at the package root.
+The Web UI is configured via environment variables read by webpack at build time. Copy [.env.example](./.env.example) to `.env` at the package root and set them there.
 
 | Variable                            | Default                 | Description                                                                                                                                                                                                        |
 | ----------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

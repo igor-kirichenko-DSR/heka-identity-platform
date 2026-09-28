@@ -1,14 +1,13 @@
-name: Verify Heka Identity Service Web UI changes
+name: Verify Heka SSO Web UI changes
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'heka-identity-service-web-ui/**'
-      - '.github/workflows/heka-identity-service-web-ui-verify.yml'
+      - 'heka-sso-web-ui/**'
+      - '.github/workflows/heka-sso-web-ui-verify.yml'
 
-# This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
@@ -20,7 +19,7 @@ jobs:
   verify:
     defaults:
       run:
-        working-directory: ./heka-identity-service-web-ui
+        working-directory: ./heka-sso-web-ui
     name: Build and check
     runs-on: ubuntu-latest
 
@@ -46,17 +45,11 @@ jobs:
         run: yarn install --immutable
         shell: bash
 
-      - name: Run build (App)
-        run: yarn build:prod
-
-      - name: Run build (Storybook)
-        run: yarn storybook:build
+      - name: Run build
+        run: yarn build
 
       - name: Run ESLint
-        run: yarn lint:ts
+        run: yarn lint-check
 
-      - name: Run Stylelint
-        run: yarn lint:scss
-
-      - name: Run tests
-        run: yarn test:unit
+      - name: Run Prettier check
+        run: yarn format-check
