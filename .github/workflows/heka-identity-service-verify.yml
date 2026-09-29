@@ -127,7 +127,7 @@ jobs:
           docker run -d --name keycloak -p 8080:8080 \
             -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
             -e KC_HOSTNAME=http://localhost:8080 \
-            -v "$PWD/keycloak:/opt/keycloak/data/import:ro" \
+            -v "$PWD/keycloak/realm-heka-platform.json:/opt/keycloak/data/import/realm-heka-platform.json:ro" \
             quay.io/keycloak/keycloak:26.3 start-dev --import-realm
           for i in $(seq 1 60); do
             if curl -sf http://localhost:8080/realms/heka-platform/.well-known/openid-configuration >/dev/null; then
