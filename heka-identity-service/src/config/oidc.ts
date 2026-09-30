@@ -62,22 +62,19 @@ const list = (value: string | undefined, defaults: string[]): string[] => {
   return items && items.length > 0 ? items : defaults
 }
 
-export default registerAs(
-  'oidc',
-  (): OidcConfig => ({
-    issuerUrl: text(process.env.OIDC_ISSUER_URL),
-    jwksUri: text(process.env.OIDC_JWKS_URI),
-    jwks: text(process.env.OIDC_JWKS) ? (JSON.parse(process.env.OIDC_JWKS as string) as JSONWebKeySet) : undefined,
-    audience: text(process.env.OIDC_AUDIENCE),
-    algorithms: list(process.env.OIDC_ALGORITHMS, oidcConfigDefaults.algorithms),
-    clockTolerance: process.env.OIDC_CLOCK_TOLERANCE
-      ? parseInt(process.env.OIDC_CLOCK_TOLERANCE, 10)
-      : oidcConfigDefaults.clockTolerance,
-    claims: {
-      userId: text(process.env.OIDC_CLAIM_USER_ID) ?? oidcClaimsDefaults.userId,
-      roles: text(process.env.OIDC_CLAIM_ROLES) ?? oidcClaimsDefaults.roles,
-      name: list(process.env.OIDC_CLAIM_NAME, oidcClaimsDefaults.name),
-      orgId: text(process.env.OIDC_CLAIM_ORG_ID) ?? oidcClaimsDefaults.orgId,
-    },
-  }),
-)
+export default registerAs('oidc', (): OidcConfig => ({
+  issuerUrl: text(process.env.OIDC_ISSUER_URL),
+  jwksUri: text(process.env.OIDC_JWKS_URI),
+  jwks: text(process.env.OIDC_JWKS) ? (JSON.parse(process.env.OIDC_JWKS as string) as JSONWebKeySet) : undefined,
+  audience: text(process.env.OIDC_AUDIENCE),
+  algorithms: list(process.env.OIDC_ALGORITHMS, oidcConfigDefaults.algorithms),
+  clockTolerance: process.env.OIDC_CLOCK_TOLERANCE
+    ? parseInt(process.env.OIDC_CLOCK_TOLERANCE, 10)
+    : oidcConfigDefaults.clockTolerance,
+  claims: {
+    userId: text(process.env.OIDC_CLAIM_USER_ID) ?? oidcClaimsDefaults.userId,
+    roles: text(process.env.OIDC_CLAIM_ROLES) ?? oidcClaimsDefaults.roles,
+    name: list(process.env.OIDC_CLAIM_NAME, oidcClaimsDefaults.name),
+    orgId: text(process.env.OIDC_CLAIM_ORG_ID) ?? oidcClaimsDefaults.orgId,
+  },
+}))
