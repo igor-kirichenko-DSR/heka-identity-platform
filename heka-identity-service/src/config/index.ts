@@ -8,4 +8,4 @@ import oidc from './oidc'
 import pino from './pino'
 import webhook from './webhook'
 
-export default [agent, express, health, jwt, oidc, demo, mikroOrm, pino, fileStorage, webhook]
+export default [agent, express, health, oidc, demo, mikroOrm, pino, fileStorage, webhook]
