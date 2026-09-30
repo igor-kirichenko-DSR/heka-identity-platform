@@ -27,7 +27,7 @@ import { MdocRecordProvider, SdJwtVcRecordProvider, W3cCredentialRecordProvider 
 import { RootStack } from './src/navigators'
 import { useIOSKeychainResetOnFirstLaunch } from './src/utils/keychain'
 
-// TODO: Find a good way to extract module-specific localization (for example, for Keplr integration)
+// TODO: Find a good way to extract module-specific localization
 initLanguages(localization)
 
 const bifoldContainer = new MainContainer(container.createChildContainer()).init()
