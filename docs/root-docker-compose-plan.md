@@ -1,6 +1,6 @@
 # Root Docker Compose for the Heka Identity Platform
 
-Status: plan, 2026-09-30, revised 2026-10-01. Progress is tracked in the Status column of section 10; step 0 is implemented, everything else is open.
+Status: plan, 2026-09-30, revised 2026-10-01. Progress is tracked in the Status column of section 10; steps 0 and 1 are implemented, everything else is open.
 
 ## 1. Goal
 
@@ -438,7 +438,7 @@ An ngrok static domain (one is included in free accounts) removes steps 1 to 3 f
 | # | Step                                                                                              | Done when                                                                                 | Status |
 | - | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------ |
 | 0 | heka-sso-service PR: `OIDC_CLIENTS_FILE` and `OIDC_LOGIN_CONFIGS_FILE` with README rows and unit tests, plus `env/oidc-login-configs.json`, `env/oidc-clients.example.json` and the gitignore entry for `env/oidc-clients.json` (section 5.3). | Service starts with both values supplied as files; inline variables still take precedence; a missing file is reported by name; both JSON files parse. | **Done** 2026-10-01, uncommitted on `feature/remove-heka-auth-service-6` |
-| 1 | Add `docker/postgres/init-databases.sh` and `docker/nginx/spa.conf`.                              | `psql` lists both databases on a fresh volume; nginx serves `/some/route` as `index.html`. | Open |
+| 1 | Add `docker/postgres/init-databases.sh` and `docker/nginx/spa.conf`, plus a root `.gitattributes` forcing LF on `*.sh` so the init script survives a Windows checkout. | `psql` lists both databases on a fresh volume; nginx serves `/some/route` as `index.html`. | **Done** 2026-10-01, uncommitted; verified with throwaway `postgres:15` and `nginx:alpine` containers |
 | 2 | Add the two web UI Dockerfiles and `.dockerignore` files.                                          | `docker build` of each package succeeds from a clean checkout with no `.env` present.     | Open |
 | 3 | Write the root `docker-compose.yml` with postgres, the two backends and the two UIs.              | `docker compose config` renders without warnings; `up -d --build` reaches healthy.         | Open |
 | 4 | Add the `keycloak` profile services, including `keycloak-realms` and `docker/keycloak/prepare-realms.sh`. | `--profile keycloak up` imports the three realms; login to the identity web UI succeeds; with `SSO_ISSUER_URL` set, the `heka` realm's broker shows that issuer in the admin console. | Open |
