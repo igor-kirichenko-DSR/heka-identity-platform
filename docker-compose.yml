@@ -9,10 +9,6 @@
 #   docker compose --profile keycloak up -d --build     Keycloak as IdP for one or both roles
 #   docker compose up -d --build                        both IdP roles on Auth0
 #   docker compose --profile keycloak up -d keycloak    only Keycloak (and its theme builder)
-#
-# Browser-facing URLs stay on localhost; server-to-provider calls go through the host gateway
-# (host.docker.internal); calls between the services of this project use service names.
-
 name: heka
 
 services:
@@ -45,9 +41,6 @@ services:
       EXPRESS_PORT: '3000'
       EXPRESS_ENABLE_CORS: 'true'
       EXPRESS_CORS_OPTIONS: '{"origin":["http://localhost:8000","http://localhost:5173"],"credentials":true}'
-      # [P] platform IdP (.env section 1.[P] or 2.[P]). OIDC_ISSUER_URL is the exact `iss`
-      # (browser-facing); OIDC_JWKS_URI is the host-gateway certs URL for Keycloak and empty
-      # (discovery) for Auth0.
       OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:?platform IdP issuer, see .env.example section 1.[P] or 2.[P]}
       OIDC_JWKS_URI: ${OIDC_JWKS_URI:-}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:?platform IdP audience, see .env.example section 1.[P] or 2.[P]}
@@ -55,14 +48,12 @@ services:
       OIDC_CLAIM_ROLES: ${OIDC_CLAIM_ROLES:-}
       OIDC_CLAIM_NAME: ${OIDC_CLAIM_NAME:-}
       OIDC_CLAIM_ORG_ID: ${OIDC_CLAIM_ORG_ID:-}
-      # Demo-token broker for the web UI's public demo pages; off when all three are empty.
       DEMO_TOKEN_URL: ${DEMO_TOKEN_URL:-}
       DEMO_CLIENT_ID: ${DEMO_CLIENT_ID:-}
       DEMO_CLIENT_SECRET: ${DEMO_CLIENT_SECRET:-}
       DEMO_TOKEN_PARAMS: ${DEMO_TOKEN_PARAMS:-}
       DEMO_CLIENT_AUTH_METHOD: ${DEMO_CLIENT_AUTH_METHOD:-}
       DEMO_TOKEN_RATE_LIMIT: ${DEMO_TOKEN_RATE_LIMIT:-}
-      # Public endpoints advertised to wallets (.env section 3); https tunnel for a phone wallet.
       AGENT_OID4VCI_ENDPOINT: ${AGENT_OID4VCI_ENDPOINT:-http://localhost:3003}
       AGENT_HTTP_ENDPOINT: ${AGENT_HTTP_ENDPOINT:-http://localhost:3001}
       AGENT_WS_ENDPOINT: ${AGENT_WS_ENDPOINT:-ws://localhost:3002}
@@ -108,30 +99,22 @@ services:
       DB_NAME: heka-sso-service
       DB_USER: heka
       DB_PASSWORD: heka1
-      # [R] the bridge's own issuer (.env section 1.[R] or 2.[R]): browser-facing localhost for
-      # Keycloak brokering with a desktop browser, the https tunnel of port 3005 for Auth0.
       OIDC_ISSUER_URL: ${SSO_ISSUER_URL:?bridge issuer, see .env.example section 1.[R] or 2.[R]}
       OIDC_COOKIE_KEYS: dev-only-cookie-key-do-not-use-in-production
       OIDC_SUB_HMAC_SALT: dev-only-sub-hmac-salt-do-not-use-in-production
-      # Sibling container of this project.
       IDENTITY_SERVICE_BASE_URL: http://heka-identity-service:3000
-      # [P] service-account token from the platform IdP (.env section 1.[P] or 2.[P]).
       IDENTITY_SERVICE_TOKEN_URL: ${IDENTITY_SERVICE_TOKEN_URL:?platform IdP token endpoint for the bridge's service account, see .env.example section 1.[P] or 2.[P]}
       IDENTITY_SERVICE_CLIENT_ID: ${IDENTITY_SERVICE_CLIENT_ID:?bridge service-account client id, see .env.example section 1.[P] or 2.[P]}
       IDENTITY_SERVICE_CLIENT_SECRET: ${IDENTITY_SERVICE_CLIENT_SECRET:?bridge service-account client secret, see .env.example section 1.[P] or 2.[P]}
       IDENTITY_SERVICE_TOKEN_PARAMS: ${IDENTITY_SERVICE_TOKEN_PARAMS:-}
       IDENTITY_SERVICE_CLIENT_AUTH_METHOD: ${IDENTITY_SERVICE_CLIENT_AUTH_METHOD:-}
-      # Bootstrap values (.env section 3); stub login stands in until they are set.
       IDENTITY_SERVICE_PUBLIC_VERIFIER_ID: ${IDENTITY_SERVICE_PUBLIC_VERIFIER_ID:-}
       IDENTITY_SERVICE_REQUEST_SIGNER_DID: ${IDENTITY_SERVICE_REQUEST_SIGNER_DID:-}
       OIDC_STUB_LOGIN: ${OIDC_STUB_LOGIN:-true}
-      # Back-channel logout to Keycloak goes to the host gateway, a private address.
       OIDC_ALLOW_PRIVATE_NETWORK_CALLS: 'true'
-      # Broker clients and login configurations as files (heka-sso-service/env/).
       OIDC_CLIENTS_FILE: /run/config/oidc-clients.json
       OIDC_LOGIN_CONFIGS_FILE: /run/config/oidc-login-configs.json
     volumes:
-      # oidc-clients.json is gitignored: copy heka-sso-service/env/oidc-clients.example.json first.
       - type: bind
         source: ./heka-sso-service/env/oidc-clients.json
         target: /run/config/oidc-clients.json
@@ -212,14 +195,6 @@ services:
       timeout: 5s
       retries: 3
 
-  # ---- profile `keycloak`: the dev IdP with the three shipped realms ------------------------
-  # Nothing depends on these services (a service without the profile cannot), and the backends
-  # fetch keys and tokens lazily, so Keycloak only has to be up before the first login.
-
-  # Rebuilds the heka-keycloak-theme jar on every `up` (demo/heka-keycloak-theme/README.md).
-  # The source is copied into one working volume (minus the host's node_modules and build
-  # output): keycloakify renames the jar from node_modules/.cache into dist_keycloak, which
-  # fails with EXDEV when those are different mounts. The host directory is left untouched.
   keycloak-theme-builder:
     profiles: [keycloak]
     build:
@@ -236,8 +211,6 @@ services:
       - keycloak-theme-work:/theme
       - keycloak-theme:/out
 
-  # Copies heka-sso-service/keycloak/realm-*.json into the import volume and sets the heka-sso
-  # broker issuer of the `heka` realm to SSO_ISSUER_URL (docker/keycloak/prepare-realms.sh).
   keycloak-realms:
     profiles: [keycloak]
     image: busybox:1.37
@@ -249,9 +222,6 @@ services:
       - keycloak-realms:/realms
     command: ['sh', '/prepare-realms.sh']
 
-  # Realms `heka` (OID4VP SSO demo), `heka-platform` (platform IdP) and `heka-wallet`
-  # (see heka-sso-service/keycloak/README.md). KC_HOSTNAME pins `iss` to the browser-facing
-  # URL whatever host name a caller uses (host.docker.internal from containers).
   keycloak:
     profiles: [keycloak]
     image: quay.io/keycloak/keycloak:26.3
