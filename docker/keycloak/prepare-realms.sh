@@ -12,7 +12,7 @@ set -eu
 
 src=/realms-src
 dst=/realms
-issuer="${SSO_ISSUER_URL:?SSO_ISSUER_URL must be set (root .env, section 1.[R] or 2.[R])}"
+issuer="${SSO_ISSUER_URL:?SSO_ISSUER_URL must be set (root .env: SSO_SERVICE_OIDC_ISSUER_URL, section 1.[R] or 2.[R])}"
 committed_issuer='http://localhost:3005'
 
 rm -f "$dst"/*.json

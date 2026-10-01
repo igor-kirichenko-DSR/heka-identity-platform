@@ -62,7 +62,7 @@ The identity web UI bakes the demo tenant's DID into its bundle, so the tenant i
 2. The script also writes the DID into that package's local `.env`, which matters if you run the web UI on the host against another database: back that file up first, or restore it afterwards. The root project only needs the value in the root `.env`:
 
    ```
-   REACT_APP_DEMO_USER_DID=did:key:...
+   IDENTITY_WEBUI_DEMO_USER_DID=did:key:...
    ```
 
 3. Rebuild the web UI image:
@@ -75,11 +75,11 @@ The DID belongs to this project's database. A host-run setup with its own databa
 
 ### Real wallet login through the bridge (optional)
 
-By default the bridge runs the dev stub login (`OIDC_STUB_LOGIN=true`): the SSO web UI signs in without any wallet and without credential verification. For a real login with a phone wallet:
+By default the bridge runs the dev stub login (`SSO_SERVICE_OIDC_STUB_LOGIN=true`): the SSO web UI signs in without any wallet and without credential verification. For a real login with a phone wallet:
 
 1. Set up the https tunnel to port 3003 (see [Phone wallets and tunnels](#phone-wallets-and-tunnels)).
 2. Create the verifier the bridge uses and prepare its wallet. The bridge acts as the Keycloak service account `heka-sso-service`: obtain a client-credentials token for that client and call `POST /prepare-wallet` on the identity service with an empty body. It returns the tenant's DID.
-3. In the root `.env`, set `IDENTITY_SERVICE_PUBLIC_VERIFIER_ID` and `IDENTITY_SERVICE_REQUEST_SIGNER_DID` to that DID and `OIDC_STUB_LOGIN=false`, then:
+3. In the root `.env`, set `SSO_SERVICE_IDENTITY_SERVICE_PUBLIC_VERIFIER_ID` and `SSO_SERVICE_IDENTITY_SERVICE_REQUEST_SIGNER_DID` to that DID and `SSO_SERVICE_OIDC_STUB_LOGIN=false`, then:
 
    ```shell
    docker compose --profile keycloak up -d heka-sso-service
@@ -92,7 +92,7 @@ By default the bridge runs the dev stub login (`OIDC_STUB_LOGIN=true`): the SSO 
 | Stop                                                            | `docker compose --profile keycloak down`                           |
 | Stop and drop the databases (fresh first boot)                  | `docker compose --profile keycloak down -v`                        |
 | A runtime value in `.env` (tunnel URL, bootstrap values)        | `docker compose --profile keycloak up -d`                          |
-| A web UI value in `.env` (`REACT_APP_*`, `VITE_*`)              | `docker compose up -d --build heka-identity-web-ui` or `heka-sso-web-ui` |
+| A web UI value in `.env` (`IDENTITY_WEBUI_*`, `VITE_SSO_WEBUI_*`)| `docker compose up -d --build heka-identity-web-ui` or `heka-sso-web-ui` |
 | `heka-sso-service/env/oidc-*.json`                              | `docker compose restart heka-sso-service`                          |
 | Keycloak theme sources                                          | `docker compose --profile keycloak up -d --force-recreate keycloak` |
 | Only Keycloak, for a service running on the host                | `docker compose --profile keycloak up -d keycloak`                 |
@@ -106,8 +106,8 @@ Everything provider-related comes from the root `.env`; the Compose file has no 
 
 | Role                     | Who signs in                                          | Containers that read it                                               | Selector                  |
 | ------------------------ | ----------------------------------------------------- | --------------------------------------------------------------------- | ------------------------- |
-| `[P]` Platform IdP       | Operators of the identity web UI; the bridge's service account | `heka-identity-service`, `heka-sso-service`, `heka-identity-web-ui` (rebuild) | `REACT_APP_AUTH_PROVIDER` |
-| `[R]` Relying-party IdP  | Users of the SSO demo web UI, brokered to the wallet bridge | `heka-sso-web-ui` (rebuild), `heka-sso-service`, `keycloak` (broker issuer) | `VITE_AUTH_PROVIDER`      |
+| `[P]` Platform IdP       | Operators of the identity web UI; the bridge's service account | `heka-identity-service`, `heka-sso-service`, `heka-identity-web-ui` (rebuild) | `IDENTITY_WEBUI_AUTH_PROVIDER` |
+| `[R]` Relying-party IdP  | Users of the SSO demo web UI, brokered to the wallet bridge | `heka-sso-web-ui` (rebuild), `heka-sso-service`, `keycloak` (broker issuer) | `VITE_SSO_WEBUI_AUTH_PROVIDER`      |
 
 Section 1 of `.env.example` holds the Keycloak values for both roles and is active. Section 2 holds the Auth0 values, commented out. Section 3 holds provider-independent values: the bootstrap values above, the tunnel URLs and a few optional settings. The comment on each line names the container that reads it and whether a change is a recreate or a web UI rebuild. A line that sets an empty value has its comment on the line above: Compose reads `VAR=   # text` as the value `# text`.
 
@@ -125,7 +125,7 @@ Each role switches on its own. Comment out its block in section 1 of `.env`, unc
 
 **Relying-party IdP to Auth0** (SSO web UI, broker):
 
-1. In the tenant, the SPA `heka-sso-web-ui` and the enterprise connection `heka-sso` must exist (README in `heka-sso-service/auth0`). Fill block `2.[R]`: the SPA client id, the tenant domain, and `SSO_ISSUER_URL` set to the https tunnel of port 3005, which the connection's issuer must equal.
+1. In the tenant, the SPA `heka-sso-web-ui` and the enterprise connection `heka-sso` must exist (README in `heka-sso-service/auth0`). Fill block `2.[R]`: the SPA client id, the tenant domain, and `SSO_SERVICE_OIDC_ISSUER_URL` set to the https tunnel of port 3005, which the connection's issuer must equal.
 2. In `heka-sso-service/env/oidc-clients.json`, set the `auth0-broker` entry's `redirectUris` to `https://<tenant>.<region>.auth0.com/login/callback` and `postLogoutRedirectUris` to `https://<tenant>.<region>.auth0.com/logout`.
 3. `docker compose [--profile keycloak] up -d --build heka-sso-web-ui heka-sso-service`
 
@@ -136,17 +136,17 @@ The verifier values of the first boot belong to the platform role's tenant and a
 A wallet on a phone cannot reach `localhost`. Every wallet interaction goes to the identity service's OID4VC endpoint on port 3003: the QR codes of the SSO login page and the identity web UI carry a request URI there, and the wallet fetches requests and posts presentations to it. Wallets require https, so expose port 3003 through a tunnel such as ngrok and put its hostname into the root `.env`:
 
 ```
-AGENT_OID4VCI_ENDPOINT=https://<tunnel host>
-FILE_STORAGE_FS_PUBLIC_URL=https://<tunnel host>
+IDENTITY_SERVICE_AGENT_OID4VCI_ENDPOINT=https://<tunnel host>
+IDENTITY_SERVICE_FILE_STORAGE_FS_PUBLIC_URL=https://<tunnel host>
 ```
 
-Then `docker compose --profile keycloak up -d`. These are runtime values: only the identity service container is recreated, no image is rebuilt. The browser-facing `FILE_STORAGE_FS_URL` stays on `localhost`, because ngrok's free tier answers browsers with an interstitial page; wallets are not browsers and are unaffected.
+Then `docker compose --profile keycloak up -d`. These are runtime values: only the identity service container is recreated, no image is rebuilt. The browser-facing `IDENTITY_SERVICE_FILE_STORAGE_FS_URL` stays on `localhost`, because ngrok's free tier answers browsers with an interstitial page; wallets are not browsers and are unaffected.
 
-The wallet never talks to the bridge, so port 3005 needs a public URL only when Auth0 brokers to it (`SSO_ISSUER_URL` in block `2.[R]`). With Keycloak and a desktop browser, keep `SSO_ISSUER_URL` on `localhost`. When it does move to a tunnel while Keycloak brokers to it, the Keycloak profile rewrites the `heka` realm's broker issuer to match on the next recreate of Keycloak.
+The wallet never talks to the bridge, so port 3005 needs a public URL only when Auth0 brokers to it (`SSO_SERVICE_OIDC_ISSUER_URL` in block `2.[R]`). With Keycloak and a desktop browser, keep `SSO_SERVICE_OIDC_ISSUER_URL` on `localhost`. When it does move to a tunnel while Keycloak brokers to it, the Keycloak profile rewrites the `heka` realm's broker issuer to match on the next recreate of Keycloak.
 
 **Rotating a dynamic tunnel hostname:** edit the values in `.env`, run `docker compose --profile keycloak up -d`, then recreate any QR codes and re-save issuer profiles and schemas whose logo URLs are persisted. Verification sessions created before the change are dead; start a new login. A static tunnel domain is best spent on port 3003, the URL that wallets see and that is persisted into records.
 
-**Webhooks** to a sibling container (for example a demo relying party) need `WEBHOOK_ALLOW_HTTP=true` and `WEBHOOK_ALLOW_PRIVATE_ADDRESSES=true` in `.env`.
+**Webhooks** to a sibling container (for example a demo relying party) need `IDENTITY_SERVICE_WEBHOOK_ALLOW_HTTP=true` and `IDENTITY_SERVICE_WEBHOOK_ALLOW_PRIVATE_ADDRESSES=true` in `.env`.
 
 ## Troubleshooting
 
