@@ -1620,32 +1620,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mikro-orm/cli@npm:7.1.3":
-  version: 7.1.3
-  resolution: "@mikro-orm/cli@npm:7.1.3"
+"@mikro-orm/cli@npm:7.2.2":
+  version: 7.2.2
+  resolution: "@mikro-orm/cli@npm:7.2.2"
   dependencies:
-    "@mikro-orm/core": "npm:7.1.3"
-    mikro-orm: "npm:7.1.3"
+    "@mikro-orm/core": "npm:7.2.2"
+    mikro-orm: "npm:7.2.2"
     yargs: "npm:17.7.2"
   bin:
     mikro-orm: cli.js
-  checksum: 10c0/667c5c8fa9bd003e5c59abd00e17f02b9f04ca075e17ed4e1cc3d188c2945ac7e7e14bc62ce95c582d34f1536d198b9b4dcd1160c1df9b2479be9a6b0fbae3c3
+  checksum: 10c0/7cd1faca33c333fb2f0b2adb65badd13c48ed5cc23b865f65de75ce1a32acc2170e9abc9ef28021fddd36a42b25fbf4a003dcee72616cecf5ae5eb14f9138c01
   languageName: node
   linkType: hard
 
-"@mikro-orm/core@npm:7.1.3":
-  version: 7.1.3
-  resolution: "@mikro-orm/core@npm:7.1.3"
-  peerDependencies:
-    dataloader: 2.2.3
-  peerDependenciesMeta:
-    dataloader:
-      optional: true
-  checksum: 10c0/1de6cf5316e94fe82d87e4dc6019bf3fe71f1229f612fcbc0777ce72ccfcbcb3506a0f096d4cf98297f25e44117c09dcff479da1e6fa1684633e6277297e4a0b
-  languageName: node
-  linkType: hard
-
-"@mikro-orm/core@npm:^7.1.3":
+"@mikro-orm/core@npm:7.2.2, @mikro-orm/core@npm:^7.1.3":
   version: 7.2.2
   resolution: "@mikro-orm/core@npm:7.2.2"
   peerDependencies:
@@ -5900,7 +5888,7 @@ __metadata:
     "@hyperledger/anoncreds-shared": "npm:0.4.0"
     "@hyperledger/indy-vdr-nodejs": "npm:0.3.0"
     "@hyperledger/indy-vdr-shared": "npm:0.3.0"
-    "@mikro-orm/cli": "npm:7.1.3"
+    "@mikro-orm/cli": "npm:7.2.2"
     "@mikro-orm/core": "npm:^7.1.3"
     "@mikro-orm/decorators": "npm:^7.1.3"
     "@mikro-orm/migrations": "npm:^7.1.3"
@@ -6659,10 +6647,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mikro-orm@npm:7.1.3":
-  version: 7.1.3
-  resolution: "mikro-orm@npm:7.1.3"
-  checksum: 10c0/c665bcda8d403682c8e606ac22a44686895d5689217ca960babc54c20a14055e739f1567e2825f3dee316dcb0ca8ca5d569b487f2fd02b633a152c1a22dafd9e
+"mikro-orm@npm:7.2.2":
+  version: 7.2.2
+  resolution: "mikro-orm@npm:7.2.2"
+  checksum: 10c0/b4ff988aba52bbbbe5643f21af465c7cd9855c40a15e8f24315469a3a359fb196b23892522bf6d167357284eb5f600b7abd39ed812120ade42fe5b06297d442c
   languageName: node
   linkType: hard
 
