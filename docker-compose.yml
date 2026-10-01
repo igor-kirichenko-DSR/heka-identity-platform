@@ -1,14 +1,3 @@
-# Heka Identity Platform: the whole platform from one place (docs/root-docker-compose-plan.md).
-#
-# Scope rule: the directory you run `docker compose` in decides the scope. Here it is the
-# platform; inside a package directory it is that one service against the rest on the host.
-#
-# Every identity-provider value comes from the root .env (copy .env.example). There are no
-# provider defaults in this file: a missing value fails `docker compose config` by name.
-#
-#   docker compose --profile keycloak up -d --build     Keycloak as IdP for one or both roles
-#   docker compose up -d --build                        both IdP roles on Auth0
-#   docker compose --profile keycloak up -d keycloak    only Keycloak (and its theme builder)
 name: heka
 
 services:
