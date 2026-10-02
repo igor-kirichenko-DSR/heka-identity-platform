@@ -1,6 +1,6 @@
 # Heka Identity Service Web UI improvements
 
-Status: plan, 2026-10-02. Nothing is implemented yet. Progress is tracked in the Status columns of section 8 (Part 1), section 16 (Part 2) and section 25 (Part 3).
+Status: plan, 2026-10-02. Part 1 implemented on 2026-10-02 (manual verification pending); Parts 2 and 3 not started. Progress is tracked in the Status columns of section 8 (Part 1), section 16 (Part 2) and section 25 (Part 3).
 
 This plan has three independent parts. Each has its own steps and PRs, none depends on another, and they can be built in any order or in parallel.
 
@@ -113,6 +113,7 @@ All paths are under `heka-identity-service-web-ui/src`.
 |---|---|
 | `components/ExistingConnection/ExistingConnectionSelect.tsx` (new) | Panel with a title, a `FormSelect`/`Select` from `shared/ui` listing the connections, and a `Button` "Send". Props: `connections`, `isLoading`, `onSelect(id)`. Renders nothing when the list is empty and loading is done. Label per decision 9: `alias`, otherwise "Unnamed connection (`id.slice(0, 8)`)", plus the formatted `createdAt`. Never `theirLabel`. |
 | `components/ExistingConnection/ConnectionNameInput.tsx` (new) | Optional `TextInput` from `shared/ui` with an Apply `Button`, placed above the QR. Props: `value`, `disabled`, `onApply(alias)`. Applies on button click or Enter. Trims the value and limits it to 64 characters. Shows a short hint that the name is only visible to the tenant. |
+| `components/ExistingConnection/ConnectionChoice.tsx` (new) | Composes the name input, the QR code and the existing-connection panel, and renders the waiting view with "Use QR code instead" once a connection was chosen. Shared by `PendingCredential` and `PendingPresentation` through an optional `connection` prop, so the OpenID4VC flows, which don't pass it, render exactly as before. |
 | `components/ExistingConnection/connectionLabel.ts` (new) | `getConnectionLabel(record, t)` implementing the label rule, so the select and any later Connections page share it. |
 | `components/ExistingConnection/ExistingConnectionSelect.module.scss` (new) | Layout for the second column. Stack the columns below the QR at narrow widths. |
 | `components/Steps/CredentialOffer/states/PendingCredential.tsx` | Accept optional `existingConnection` and `connectionName` props. For Aries, render `ConnectionNameInput` above the QR and the existing-connection panel next to it. When a connection was chosen, show the loader and "Waiting for the holder to accept the offer" instead of the QR, plus the "Use QR code instead" link. |
@@ -143,11 +144,11 @@ All paths are under `heka-identity-service-web-ui/src`.
 
 Jest is already configured (`yarn test:unit`); `entities/Presentation/model/services/requestPresentation.test.ts` is the pattern for thunk tests with a mocked Axios instance.
 
-1. `fetchConnections.test.ts`: filters out non-`completed` records, sorts newest first, uses `agencyDemoApi` when `useDemo` is true, rejects through `handleError` on failure.
-2. `connectionSlice.test.ts`: `selectExistingConnection` produces a `completed` session; a later `createConnection.fulfilled` does not overwrite it; `reset` clears `connections`.
-3. `createConnection` / `updateConnectionState`: pick the demo API instance when `useDemo` is set. `createConnection` sends a trimmed `alias` and omits it when empty.
+1. `entities/Connection/model/services/connectionThunks.test.ts`, `fetchConnections`: filters out non-`completed` records, sorts newest first, uses `agencyDemoApi` when `useDemo` is true, rejects through `handleError` on failure.
+2. `connectionSlice.test.ts`: `selectExistingConnection` produces a `completed` session; a later `createConnection.fulfilled` does not overwrite it; `reset` clears `connections`. Polling results for a replaced invitation are ignored.
+3. `connectionThunks.test.ts`, `createConnection` / `updateConnectionState`: pick the demo API instance when `useDemo` is set. `createConnection` sends a trimmed `alias` and omits it when empty.
 4. `connectionLabel.test.ts`: uses `alias` when present; falls back to "Unnamed connection (id prefix)"; never returns `theirLabel`.
-5. `ExistingConnectionSelect` and `ConnectionNameInput` (React Testing Library, if available in the package; otherwise skip): select is hidden on an empty list and calls `onSelect` with the chosen id; name input calls `onApply` with the trimmed value and does nothing while disabled.
+5. `ExistingConnectionSelect` and `ConnectionNameInput` (React Testing Library; `Button` and `Select` are replaced by plain stand-ins because their SVG imports do not load in jest): select is hidden on an empty list and calls `onSelect` with the chosen id; name input calls `onApply` with the trimmed value and does nothing while disabled.
 
 ## 7. Manual verification
 
@@ -165,14 +166,14 @@ Jest is already configured (`yarn test:unit`); `entities/Presentation/model/serv
 
 | # | Step | Status |
 |---|---|---|
-| 1 | Endpoint, types, `fetchConnections` thunk, `useDemo` on `createConnection` / `updateConnectionState`, `alias` on `createConnection` | todo |
-| 2 | Slice: list reducers, `selectExistingConnection`, completion guard, selectors, exports | todo |
-| 3 | `useConnection` changes, including `renameInvitation` and `canRename` | todo |
-| 4 | `ExistingConnectionSelect`, `ConnectionNameInput`, `getConnectionLabel` and translations | todo |
-| 5 | Wire into `PendingCredential` / `AnoncredsCredentialOffer` | todo |
-| 6 | Wire into `PendingPresentation` / `AnoncredsVerificationRequest` | todo |
-| 7 | Unit tests (section 6) | todo |
-| 8 | Manual verification (section 7), `yarn lint:ts`, `yarn lint:scss` | todo |
+| 1 | Endpoint, types, `fetchConnections` thunk, `useDemo` on `createConnection` / `updateConnectionState`, `alias` on `createConnection` | done |
+| 2 | Slice: list reducers, `selectExistingConnection`, completion guard, selectors, exports | done |
+| 3 | `useConnection` changes, including `renameInvitation` and `canRename` | done |
+| 4 | `ExistingConnectionSelect`, `ConnectionNameInput`, `getConnectionLabel` and translations | done |
+| 5 | Wire into `PendingCredential` / `AnoncredsCredentialOffer` | done |
+| 6 | Wire into `PendingPresentation` / `AnoncredsVerificationRequest` | done |
+| 7 | Unit tests (section 6) | done |
+| 8 | Manual verification (section 7). Lint, Stylelint, type-check and the full unit suite pass | manual verification todo |
 
 Steps 1 to 3 are one PR without visible change; steps 4 to 8 are a second PR. A single PR is also fine given the size.
 

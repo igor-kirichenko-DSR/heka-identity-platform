@@ -2,6 +2,10 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
+import {
+  ConnectionChoice,
+  ConnectionChoiceOptions,
+} from '@/components/ExistingConnection';
 import { CopyLink } from '@/components/Link/CopyLink';
 import { QRCode } from '@/components/QRCode';
 import { pollTimeout } from '@/const/behaviour';
@@ -21,12 +25,15 @@ interface PendingPresentation {
   value?: string;
   protocolType?: ProtocolType;
   useDemo?: boolean;
+  // Aries only: name the new connection or send over an existing one
+  connection?: ConnectionChoiceOptions;
 }
 
 export const PendingPresentation = ({
   value,
   protocolType,
   useDemo,
+  connection,
 }: PendingPresentation) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -63,20 +70,32 @@ export const PendingPresentation = ({
         className={cls.header}
       >
         <Row className={cls.title}>{t('Flow.titles.verificationRequest')}</Row>
-        <Row className={cls.description}>
-          <p>
-            {t('Common.titles.scanQR')}&nbsp;
-            <CopyLink value={value} />
-          </p>
-        </Row>
+        {!connection?.isExistingConnectionSelected && (
+          <Row className={cls.description}>
+            <p>
+              {t('Common.titles.scanQR')}&nbsp;
+              <CopyLink value={value} />
+            </p>
+          </Row>
+        )}
       </Column>
       <Column
         className={cls.mainContent}
         justifyContent="center"
         alignItems="center"
       >
-        {!value && <Loader />}
-        {value && <QRCode content={value} />}
+        {connection ? (
+          <ConnectionChoice
+            {...connection}
+            qrValue={value}
+            waitingText={t('Connection.titles.waitingRequest')}
+          />
+        ) : (
+          <>
+            {!value && <Loader />}
+            {value && <QRCode content={value} />}
+          </>
+        )}
       </Column>
     </Column>
   );
