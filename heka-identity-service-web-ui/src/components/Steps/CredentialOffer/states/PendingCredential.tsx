@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
@@ -8,13 +8,13 @@ import {
 } from '@/components/ExistingConnection';
 import { CopyLink } from '@/components/Link/CopyLink';
 import { QRCode } from '@/components/QRCode';
-import { pollTimeout } from '@/const/behaviour';
 import {
   getCredentialOfferId,
   getIsCredentialSent,
 } from '@/entities/Credential/model/selectors/credentialSelector';
 import { updateCredentialState } from '@/entities/Credential/model/services/updateCredentialState';
 import { ProtocolType } from '@/entities/Schema/model/types/schema';
+import { useRecordUpdates } from '@/shared/hooks/recordUpdates';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { Column, Row } from '@/shared/ui/Grid';
 import { Loader } from '@/shared/ui/Loader/Loader';
@@ -41,20 +41,23 @@ export const PendingCredential = ({
   const credentialOfferId = useSelector(getCredentialOfferId);
   const isCredentialSent = useSelector(getIsCredentialSent);
 
-  useEffect(() => {
-    if (credentialOfferId && protocolType && !isCredentialSent) {
-      const polling = setInterval(() => {
-        dispatch(
-          updateCredentialState({
-            protocolType: protocolType,
-            id: credentialOfferId,
-            useDemo,
-          }),
-        );
-      }, pollTimeout);
-      return () => clearInterval(polling);
-    }
-  }, [credentialOfferId, isCredentialSent, protocolType, dispatch, useDemo]);
+  const refreshCredentialState = useCallback(() => {
+    if (!credentialOfferId || !protocolType) return;
+    dispatch(
+      updateCredentialState({
+        protocolType: protocolType,
+        id: credentialOfferId,
+        useDemo,
+      }),
+    );
+  }, [credentialOfferId, protocolType, dispatch, useDemo]);
+
+  useRecordUpdates({
+    recordId: protocolType ? credentialOfferId : undefined,
+    isDone: isCredentialSent,
+    refresh: refreshCredentialState,
+    useDemo,
+  });
 
   return (
     <>
