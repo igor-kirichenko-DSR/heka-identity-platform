@@ -174,6 +174,23 @@ describe('CreateSchemaModal', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
+  test('registers each field once, without passing refs to TextInput', async () => {
+    const user = userEvent.setup();
+    const consoleError = jest.spyOn(console, 'error');
+    renderModal();
+
+    await user.type(screen.getByPlaceholderText('Schema name'), 'Passport');
+    await addCredential(user, 'number');
+
+    // A field spread from `register()` onto the Controller-based TextInput hands it a ref
+    // it cannot take, and registers the field a second time
+    const refWarnings = consoleError.mock.calls.filter((args) =>
+      String(args[0]).includes('Function components cannot be given refs'),
+    );
+    expect(refWarnings).toEqual([]);
+    expect(credentialInputs()[0]).toHaveValue('number');
+  });
+
   test('removes a credential field', async () => {
     const user = userEvent.setup();
     renderModal();
@@ -237,6 +254,51 @@ describe('CreateSchemaModal', () => {
     await waitFor(() =>
       expect(screen.getByPlaceholderText('Schema name')).toHaveValue(''),
     );
+  });
+
+  test('still uploads the default logo as a file after the form was reset', async () => {
+    const user = userEvent.setup();
+    const { api } = renderModal();
+    api.post.mockResolvedValue({ data: { id: 'schema-2', name: 'Visa' } });
+    await waitFor(() =>
+      expect(screen.getByRole('img', { name: 'Schema logo' })).toHaveAttribute(
+        'src',
+        'blob:logo',
+      ),
+    );
+
+    // Closing resets the form, as creating a schema does
+    await user.click(
+      screen.getAllByRole('button', { name: 'close button' })[1],
+    );
+    await user.type(screen.getByPlaceholderText('Schema name'), 'Visa');
+    await addCredential(user, 'number');
+    await waitFor(() => expect(createButton()).toBeEnabled());
+    await user.click(createButton());
+
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    const formData = api.post.mock.calls[0][1] as FormData;
+    const logo = formData.get('logo');
+    expect(logo).toBeInstanceOf(File);
+    expect((logo as File).name).toBe('default_image.jpg');
+  });
+
+  test('sends no logo when the default logo cannot be loaded', async () => {
+    const user = userEvent.setup();
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    global.fetch = jest.fn().mockRejectedValue(new Error('offline'));
+    const { api } = renderModal();
+    api.post.mockResolvedValue({ data: { id: 'schema-3', name: 'Visa' } });
+
+    await user.type(screen.getByPlaceholderText('Schema name'), 'Visa');
+    await addCredential(user, 'number');
+    await waitFor(() => expect(createButton()).toBeEnabled());
+    await user.click(createButton());
+
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    const formData = api.post.mock.calls[0][1] as FormData;
+    // Never the image path as a text field
+    expect(formData.has('logo')).toBe(false);
   });
 
   test('keeps working when the default logo cannot be loaded', async () => {

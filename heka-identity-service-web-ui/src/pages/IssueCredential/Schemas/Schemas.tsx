@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/app/providers/StoreProvider';
 import { RootState } from '@/app/providers/StoreProvider/config/store';
 import { CreateSchemaModal } from '@/components/CreateSchema/CreateSchema';
+import { useSortableSensors } from '@/components/Draggable/Draggable';
 import { NoItemFound } from '@/components/NoItemFound/NoItemFound';
 import { PlusButton } from '@/components/PlusButton';
 import { Schema } from '@/components/Schema/Schema';
@@ -77,6 +78,8 @@ export const Schemas = () => {
   const handleStatusFilterChange = useCallback((value: boolean) => {
     setShowActiveSchemas(value);
   }, []);
+
+  const sensors = useSortableSensors();
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
@@ -216,7 +219,10 @@ export const Schemas = () => {
             </DesktopView>
           )}
           {localSchemas.length > 0 && (
-            <DndContext onDragEnd={handleDragEnd}>
+            <DndContext
+              sensors={sensors}
+              onDragEnd={handleDragEnd}
+            >
               <SortableContext items={localSchemas}>
                 {localSchemas.map((schema) => (
                   <Schema

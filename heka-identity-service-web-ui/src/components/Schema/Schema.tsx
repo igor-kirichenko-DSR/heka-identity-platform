@@ -132,7 +132,10 @@ export const Schema = ({
           </div>
         )}
 
-        <DraggableArea sortable={sortable}>
+        <DraggableArea
+          sortable={sortable}
+          label={t('IssueCredential.schema.hints.move')}
+        >
           <div title={t('IssueCredential.schema.hints.move')}>
             <EqualIcon
               className={cls.schemaEqualIcon}

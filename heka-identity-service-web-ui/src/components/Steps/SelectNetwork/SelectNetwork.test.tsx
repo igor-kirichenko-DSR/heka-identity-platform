@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 
 import { ProtocolType } from '@/entities/Schema';
+import { DidDocument } from '@/entities/User/model/types/user';
 import {
   credentialConfig,
   INDY_DID,
@@ -24,12 +25,16 @@ jest.mock('@/components/Screen/Screen', () => ({
 const Harness = ({
   withDid = true,
   didOptional,
+  initialNetwork,
+  initialDid,
 }: {
   withDid?: boolean;
   didOptional?: boolean;
+  initialNetwork?: string;
+  initialDid?: string;
 }) => {
-  const [network, setNetwork] = useState<string>();
-  const [did, setDid] = useState<string>();
+  const [network, setNetwork] = useState<string | undefined>(initialNetwork);
+  const [did, setDid] = useState<string | undefined>(initialDid);
   return (
     <>
       <SelectNetwork
@@ -48,9 +53,12 @@ const Harness = ({
   );
 };
 
-const renderStep = (props: React.ComponentProps<typeof Harness> = {}) => {
+const renderStep = (
+  props: React.ComponentProps<typeof Harness> = {},
+  dids?: DidDocument[],
+) => {
   const api = createMockApi();
-  routeAgencyGets(api);
+  routeAgencyGets(api, { dids });
   renderWithProviders(<Harness {...props} />, {
     api,
     initialState: {
@@ -103,11 +111,50 @@ describe('SelectNetwork', () => {
     await user.click(screen.getByRole('button', { name: /^indy/ }));
     await user.click(await screen.findByRole('option', { name: 'hedera' }));
 
+    // hedera has no DIDs: the indy DID must not stay selected
     await waitFor(() =>
-      expect(screen.getByTestId('selection')).toHaveTextContent(/^hedera\|/),
+      expect(screen.getByTestId('selection')).toHaveTextContent(
+        'hedera|undefined',
+      ),
     );
     expect(api.get).toHaveBeenCalledWith('/dids', {
       params: { own: true, method: 'hedera' },
     });
+    expect(screen.getByRole('button', { name: /Next/ })).toBeDisabled();
+  });
+
+  test('clears the DID after switching to a network without DIDs', async () => {
+    const { user } = renderStep();
+    await waitFor(() =>
+      expect(screen.getByTestId('selection')).toHaveTextContent(
+        `indy|${INDY_DID}`,
+      ),
+    );
+
+    await user.click(screen.getByText('hedera'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('selection')).toHaveTextContent(
+        'hedera|undefined',
+      ),
+    );
+    expect(screen.queryByText(INDY_DID)).toBeNull();
+    expect(screen.getByRole('button', { name: /Next/ })).toBeDisabled();
+  });
+
+  test('keeps a previously chosen DID when the step is shown again', async () => {
+    const second = 'did:indy:test:issuer2';
+    const { api } = renderStep({ initialNetwork: 'indy', initialDid: second }, [
+      { id: INDY_DID, verificationMethod: [] },
+      { id: second, verificationMethod: [] },
+    ] as DidDocument[]);
+
+    await waitFor(() =>
+      expect(api.get).toHaveBeenCalledWith('/dids', {
+        params: { own: true, method: 'indy' },
+      }),
+    );
+    expect(await screen.findByText(second)).toBeInTheDocument();
+    expect(screen.getByTestId('selection')).toHaveTextContent(`indy|${second}`);
   });
 });

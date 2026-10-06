@@ -116,17 +116,17 @@ export const userSlice = buildSlice({
         state.isLoading = false;
         state.error = action.payload ?? action.error.message;
       })
-      .addCase(
-        fetchDidDocuments.fulfilled,
-        (state, action: PayloadAction<GetDidDocumentsResult>) => {
-          state.isLoading = false;
-          state.error = undefined;
-          state.data = {
-            ...(state.data ?? {}),
-            didDocuments: action.payload.didDocuments,
-          };
-        },
-      )
+      .addCase(fetchDidDocuments.fulfilled, (state, action) => {
+        const result: GetDidDocumentsResult = action.payload;
+        state.isLoading = false;
+        state.error = undefined;
+        state.data = {
+          ...(state.data ?? {}),
+          didDocuments: result.didDocuments,
+          // Lets the UI tell which network the DIDs belong to
+          didDocumentsMethod: action.meta.arg.method,
+        };
+      })
       .addCase(fetchDidDocuments.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload ?? action.error.message;

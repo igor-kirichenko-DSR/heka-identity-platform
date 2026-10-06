@@ -73,6 +73,7 @@ export const Template = ({
         </Column>
         <DraggableArea
           sortable={sortable}
+          label={t('Template.hints.move')}
           className={classNames(cls.dragIconWrapper, {}, [cls.iconWrapper])}
         >
           <div title={t('Template.hints.move')}>

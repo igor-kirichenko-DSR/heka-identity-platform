@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import { useSortableSensors } from '@/components/Draggable/Draggable';
 import { NoItemFound } from '@/components/NoItemFound/NoItemFound';
 import { DesktopView } from '@/components/Screen/Screen';
 import { Template } from '@/components/Template/Template';
@@ -82,6 +83,8 @@ export const Templates = ({
     setDeletingTemplateId(templateId);
     confirm();
   };
+
+  const sensors = useSortableSensors();
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
@@ -168,7 +171,10 @@ export const Templates = ({
             </DesktopView>
           )}
           {filteredTemplates.length > 0 && (
-            <DndContext onDragEnd={handleDragEnd}>
+            <DndContext
+              sensors={sensors}
+              onDragEnd={handleDragEnd}
+            >
               <SortableContext items={filteredTemplates}>
                 {filteredTemplates.map((template) => (
                   <Template
