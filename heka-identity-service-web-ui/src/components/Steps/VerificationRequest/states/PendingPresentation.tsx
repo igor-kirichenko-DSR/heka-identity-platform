@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
@@ -8,13 +8,13 @@ import {
 } from '@/components/ExistingConnection';
 import { CopyLink } from '@/components/Link/CopyLink';
 import { QRCode } from '@/components/QRCode';
-import { pollTimeout } from '@/const/behaviour';
 import {
   getIsPresentationCompleted,
   getPresentationRequestId,
 } from '@/entities/Presentation/model/selectors/presentationSelector';
 import { updatePresentationState } from '@/entities/Presentation/model/services/updatePresentationState';
 import { ProtocolType } from '@/entities/Schema/model/types/schema';
+import { useRecordUpdates } from '@/shared/hooks/recordUpdates';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { Column, Row } from '@/shared/ui/Grid';
 import { Loader } from '@/shared/ui/Loader/Loader';
@@ -41,26 +41,23 @@ export const PendingPresentation = ({
   const presentationRequestId = useSelector(getPresentationRequestId);
   const isPresentationCompleted = useSelector(getIsPresentationCompleted);
 
-  useEffect(() => {
-    if (presentationRequestId && protocolType && !isPresentationCompleted) {
-      const polling = setInterval(() => {
-        dispatch(
-          updatePresentationState({
-            id: presentationRequestId,
-            protocolType: protocolType,
-            useDemo,
-          }),
-        );
-      }, pollTimeout);
-      return () => clearInterval(polling);
-    }
-  }, [
-    presentationRequestId,
-    isPresentationCompleted,
-    protocolType,
-    dispatch,
+  const refreshPresentationState = useCallback(() => {
+    if (!presentationRequestId || !protocolType) return;
+    dispatch(
+      updatePresentationState({
+        id: presentationRequestId,
+        protocolType: protocolType,
+        useDemo,
+      }),
+    );
+  }, [presentationRequestId, protocolType, dispatch, useDemo]);
+
+  useRecordUpdates({
+    recordId: protocolType ? presentationRequestId : undefined,
+    isDone: isPresentationCompleted,
+    refresh: refreshPresentationState,
     useDemo,
-  ]);
+  });
 
   return (
     <Column className={cls.requestContent}>

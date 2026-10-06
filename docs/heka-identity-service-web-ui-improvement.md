@@ -1,6 +1,6 @@
 # Heka Identity Service Web UI improvements
 
-Status: plan, 2026-10-02. Part 1 implemented on 2026-10-02 (manual verification pending); Parts 2 and 3 not started. Progress is tracked in the Status columns of section 8 (Part 1), section 16 (Part 2) and section 25 (Part 3).
+Status: plan, 2026-10-02. Parts 1 and 2 implemented on 2026-10-02 (manual verification pending for both); Part 3 not started. Progress is tracked in the Status columns of section 8 (Part 1), section 16 (Part 2) and section 25 (Part 3).
 
 This plan has three independent parts. Each has its own steps and PRs, none depends on another, and they can be built in any order or in parallel.
 
@@ -250,10 +250,10 @@ No new configuration and no change to the REST API.
 | File | Change |
 |---|---|
 | `shared/lib/notifications/types.ts` (new) | `NotificationMessage` union covering only what the UI reads: `type`, `state`, and the record id (`id` for DIDComm, `issuanceSession.id` / `verificationSession.id` for OpenID4VC). `getRecordId(message)` helper. |
-| `shared/lib/notifications/notificationClient.ts` (new) | Module-level client. `connect()`, `disconnect()`, `subscribe(listener) => unsubscribe`, `onStatusChange`. URL derived from `REACT_APP_AGENCY_ENDPOINT` (`http` to `ws`, `https` to `wss`, path `/notifications`); no new environment variable. Token from `currentAccessToken()`. Reconnects with backoff (1 s, doubling, capped at 30 s). On close code `4001` or `3000` it calls `refreshSessionToken()` first and stops if there is no session. Parses messages defensively and ignores unknown types. |
-| `app/App.tsx` (or the provider that owns the session) | Call `connect()` when a session exists and `disconnect()` on sign-out. |
+| `shared/lib/notifications/notificationClient.ts` (new) | Module-level client. `connect()`, `disconnect()`, `subscribe(listener) => unsubscribe`, `onStatusChange`. URL derived from `REACT_APP_AGENCY_ENDPOINT` (`http` to `ws`, `https` to `wss`, path `/notifications`); no new environment variable. Token from `getSessionAccessToken()`. Falls back to the page origin when `REACT_APP_AGENCY_ENDPOINT` is empty. Reconnects with backoff (1 s, doubling, capped at 30 s). On close code `4001` or `3000` it calls `refreshSessionToken()` first and stops if there is no session. Parses messages defensively and ignores unknown types. |
+| `shared/lib/notifications/NotificationsConnector.tsx` (new), rendered in `app/App.tsx` | Calls `connect()` while `getUserIsSignedIn` is true and `disconnect()` when it turns false or on unmount. |
 | `entities/User` | No change: `getAgencyUser` already loads `messageDeliveryType` from `GET /user` into the user slice. Add a selector for it if none exists, so the hook can tell whether pushes will arrive. |
-| `shared/hooks/useRecordUpdates.ts` (new) | `useRecordUpdates({ recordId, isDone, refresh, useDemo })`. Subscribes to the client and calls `refresh()` when a message for `recordId` arrives. Runs a fallback interval: 2 s if `useDemo`, the socket is not open, or `messageDeliveryType === 'WebHook'`; 15 s otherwise. Calls `refresh()` once on every switch to "open". Stops everything when `isDone` is true. |
+| `shared/hooks/recordUpdates.ts` (new) | `useRecordUpdates({ recordId, isDone, refresh, useDemo })`. Subscribes to the client and calls `refresh()` when a message for `recordId` arrives. Runs a fallback interval: 2 s if `useDemo`, the socket is not open, or `messageDeliveryType === 'WebHook'`; 15 s otherwise. Calls `refresh()` once on every switch to "open". Stops everything when `isDone` is true. |
 | `const/behaviour.ts` | Add `safetyPollTimeout = 15000` next to `pollTimeout`. |
 | `components/Steps/CredentialOffer/states/PendingCredential.tsx` | Replace the `setInterval` effect with `useRecordUpdates({ recordId: credentialOfferId, isDone: isCredentialSent, refresh: () => dispatch(updateCredentialState(...)), useDemo })`. |
 | `components/Steps/VerificationRequest/states/PendingPresentation.tsx` | Same, with `presentationRequestId`, `isPresentationCompleted` and `updatePresentationState`. |
@@ -278,7 +278,7 @@ Unit tests:
 
 1. Identity service: `notification.gateway.test.ts` (section 13.1) and an `auth.service` test for subprotocol token extraction.
 2. Web UI `notificationClient.test.ts` with a mock `WebSocket`: builds the `ws`/`wss` URL, sends the subprotocol, reconnects with backoff, refreshes the token on `4001`, delivers parsed messages to subscribers, ignores malformed ones.
-3. Web UI `useRecordUpdates.test.ts` with fake timers: refresh on matching event only; 2 s interval when closed, demo or WebHook; 15 s when open; one refresh on reconnect; nothing after `isDone`.
+3. Web UI `recordUpdates.test.tsx` with fake timers: refresh on matching event only; 2 s interval when closed, demo or WebHook; 15 s when open; one refresh on reconnect; nothing after `isDone`.
 
 Manual:
 
@@ -295,13 +295,13 @@ Manual:
 
 | # | Step | Status |
 |---|---|---|
-| 1 | Identity service: subprotocol auth, multi-socket map, expiry close, silent `send`, trace log fix, tests | todo |
-| 2 | Identity service: verify OpenID4VC events reach the listener for tenant agents; fix if needed | todo |
-| 3 | Web UI: notification types and client, connect/disconnect with the session, tests | todo |
-| 4 | Web UI: `messageDeliveryType` selector for the hook | todo |
-| 5 | Web UI: `useRecordUpdates` hook and tests | todo |
-| 6 | Web UI: switch `PendingCredential` and `PendingPresentation` to the hook | todo |
-| 7 | Manual verification (section 15), lint and unit tests in both packages | todo |
+| 1 | Identity service: subprotocol auth, multi-socket map, expiry close, silent `send`, trace log fix, tests | done |
+| 2 | Identity service: verify OpenID4VC events reach the listener for tenant agents; fix if needed | done: verified by code, no fix needed (tenant agents use a child container of the root, so they share its `EventEmitter`) |
+| 3 | Web UI: notification types and client, connect/disconnect with the session, tests | done |
+| 4 | Web UI: `messageDeliveryType` selector for the hook | done |
+| 5 | Web UI: `useRecordUpdates` hook and tests | done |
+| 6 | Web UI: switch `PendingCredential` and `PendingPresentation` to the hook | done |
+| 7 | Manual verification (section 15). Lint, type-check and both unit suites pass (identity service 543, web UI 96) | manual verification todo |
 
 Steps 1 and 2 are one identity service PR and must merge first, since a browser cannot authenticate to the gateway before it. Steps 3 to 7 are one web UI PR. The UI PR is safe to deploy against an older identity service: the socket fails to authenticate and the hook keeps polling at 2 s.
 
