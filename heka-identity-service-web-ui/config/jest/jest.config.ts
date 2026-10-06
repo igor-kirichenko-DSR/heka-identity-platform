@@ -22,8 +22,23 @@ const config: Config = {
     '!src/**/*.{test,spec}.{ts,tsx}',
     '!src/**/*.stories.{ts,tsx}',
     '!src/**/*.d.ts',
+    // Test-only helpers and fixtures
+    '!src/shared/lib/tests/**',
+    '!src/**/testUtils/**',
+    '!src/**/testUtils.{ts,tsx}',
+    '!src/**/*TestStubs.{ts,tsx}',
   ],
   coveragePathIgnorePatterns: ['/node_modules/'],
+  // `yarn test:coverage` fails when coverage drops below these floors (current: ~97% lines,
+  // ~82% branches, ~86% functions)
+  coverageThreshold: {
+    global: {
+      lines: 90,
+      statements: 90,
+      branches: 75,
+      functions: 80,
+    },
+  },
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node'],
   moduleDirectories: ['node_modules'],
   modulePaths: ['<rootDir>src'],
@@ -32,6 +47,9 @@ const config: Config = {
   setupFilesAfterEnv: ['<rootDir>config/jest/setupTests.ts'],
   moduleNameMapper: {
     '\\.s?css$': 'identity-obj-proxy',
+    // SVGs are imported as React components (svgr), other assets as URLs
+    '\\.svg$': '<rootDir>config/jest/jestEmptyComponent.tsx',
+    '\\.(png|jpe?g|gif|woff2?)$': '<rootDir>config/jest/fileMock.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   reporters: [
