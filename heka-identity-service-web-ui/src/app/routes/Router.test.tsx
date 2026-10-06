@@ -64,7 +64,9 @@ const renderRouter = (
   window.history.pushState({}, '', path);
   return render(
     <Provider store={createTestStore(userState(signedIn))}>
-      <AuthSessionContext.Provider value={createTestSession(session)}>
+      <AuthSessionContext.Provider
+        value={createTestSession({ isAuthenticated: signedIn, ...session })}
+      >
         <Router />
       </AuthSessionContext.Provider>
     </Provider>,
@@ -98,6 +100,14 @@ describe('Router', () => {
     expect(screen.getByText(`${page} page`)).toBeInTheDocument();
     // Pages are wrapped into the authenticated layout
     expect(screen.getByText('Issue credential')).toBeInTheDocument();
+  });
+
+  test('a reloaded deep link stays put before Redux mirrors the session', () => {
+    // On reload the OIDC session is restored first; the Redux user slice catches up in an effect
+    renderRouter('/profile', false, { isAuthenticated: true });
+
+    expect(screen.getByText('profile page')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/profile');
   });
 
   test('signed in, unknown routes redirect home', () => {

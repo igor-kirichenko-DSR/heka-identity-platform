@@ -1,8 +1,9 @@
-import { PayloadAction } from '@reduxjs/toolkit';
+import { isAnyOf, PayloadAction } from '@reduxjs/toolkit';
 
 import { buildSlice } from '@/shared/lib/store';
 
 import { createNewSchema } from '../services/createSchema';
+import { getDemoSchemaList } from '../services/getDemoSchemaList';
 import { getSchemaList } from '../services/getSchemaList';
 import { getSingleSchema } from '../services/getSingleSchema';
 import { registerSchema } from '../services/registerSchema';
@@ -33,25 +34,6 @@ export const schemasSlice = buildSlice({
   },
   extraReducers: (builder) =>
     builder
-      // List of schema
-      .addCase(getSchemaList.pending, (state) => {
-        state.isLoading = true;
-        state.error = undefined;
-        state.schemas = undefined;
-      })
-      .addCase(
-        getSchemaList.fulfilled,
-        (state, action: PayloadAction<Schema[]>) => {
-          state.schemas = action.payload;
-          state.isLoading = false;
-          state.error = undefined;
-        },
-      )
-      .addCase(getSchemaList.rejected, (state, action) => {
-        state.isLoading = false;
-        state.schemas = undefined;
-        state.error = action.payload ?? action.error.message;
-      })
       // Single schema
       .addCase(getSingleSchema.pending, (state) => {
         state.isLoading = true;
@@ -127,7 +109,33 @@ export const schemasSlice = buildSlice({
       .addCase(updateSchemaView.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload ?? action.error.message;
-      }),
+      })
+      // List of schemas: the tenant's and the demo tenant's share the same state
+      // (matchers must follow all addCase calls)
+      .addMatcher(
+        isAnyOf(getSchemaList.pending, getDemoSchemaList.pending),
+        (state) => {
+          state.isLoading = true;
+          state.error = undefined;
+          state.schemas = undefined;
+        },
+      )
+      .addMatcher(
+        isAnyOf(getSchemaList.fulfilled, getDemoSchemaList.fulfilled),
+        (state, action: PayloadAction<Schema[]>) => {
+          state.schemas = action.payload;
+          state.isLoading = false;
+          state.error = undefined;
+        },
+      )
+      .addMatcher(
+        isAnyOf(getSchemaList.rejected, getDemoSchemaList.rejected),
+        (state, action) => {
+          state.isLoading = false;
+          state.schemas = undefined;
+          state.error = action.payload ?? action.error.message;
+        },
+      ),
 });
 
 export const {

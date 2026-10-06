@@ -93,6 +93,10 @@ describe('getDemoSchemaList', () => {
     expect(api.get).not.toHaveBeenCalled();
     expect(demoApi.get).toHaveBeenCalledWith(agencyEndpoints.getSchemaList);
     expect(action.payload).toEqual([schema('demo')]);
+    // Its own action type, stored in the same list state as the tenant's schemas
+    expect(action.type).toBe('schema/getDemoSchemaList/fulfilled');
+    expect(store.getState().schemas.schemas).toEqual([schema('demo')]);
+    expect(store.getState().schemas.isLoading).toBe(false);
   });
 
   test('rejects with the server message', async () => {
@@ -103,6 +107,8 @@ describe('getDemoSchemaList', () => {
     const action = await store.dispatch(getDemoSchemaList());
 
     expect(action.payload).toBe('demo down');
+    expect(store.getState().schemas.error).toBe('demo down');
+    expect(store.getState().schemas.schemas).toBeUndefined();
   });
 });
 

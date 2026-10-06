@@ -163,7 +163,14 @@ describe('offerCredential', () => {
     async (protocolType) => {
       const api = createMockApi();
       const demoApi = createMockApi();
-      demoApi.get.mockResolvedValue({ data: { credentials: {} } });
+      demoApi.get.mockResolvedValue({
+        data: {
+          credentials: {
+            supportedCredentialId: 'sc-1',
+            credentialDefinitionId: 'cred-def-1',
+          },
+        },
+      });
       demoApi.post.mockResolvedValue({
         data: { id: 'x', state: 'offer-sent', issuanceSession: { id: 'x' } },
       });
@@ -179,6 +186,32 @@ describe('offerCredential', () => {
       expect(api.get).not.toHaveBeenCalled();
       expect(api.post).not.toHaveBeenCalled();
       expect(demoApi.post).toHaveBeenCalled();
+    },
+  );
+
+  test.each([
+    [
+      ProtocolType.Oid4vc,
+      oidParams,
+      'Schema registration has no supported credential for OpenID4VC issuance',
+    ],
+    [
+      ProtocolType.Aries,
+      ariesParams,
+      'Schema registration has no credential definition',
+    ],
+  ])(
+    '%s: rejects without posting when the registration lacks the credential id',
+    async (_protocol, params, message) => {
+      const api = createMockApi();
+      api.get.mockResolvedValue({ data: { credentials: { issuerId: 'i' } } });
+      const store = createTestStore({}, api);
+
+      const action = await store.dispatch(offerCredential(params));
+
+      expect(api.post).not.toHaveBeenCalled();
+      expect(action.payload).toBe(message);
+      expect(toast.error).toHaveBeenCalledWith(message);
     },
   );
 

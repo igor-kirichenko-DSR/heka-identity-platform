@@ -48,6 +48,45 @@ describe('handleError', () => {
     expect(rejectWithValue).toHaveBeenCalledWith('Unknown server error');
   });
 
+  test('falls back to a generic message when the response has no body', () => {
+    const rejectWithValue = jest.fn();
+
+    handleError(
+      { name: 'AxiosError', message: 'x', response: { status: 502 } } as Error,
+      rejectWithValue,
+    );
+
+    expect(rejectWithValue).toHaveBeenCalledWith('Unknown server error');
+  });
+
+  test('keeps the message of a client-side error', () => {
+    const rejectWithValue = jest.fn();
+
+    handleError(new Error('Schema is not registered'), rejectWithValue);
+
+    expect(toast.error).toHaveBeenCalledWith('Schema is not registered');
+    expect(rejectWithValue).toHaveBeenCalledWith('Schema is not registered');
+  });
+
+  test('keeps the message of a request that got no response', () => {
+    const rejectWithValue = jest.fn();
+    const networkError = Object.assign(new Error('Network Error'), {
+      isAxiosError: true,
+    });
+
+    handleError(networkError, rejectWithValue);
+
+    expect(rejectWithValue).toHaveBeenCalledWith('Network Error');
+  });
+
+  test('falls back to a generic message for an error without a message', () => {
+    const rejectWithValue = jest.fn();
+
+    handleError(new Error(''), rejectWithValue);
+
+    expect(rejectWithValue).toHaveBeenCalledWith('Unknown server error');
+  });
+
   test('does not toast an empty message', () => {
     const rejectWithValue = jest.fn();
 

@@ -48,16 +48,14 @@ export const presentationSlice = buildSlice({
         state.error = action.payload ?? action.error.message;
         state.presentationSession = undefined;
       })
-      .addCase(
-        updatePresentationState.fulfilled,
-        (state, action: PayloadAction<CheckPresentationStateResult>) => {
-          if (state.presentationSession) {
-            state.presentationSession.state = action.payload.state;
-            state.presentationSession.sharedAttributes =
-              action.payload.sharedAttributes;
-          }
-        },
-      ),
+      .addCase(updatePresentationState.fulfilled, (state, action) => {
+        const session = state.presentationSession;
+        // Ignore answers for a request that has since been replaced
+        if (!session || session.id !== action.meta.arg.id) return;
+        const result: CheckPresentationStateResult = action.payload;
+        session.state = result.state;
+        session.sharedAttributes = result.sharedAttributes;
+      }),
 });
 
 export const {

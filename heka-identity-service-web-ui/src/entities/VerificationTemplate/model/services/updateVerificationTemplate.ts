@@ -6,6 +6,8 @@ import { CredentialFormat } from '@/entities/Schema/model/types/schema';
 import { agencyEndpoints } from '@/shared/api/config/endpoints';
 import { handleError } from '@/shared/api/utils/error';
 
+import { toTemplateFields } from '../utils/templateFields';
+
 export interface UpdateVerificationTemplateParams {
   templateId: string;
   params: {
@@ -42,14 +44,7 @@ export const updateVerificationTemplate = createAsyncThunk<
 
     try {
       const fields =
-        schema && attributes
-          ? attributes.map((attribute: string) => {
-              const field = schema.fields?.find(
-                (field) => field.name === attribute,
-              );
-              return { schemaFieldId: field?.id };
-            })
-          : undefined;
+        schema && attributes ? toTemplateFields(schema, attributes) : undefined;
 
       await extra.agencyApi.patch(
         agencyEndpoints.updateVerificationTemplate(templateId),

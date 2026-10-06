@@ -51,14 +51,13 @@ export const credentialSlice = buildSlice({
         state.isLoading = false;
         state.issuanceSession = undefined;
       })
-      .addCase(
-        updateCredentialState.fulfilled,
-        (state, action: PayloadAction<UpdateCredentialStateResult>) => {
-          if (state.issuanceSession) {
-            state.issuanceSession.state = action.payload.state;
-          }
-        },
-      )
+      .addCase(updateCredentialState.fulfilled, (state, action) => {
+        const session = state.issuanceSession;
+        // Ignore answers for an offer that has since been replaced
+        if (!session || session.id !== action.meta.arg.id) return;
+        const result: UpdateCredentialStateResult = action.payload;
+        session.state = result.state;
+      })
       .addCase(getCredentialConfig.fulfilled, (state, action) => {
         state.credentialsConfig = action.payload;
       }),

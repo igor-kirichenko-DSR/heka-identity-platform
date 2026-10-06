@@ -158,6 +158,20 @@ describe('createVerificationTemplate', () => {
     expect(getVerificationTemplatesIsMutating(store.getState())).toBe(false);
   });
 
+  test('rejects without posting when an attribute is not a schema field', async () => {
+    const api = createMockApi();
+    const store = createTestStore(loaded([template('t1')]), api);
+
+    const action = await store.dispatch(
+      createVerificationTemplate({ ...params, attributes: ['birth_date'] }),
+    );
+
+    expect(api.post).not.toHaveBeenCalled();
+    expect(action.payload).toBe(
+      'Attribute "birth_date" is not a field of schema "Passport"',
+    );
+  });
+
   test('records a mutation error on failure', async () => {
     const api = createMockApi();
     api.post.mockRejectedValue(apiError('name taken'));
@@ -205,6 +219,23 @@ describe('updateVerificationTemplate', () => {
         fields: [{ schemaFieldId: 'f1' }, { schemaFieldId: 'f2' }],
         previousTemplateId: undefined,
       },
+    );
+  });
+
+  test('rejects without patching when an attribute is not a schema field', async () => {
+    const api = createMockApi();
+    const store = createTestStore({}, api);
+
+    const action = await store.dispatch(
+      updateVerificationTemplate({
+        templateId: 't1',
+        params: { schema, attributes: ['given_name', 'birth_date'] },
+      }),
+    );
+
+    expect(api.patch).not.toHaveBeenCalled();
+    expect(action.payload).toBe(
+      'Attribute "birth_date" is not a field of schema "Passport"',
     );
   });
 
