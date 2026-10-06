@@ -39,6 +39,18 @@ describe('Template', () => {
     expect(props.onClick).toHaveBeenCalledWith('tpl-1');
   });
 
+  test('opens the template from the keyboard', async () => {
+    const user = userEvent.setup();
+    const props = renderTemplate();
+
+    const card = screen.getByRole('button', { name: 'KYC basic' });
+    expect(card).toHaveAttribute('tabindex', '0');
+    card.focus();
+    await user.keyboard('{Enter}');
+
+    expect(props.onClick).toHaveBeenCalledWith('tpl-1');
+  });
+
   test('edits the template from its menu', async () => {
     const user = userEvent.setup();
     const props = renderTemplate();

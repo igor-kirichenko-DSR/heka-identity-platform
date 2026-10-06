@@ -2,17 +2,16 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useForm } from 'react-hook-form';
 
-// Both visibility icons resolve to the same SVG stub module; forward clicks so the toggle works
+// Both visibility icons resolve to the same SVG stub module; render a span that keeps the
+// icon's props (role, tabIndex, aria-label, handlers), so the toggle can be found and operated
 jest.mock('@/shared/assets/icons/visibility-off.svg', () => ({
   __esModule: true,
-  default: (props: { onClick?: () => void }) => (
-    <button
-      type="button"
-      aria-label="toggle visibility"
-      onClick={props.onClick}
-    />
+  default: (props: React.HTMLAttributes<HTMLSpanElement>) => (
+    <span {...props} />
   ),
 }));
+
+import '@/translations';
 
 import { TextInput } from './TextInput';
 
@@ -78,10 +77,25 @@ describe('TextInput', () => {
     const input = screen.getByPlaceholderText('Secret');
     expect(input).toHaveAttribute('type', 'password');
 
-    await user.click(screen.getByRole('button', { name: 'toggle visibility' }));
+    await user.click(screen.getByRole('button', { name: 'Show text' }));
     expect(input).toHaveAttribute('type', 'text');
 
-    await user.click(screen.getByRole('button', { name: 'toggle visibility' }));
+    await user.click(screen.getByRole('button', { name: 'Hide text' }));
+    expect(input).toHaveAttribute('type', 'password');
+  });
+
+  test('toggles visibility from the keyboard', async () => {
+    const user = userEvent.setup();
+
+    render(<Harness hideText />);
+    const input = screen.getByPlaceholderText('Secret');
+
+    screen.getByRole('button', { name: 'Show text' }).focus();
+    await user.keyboard('{Enter}');
+    expect(input).toHaveAttribute('type', 'text');
+
+    screen.getByRole('button', { name: 'Hide text' }).focus();
+    await user.keyboard(' ');
     expect(input).toHaveAttribute('type', 'password');
   });
 });

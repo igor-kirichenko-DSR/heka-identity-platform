@@ -94,6 +94,27 @@ describe('PanelWithMenu', () => {
     await user.click(screen.getByText('menu items'));
     expect(screen.queryByText('menu items')).not.toBeInTheDocument();
   });
+
+  test('opens the mobile menu from the keyboard', async () => {
+    setViewportWidth(400);
+    const user = userEvent.setup();
+
+    render(
+      <PanelWithMenu
+        title="Issue"
+        activeItem="Schemas"
+        panelMenu={<span>menu items</span>}
+      />,
+    );
+
+    const toggle = screen.getByRole('button', { name: 'Schemas' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    toggle.focus();
+    await user.keyboard('{Enter}');
+
+    expect(screen.getByText('menu items')).toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  });
 });
 
 describe('ColorizedPanel', () => {

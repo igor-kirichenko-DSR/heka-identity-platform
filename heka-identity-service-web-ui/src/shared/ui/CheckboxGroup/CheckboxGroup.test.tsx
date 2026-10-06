@@ -8,8 +8,35 @@ import { CheckboxGroup } from './CheckboxGroup';
 const options = ['name', 'age', 'city'];
 
 describe('CheckboxGroup', () => {
-  // Inputs carry no accessible label: the first checkbox is "Select all", then one per option
+  // The first checkbox is "Select all", then one per option
   const checkboxes = () => screen.getAllByRole('checkbox');
+
+  test('labels every checkbox, and its label text toggles it', async () => {
+    const user = userEvent.setup();
+    const setSelected = jest.fn();
+    const consoleError = jest.spyOn(console, 'error');
+
+    render(
+      <CheckboxGroup
+        options={options}
+        setSelected={setSelected}
+      />,
+    );
+
+    expect(
+      screen.getByRole('checkbox', { name: 'Select all' }),
+    ).not.toBeChecked();
+    const age = screen.getByRole('checkbox', { name: 'age' });
+    expect(age).not.toBeChecked();
+
+    await user.click(screen.getByText('age'));
+
+    expect(age).toBeChecked();
+    expect(setSelected).toHaveBeenLastCalledWith(['age']);
+    // Neither "uncontrolled to controlled" nor "cannot update a component while rendering"
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
 
   test('renders nothing without options', () => {
     const { container } = render(

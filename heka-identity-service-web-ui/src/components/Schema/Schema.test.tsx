@@ -6,19 +6,13 @@ import toast from 'react-hot-toast';
 
 import { renderWithProviders } from '@/shared/lib/tests/renderWithProviders';
 
-// The visibility icons share one SVG stub module; forward clicks so they can be toggled
+// All icons share one SVG stub module; render them as spans that keep their props (role,
+// tabIndex, aria-label, handlers) so the icon buttons can be found and operated
 jest.mock('@/shared/assets/icons/visibility-off.svg', () => ({
   __esModule: true,
-  default: (props: { onClick?: () => void }) =>
-    props.onClick ? (
-      <button
-        type="button"
-        aria-label="toggle visibility"
-        onClick={props.onClick}
-      />
-    ) : (
-      <span />
-    ),
+  default: (props: React.HTMLAttributes<HTMLSpanElement>) => (
+    <span {...props} />
+  ),
 }));
 
 import { Schema } from './Schema';
@@ -111,7 +105,7 @@ describe('Schema', () => {
     const schema = { id: 's1', name: 'Passport', isHidden: false };
     const { api, onVisibilityChanged } = renderSchema(schema);
 
-    await user.click(screen.getByRole('button', { name: 'toggle visibility' }));
+    await user.click(screen.getByRole('button', { name: 'Hide schema' }));
 
     await waitFor(() =>
       expect(onVisibilityChanged).toHaveBeenCalledWith(schema),
@@ -135,7 +129,7 @@ describe('Schema', () => {
     expect(screen.getByTitle('Show schema')).toBeInTheDocument();
     expect(screen.queryByTitle('Actions with schema')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'toggle visibility' }));
+    await user.click(screen.getByRole('button', { name: 'Show schema' }));
 
     await waitFor(() =>
       expect(onVisibilityChanged).toHaveBeenCalledWith(schema),
@@ -144,6 +138,32 @@ describe('Schema', () => {
       'false',
     );
     expect(success).toHaveBeenCalledWith('Schema was activated successfully');
+  });
+
+  test('is operable from the keyboard', async () => {
+    const user = userEvent.setup();
+    const schema = { id: 's1', name: 'Passport', isHidden: false };
+    const { onVisibilityChanged, onChange, onRegistrationsClick } =
+      renderSchema(schema);
+
+    const hide = screen.getByRole('button', { name: 'Hide schema' });
+    hide.focus();
+    await user.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(onVisibilityChanged).toHaveBeenCalledWith(schema),
+    );
+
+    screen.getByRole('button', { name: 'Passport' }).focus();
+    await user.keyboard(' ');
+    expect(onChange).toHaveBeenCalledWith('s1');
+
+    const registrations = screen.getByRole('button', {
+      name: 'Not registered',
+    });
+    expect(registrations).toHaveAttribute('tabindex', '0');
+    registrations.focus();
+    await user.keyboard('{Enter}');
+    expect(onRegistrationsClick).toHaveBeenCalledWith('s1');
   });
 
   test('keeps the schema when changing visibility fails', async () => {
@@ -157,7 +177,7 @@ describe('Schema', () => {
       response: { data: { message: 'Schema not found' } },
     });
 
-    await user.click(screen.getByRole('button', { name: 'toggle visibility' }));
+    await user.click(screen.getByRole('button', { name: 'Hide schema' }));
 
     await waitFor(() => expect(error).toHaveBeenCalledWith('Schema not found'));
     expect(onVisibilityChanged).not.toHaveBeenCalled();

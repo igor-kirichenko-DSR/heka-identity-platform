@@ -12,6 +12,7 @@ import { changeSchemaVisibility } from '@/entities/Schema/model/services/changeS
 import EqualIcon from '@/shared/assets/icons/equal.svg';
 import VisibilityOffIcon from '@/shared/assets/icons/visibility-off.svg';
 import VisibilityOutlineIcon from '@/shared/assets/icons/visibility-outline.svg';
+import { clickableProps } from '@/shared/lib/a11y/clickable';
 import { Column, Row } from '@/shared/ui/Grid';
 import { PopupMenu } from '@/shared/ui/PopupMenu';
 import { calculateBorderColor, getTextColor } from '@/shared/utils/colors';
@@ -93,7 +94,9 @@ export const Schema = ({
               <VisibilityOutlineIcon
                 className={cls.schemaVisibleOrOffIcon}
                 style={{ stroke: textColor, strokeWidth: 0.6 }}
-                onClick={handleVisibleIconToggle}
+                {...clickableProps(handleVisibleIconToggle, {
+                  label: t('IssueCredential.schema.hints.hide'),
+                })}
               />
             </div>
             <Column
@@ -127,7 +130,9 @@ export const Schema = ({
             <VisibilityOffIcon
               className={cls.schemaVisibleOrOffIcon}
               style={{ stroke: textColor, strokeWidth: 0.6 }}
-              onClick={handleVisibleIconToggle}
+              {...clickableProps(handleVisibleIconToggle, {
+                label: t('IssueCredential.schema.hints.show'),
+              })}
             />
           </div>
         )}
@@ -146,6 +151,8 @@ export const Schema = ({
       </Row>
 
       <Column className={cls.schemaBodyWrapper}>
+        {/* A mouse shortcut to the same action as the schema name below, which is the
+            keyboard-reachable control */}
         <Row
           className={cls.schemaLogoContainer}
           onClick={() => onChange(id)}
@@ -161,14 +168,14 @@ export const Schema = ({
           <div
             className={cls.schemaBottomTitle}
             title={name}
-            onClick={() => onChange(id)}
+            {...clickableProps(() => onChange(id))}
           >
             {name}
           </div>
           <div
             className={cls.schemaBottomRegister}
             title={t('IssueCredential.schema.hints.registrations')}
-            onClick={() => onRegistrationsClick(id)}
+            {...clickableProps(() => onRegistrationsClick(id))}
           >
             {registrationsCount && registrationsCount > 0
               ? t('IssueCredential.schema.registered', {

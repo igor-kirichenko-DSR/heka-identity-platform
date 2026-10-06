@@ -28,6 +28,9 @@ export default {
       menu: 'Menu',
       yes: 'Yes',
       cancel: 'Cancel',
+      create: 'Create',
+      showText: 'Show text',
+      hideText: 'Hide text',
     },
     imageAlts: {
       schemaLogo: 'Schema logo',

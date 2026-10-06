@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Draggable, DraggableArea } from '@/components/Draggable/Draggable';
 import EqualIcon from '@/shared/assets/icons/equal.svg';
+import { clickableProps } from '@/shared/lib/a11y/clickable';
 import { classNames } from '@/shared/lib/classNames';
 import { Column, Row } from '@/shared/ui/Grid';
 import { PopupMenu } from '@/shared/ui/PopupMenu';
@@ -82,8 +83,8 @@ export const Template = ({
         </DraggableArea>
       </Row>
       <Row
-        onClick={() => onClick(id)}
         className={cls.cardBody}
+        {...clickableProps(() => onClick(id), { label: title })}
       >
         <p
           className={cls.templateTitle}

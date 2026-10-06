@@ -63,6 +63,40 @@ describe('DesktopNavigationMenu', () => {
     expect(location()).toHaveTextContent(/^\/$/);
   });
 
+  test('menu items are links operable from the keyboard', async () => {
+    const user = userEvent.setup();
+
+    renderMenu(<DesktopNavigationMenu />, signedInState);
+
+    const issue = screen.getByRole('link', { name: 'Issue credential' });
+    issue.focus();
+    await user.keyboard('{Enter}');
+    expect(location()).toHaveTextContent('/issue-credential/templates');
+    expect(
+      screen.getByRole('link', { name: 'Issue credential' }),
+    ).toHaveAttribute('aria-current', 'page');
+
+    // Like a native link, Space does not follow it
+    screen.getByRole('link', { name: 'Verify credential' }).focus();
+    await user.keyboard(' ');
+    expect(location()).toHaveTextContent('/issue-credential/templates');
+  });
+
+  test('menu items are disabled for the keyboard while the wallet is prepared', async () => {
+    const user = userEvent.setup();
+
+    renderMenu(<DesktopNavigationMenu />, {
+      user: { ...signedInState.user!, isPreparing: true },
+    });
+
+    const issue = screen.getByRole('link', { name: 'Issue credential' });
+    expect(issue).toHaveAttribute('aria-disabled', 'true');
+    expect(issue).toHaveAttribute('tabindex', '-1');
+    issue.focus();
+    await user.keyboard('{Enter}');
+    expect(location()).toHaveTextContent(/^\/$/);
+  });
+
   test('opens the profile from the user button', async () => {
     const user = userEvent.setup();
 
