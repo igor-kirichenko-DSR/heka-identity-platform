@@ -72,7 +72,7 @@ export const FillCredentialData = ({
           schema: context.schema!,
           credentialValues: getValues(),
         }),
-      );
+      ).unwrap();
       navigate(ROUTES.ISSUE_CREDENTIAL_TEMPLATES);
     },
     [navigate, dispatch, context, getValues],
@@ -80,19 +80,24 @@ export const FillCredentialData = ({
 
   const onUpdateTemplate = useCallback(async () => {
     if (!context.templateId) return;
-    await dispatch(
-      updateIssuanceTemplate({
-        templateId: context.templateId,
-        params: {
-          protocolType: context.protocolType,
-          credentialType: context.credentialType,
-          network: context.network,
-          did: context.did,
-          schema: context.schema,
-          credentialValues: getValues(),
-        },
-      }),
-    );
+    try {
+      await dispatch(
+        updateIssuanceTemplate({
+          templateId: context.templateId,
+          params: {
+            protocolType: context.protocolType,
+            credentialType: context.credentialType,
+            network: context.network,
+            did: context.did,
+            schema: context.schema,
+            credentialValues: getValues(),
+          },
+        }),
+      ).unwrap();
+    } catch {
+      // The thunk has already shown the error; stay on the page
+      return;
+    }
     toast.success(
       t('Template.messages.updateSuccess', { name: context.templateName }),
     );

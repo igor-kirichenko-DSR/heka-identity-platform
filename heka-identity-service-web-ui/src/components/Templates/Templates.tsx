@@ -89,20 +89,26 @@ export const Templates = ({
 
       if (!over || active.id === over.id) return;
 
-      const oldIndex = event.active.data.current?.sortable.index ?? 0;
-      const newIndex = event.over?.data.current?.sortable.index ?? 0;
+      // Resolve positions by id in the full list: the sortable indexes refer to the
+      // filtered list while a search is active
+      const oldIndex = localTemplates.findIndex((t) => t.id === active.id);
+      const newIndex = localTemplates.findIndex((t) => t.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
 
-      let previousTemplateId;
-      setLocalTemplates((templates) => {
-        const updatedLocalTemplates = arrayMove(templates, oldIndex, newIndex);
-        previousTemplateId =
-          newIndex === 0 ? null : updatedLocalTemplates[newIndex - 1].id;
-        return updatedLocalTemplates;
-      });
+      const previousOrder = localTemplates;
+      const updatedOrder = arrayMove(localTemplates, oldIndex, newIndex);
+      const previousTemplateId =
+        newIndex === 0 ? null : updatedOrder[newIndex - 1].id;
+      setLocalTemplates(updatedOrder);
 
-      await changeTemplateOrder(String(active.id), previousTemplateId);
+      try {
+        await changeTemplateOrder(String(active.id), previousTemplateId);
+      } catch {
+        // The error has already been shown; put the list back as the server has it
+        setLocalTemplates(previousOrder);
+      }
     },
-    [changeTemplateOrder],
+    [changeTemplateOrder, localTemplates],
   );
 
   const onClickTemplate = useCallback(

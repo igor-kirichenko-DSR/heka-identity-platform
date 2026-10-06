@@ -37,11 +37,13 @@ const activeUser = (user: User | null | undefined): User | null =>
 
 interface SessionBridgeProps {
   profile: ProviderProfile;
+  userManager: UserManager;
 }
 
 /** Mirrors the OIDC client state into the Redux user slice and exposes the `AuthSession` contract. */
-const SessionBridge = ({
+export const SessionBridge = ({
   profile,
+  userManager,
   children,
 }: PropsWithChildren<SessionBridgeProps>) => {
   const auth = useAuth();
@@ -66,9 +68,12 @@ const SessionBridge = ({
   useEffect(() => {
     registerSessionBridge({
       getAccessToken: () => userRef.current?.access_token ?? null,
+      // Renew through the UserManager, not `auth.signinSilent()`: the context wrapper flags the
+      // renewal as a navigation (`isLoading`/`activeNavigator`), which would swap the whole router
+      // for the loader mid-flow. The provider still receives the renewed user via `userLoaded`.
       refresh: async () => {
         try {
-          const renewed = await auth.signinSilent();
+          const renewed = await userManager.signinSilent();
           return renewed?.access_token ?? null;
         } catch {
           return null;
@@ -84,7 +89,7 @@ const SessionBridge = ({
       },
     });
     return () => registerSessionBridge(null);
-  }, [auth]);
+  }, [auth, userManager]);
 
   const session = useMemo<AuthSession>(
     () => ({
@@ -153,7 +158,12 @@ export const OidcAuthProvider = ({ children }: PropsWithChildren) => {
       userManager={userManager}
       onSigninCallback={onSigninCallback}
     >
-      <SessionBridge profile={profile}>{children}</SessionBridge>
+      <SessionBridge
+        profile={profile}
+        userManager={userManager}
+      >
+        {children}
+      </SessionBridge>
     </AuthProvider>
   );
 };

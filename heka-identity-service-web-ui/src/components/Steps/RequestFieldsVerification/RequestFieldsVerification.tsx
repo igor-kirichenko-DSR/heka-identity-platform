@@ -93,7 +93,7 @@ export const RequestFieldsVerification = ({
           schema: context.schema!,
           attributes: selectedAttributes,
         }),
-      );
+      ).unwrap();
       navigate(ROUTES.VERIFY_CREDENTIAL_TEMPLATES);
     },
     [navigate, selectedAttributes, dispatch, context],
@@ -102,19 +102,24 @@ export const RequestFieldsVerification = ({
   const onUpdateTemplate = useCallback(async () => {
     if (!context.templateId) return;
 
-    await dispatch(
-      updateVerificationTemplate({
-        templateId: context.templateId,
-        params: {
-          protocolType: context.protocolType,
-          credentialType: context.credentialType,
-          network: context.network,
-          did: context.did,
-          schema: context.schema,
-          attributes: selectedAttributes,
-        },
-      }),
-    );
+    try {
+      await dispatch(
+        updateVerificationTemplate({
+          templateId: context.templateId,
+          params: {
+            protocolType: context.protocolType,
+            credentialType: context.credentialType,
+            network: context.network,
+            did: context.did,
+            schema: context.schema,
+            attributes: selectedAttributes,
+          },
+        }),
+      ).unwrap();
+    } catch {
+      // The thunk has already shown the error; stay on the page
+      return;
+    }
     toast.success(
       t('Template.messages.updateSuccess', { name: context.templateName }),
     );

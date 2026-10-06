@@ -99,15 +99,20 @@ export const VerificationFromTemplate = () => {
   const onSaveTemplate = useCallback(async () => {
     if (!verificationTemplate) return;
 
-    await dispatch(
-      updateVerificationTemplate({
-        templateId: verificationTemplate.id,
-        params: {
-          schema: verificationTemplate.schema,
-          attributes: selectedAttributes,
-        },
-      }),
-    );
+    try {
+      await dispatch(
+        updateVerificationTemplate({
+          templateId: verificationTemplate.id,
+          params: {
+            schema: verificationTemplate.schema,
+            attributes: selectedAttributes,
+          },
+        }),
+      ).unwrap();
+    } catch {
+      // The thunk has already shown the error
+      return;
+    }
 
     toast.success(t('VerificationFromTemplate.messages.success'));
   }, [verificationTemplate, dispatch, selectedAttributes, t]);

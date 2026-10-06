@@ -50,12 +50,17 @@ export const Schema = ({
   }, [isHidden, backgroundColor, textColor]);
 
   const handleVisibleIconToggle = useCallback(async () => {
-    await dispatch(
-      changeSchemaVisibility({
-        schemaId: String(schema.id),
-        params: { isHidden: !schema.isHidden },
-      }),
-    );
+    try {
+      await dispatch(
+        changeSchemaVisibility({
+          schemaId: String(schema.id),
+          params: { isHidden: !schema.isHidden },
+        }),
+      ).unwrap();
+    } catch {
+      // The thunk has already shown the error; keep the schema where it is
+      return;
+    }
     toast.success(
       t(
         schema.isHidden

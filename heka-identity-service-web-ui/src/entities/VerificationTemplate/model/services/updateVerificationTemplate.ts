@@ -16,7 +16,8 @@ export interface UpdateVerificationTemplateParams {
     did?: string;
     schema?: Schema;
     attributes?: string[];
-    previousTemplateId?: string;
+    // `null` moves the template to the top; omitted leaves the order unchanged
+    previousTemplateId?: string | null;
   };
 }
 

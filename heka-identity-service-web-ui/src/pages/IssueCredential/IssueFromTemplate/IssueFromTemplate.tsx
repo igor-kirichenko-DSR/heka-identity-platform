@@ -98,15 +98,20 @@ export const IssueFromTemplate = () => {
   const onSaveTemplate = useCallback(async () => {
     if (!issuanceTemplate) return;
 
-    await dispatch(
-      updateIssuanceTemplate({
-        templateId: issuanceTemplate.id,
-        params: {
-          schema: issuanceTemplate.schema,
-          credentialValues: getValues(),
-        },
-      }),
-    );
+    try {
+      await dispatch(
+        updateIssuanceTemplate({
+          templateId: issuanceTemplate.id,
+          params: {
+            schema: issuanceTemplate.schema,
+            credentialValues: getValues(),
+          },
+        }),
+      ).unwrap();
+    } catch {
+      // The thunk has already shown the error
+      return;
+    }
 
     toast.success(t('IssueFromTemplate.messages.success'));
   }, [dispatch, getValues, issuanceTemplate, t]);
