@@ -1,6 +1,6 @@
 # Root Docker Compose for the Heka Identity Platform
 
-Status: plan, 2026-09-30, revised 2026-10-01. Progress is tracked in the Status column of section 10; steps 0 to 2 are implemented, everything else is open.
+Status: plan, 2026-09-30, revised 2026-10-01. Progress is tracked in the Status column of section 10; steps 0 to 5 are implemented; 6, 7 and 8 are open.
 
 ## 1. Goal
 
@@ -83,7 +83,9 @@ Build context `./heka-identity-service`, existing Dockerfile. Environment, using
 | `FILE_STORAGE_FS_URL`                  | `${FILE_STORAGE_FS_URL:-http://localhost:3000}`                                               |
 | `FILE_STORAGE_FS_PUBLIC_URL`           | `${FILE_STORAGE_FS_PUBLIC_URL:-}`                                                             |
 
-Provider values (`OIDC_*`, `DEMO_*`) have no Keycloak default here on purpose (decision 8). Provider-independent values (agent endpoints, file URLs) keep a `localhost` default.
+Provider values (`OIDC_*`, `DEMO_*`) have no Keycloak default here on purpose (decision 8).
+
+Found while verifying step 3: the image failed in `yarn migration:up` with "Bad @mikro-orm/decorators version 7.2.2 ... same version as @mikro-orm/core (7.1.3)", and `yarn migration:pending` failed the same way on the host. The package pinned `@mikro-orm/cli` to exactly 7.1.3 while the runtime packages float with `^7.1.3` and were locked at 7.2.2, so the CLI carried its own nested core. Fix applied in `heka-identity-service/package.json` and `yarn.lock`: the CLI is pinned to the locked runtime version, 7.2.2. The exact pin is deliberate, a caret pulled the CLI to 7.2.3 and recreated the mismatch; whoever bumps the MikroORM runtime must bump the CLI pin with it. Provider-independent values (agent endpoints, file URLs) keep a `localhost` default.
 | `WEBHOOK_ALLOW_HTTP`, `WEBHOOK_ALLOW_PRIVATE_ADDRESSES`, `WEBHOOK_HTTP_TIMEOUT_MS` | pass-through with the dev Compose defaults          |
 
 Also: `extra_hosts: host.docker.internal:host-gateway`, ports 3000 to 3003, the existing curl healthcheck on `/health`, `depends_on: postgres: condition: service_healthy`.
@@ -144,6 +146,8 @@ The nginx config copy needs the file inside the build context; either duplicate 
 
 Implemented (step 2): the committed `heka-identity-service-web-ui/Dockerfile` follows this sketch with three additions: it copies `.yarn/plugins` as well, sets `HUSKY=0` because the package's `prepare` script runs husky and there is no git inside the build, and writes only non-empty `REACT_APP_*` args into `.env` so an empty arg behaves like an unset variable. A `# check=skip=SecretsUsedInArgOrEnv` directive silences BuildKit's heuristic that flags any arg named with `AUTH`. Standalone build: `docker build --build-context nginxconf=../docker/nginx -t heka-identity-web-ui .`
 
+Found while verifying step 3: the container healthcheck uses busybox `wget`, which resolves `localhost` to `::1` first, while `spa.conf` listened on IPv4 only, so both web UIs reported unhealthy. `spa.conf` now also listens on `[::]:80` and the healthchecks target `127.0.0.1`.
+
 Compose `build.args` map the `REACT_APP_*` variables of the `[P]` block and the demo DID straight from `.env`; `REACT_APP_AUTH_PROVIDER`, `REACT_APP_OIDC_AUTHORITY` and `REACT_APP_OIDC_CLIENT_ID` are required (`:?`), the agency endpoint defaults to `http://localhost:3000`. Port `8000:80`.
 
 `.dockerignore`: `node_modules`, `build`, `.env`, `reports`, `storybook-static`. Excluding `.env` matters: the developer's host `.env` must not leak into the image.
@@ -167,6 +171,12 @@ Lifted from `heka-sso-service/docker-compose.dev.yml` with paths rewritten to th
 
 Both services carry `profiles: [keycloak]`. After the migration of section 13 this is the only Compose definition of Keycloak in the repository; a developer who needs just Keycloak runs `docker compose --profile keycloak up -d keycloak` at the root, which also starts the theme builder as its dependency.
 
+Found while verifying step 4: the theme builder as defined in the SSO package Compose fails with `EXDEV: cross-device link not permitted`. keycloakify renames the finished jar from `node_modules/.cache` (the named `node_modules` volume) into `dist_keycloak` (the host bind mount), and `rename` cannot cross mount points. The root file therefore mounts the host source read-only at `/theme-src` and copies it, minus `node_modules`, `dist` and `dist_keycloak`, into one working volume (`keycloak-theme-work`) where install, cache and output share a mount. The host directory is no longer written to. The package Compose has the same latent failure; step 8c removes that definition.
+
+Also found: the healthcheck probe contains `Host: localhost`, which YAML reads as a mapping inside a plain list item; it is written as a folded block scalar.
+
+Verification notes: a browser login could not be driven from the shell, so the equivalent checks were used. The `heka-platform` authorize endpoint renders the Heka-themed login page for the web UI client and its redirect URI; a token from the demo broker (identity service to Keycloak through the host gateway) carries the expected issuer, audience and role and is accepted on `GET /user` while a missing or tampered token gets 401; the `heka` realm with `kc_idp_hint=heka-sso` redirects through Keycloak's broker endpoint to the bridge's `/authorize` and on to `/interaction/<id>`. Keycloak sets its auth-session cookies with the `Secure` attribute, which curl drops over http while browsers accept it for localhost; the chain was followed by forwarding the cookies by hand.
+
 ## 5. Root `.env.example`
 
 ### 5.1 Two IdP roles, switched independently
@@ -183,24 +193,30 @@ Rules that make the file predictable:
 - The root Compose file has **no provider-specific defaults**. Every provider value comes from `.env`; required ones are declared `${VAR:?...}` so a missing value fails at `docker compose config` with the variable name instead of silently pointing at the wrong provider. `cp .env.example .env` is therefore mandatory.
 - Each role has one **selector variable** that the web UI already understands, `REACT_APP_AUTH_PROVIDER` for the platform role and `VITE_AUTH_PROVIDER` for the demo role. The selector does nothing by itself in Compose; it is the first line of each block so a reader sees which block is active.
 - The file has **two provider sections, Keycloak first and active, Auth0 second and commented out**. Each section repeats the same two role blocks with the same variable names. Switching a role means commenting out its block in one section and uncommenting the same block in the other; nothing else moves.
-- Every variable carries the container it reaches, and whether a change needs `up -d` (runtime) or `up -d --build <service>` (baked into a web UI image).
+- Every variable carries the container it reaches, and whether a change needs `up -d` (runtime) or `up -d --build <service>` (baked into a web UI image). A line that sets an **empty** value carries no inline comment, the comment goes on the line above: Compose's env parser reads `VAR=   # text` as the value `# text` (found while verifying step 3).
 - Values shared by both providers (bootstrap, tunnels, SSO issuer) sit in a third section after the two provider sections.
 
 ### 5.2 File layout
 
+Implemented (step 5): the committed root `.env.example` is this block verbatim.
+
 ```
 ################################################################################
-# Heka Identity Platform: root Compose variables
+# Heka Identity Platform: root Compose variables (docs/root-docker-compose-plan.md, section 5)
 #
 # Two identity-provider roles, chosen independently:
-#   [P] Platform IdP  - identity web UI login, identity service token check,
-#                       SSO bridge service account.  Selector: REACT_APP_AUTH_PROVIDER
+#   [P] Platform IdP      - identity web UI login, identity service token check,
+#                           SSO bridge service account.   Selector: REACT_APP_AUTH_PROVIDER
 #   [R] Relying-party IdP - SSO demo web UI login, brokered to the wallet bridge.
-#                       Selector: VITE_AUTH_PROVIDER
+#                           Selector: VITE_AUTH_PROVIDER
 # Section 1 (Keycloak) is active. To move a role to Auth0, comment out its [P] or
 # [R] block below and uncomment the same block in section 2. Rebuild the web UI
 # named in the block afterwards; runtime values only need `docker compose up -d`.
 # Keycloak is needed while any role uses it: add `--profile keycloak`.
+#
+# The comment on (or above) every line names the container that reads the value and
+# whether a change is a container recreate (`up -d`) or a web UI rebuild. A line that
+# sets an empty value carries no inline comment: Compose would read the comment as the value.
 ################################################################################
 
 # ==============================================================================
@@ -211,22 +227,26 @@ Rules that make the file predictable:
 REACT_APP_AUTH_PROVIDER=keycloak                                  # heka-identity-web-ui (rebuild)
 REACT_APP_OIDC_AUTHORITY=http://localhost:8080/realms/heka-platform   # heka-identity-web-ui (rebuild)
 REACT_APP_OIDC_CLIENT_ID=heka-identity-web-ui                     # heka-identity-web-ui (rebuild)
-REACT_APP_OIDC_AUDIENCE=                                          # heka-identity-web-ui (rebuild), Auth0 only
+# heka-identity-web-ui (rebuild), Auth0 only
+REACT_APP_OIDC_AUDIENCE=
 OIDC_ISSUER_URL=http://localhost:8080/realms/heka-platform        # heka-identity-service: exact iss (browser-facing URL)
 OIDC_JWKS_URI=http://host.docker.internal:8080/realms/heka-platform/protocol/openid-connect/certs   # heka-identity-service: JWKS via host gateway
 OIDC_AUDIENCE=heka-identity-service                               # heka-identity-service
-OIDC_CLAIM_USER_ID=                                               # heka-identity-service: empty = service defaults (sub, roles, ...)
+# heka-identity-service: empty = service defaults (sub, roles, ...)
+OIDC_CLAIM_USER_ID=
 OIDC_CLAIM_ROLES=
 OIDC_CLAIM_NAME=
 OIDC_CLAIM_ORG_ID=
 DEMO_TOKEN_URL=http://host.docker.internal:8080/realms/heka-platform/protocol/openid-connect/token   # heka-identity-service: demo-token broker
 DEMO_CLIENT_ID=heka-demo                                          # heka-identity-service
 DEMO_CLIENT_SECRET=dev-only-heka-demo-secret-do-not-use-in-production   # heka-identity-service
-DEMO_TOKEN_PARAMS=                                                # heka-identity-service, Auth0 only
+# heka-identity-service, Auth0 only
+DEMO_TOKEN_PARAMS=
 IDENTITY_SERVICE_TOKEN_URL=http://host.docker.internal:8080/realms/heka-platform/protocol/openid-connect/token   # heka-sso-service: service-account token
 IDENTITY_SERVICE_CLIENT_ID=heka-sso-service                       # heka-sso-service
 IDENTITY_SERVICE_CLIENT_SECRET=dev-only-heka-sso-service-secret-do-not-use-in-production   # heka-sso-service
-IDENTITY_SERVICE_TOKEN_PARAMS=                                    # heka-sso-service, Auth0 only
+# heka-sso-service, Auth0 only
+IDENTITY_SERVICE_TOKEN_PARAMS=
 
 # ---- 1.[R] Relying-party IdP = Keycloak realm heka ----------------------------
 VITE_AUTH_PROVIDER=keycloak                                       # heka-sso-web-ui (rebuild)
@@ -247,7 +267,8 @@ SSO_ISSUER_URL=http://localhost:3005                              # heka-sso-ser
 # REACT_APP_OIDC_CLIENT_ID=<heka-identity-web-ui SPA client id>   # heka-identity-web-ui (rebuild)
 # REACT_APP_OIDC_AUDIENCE=https://heka-identity                   # heka-identity-web-ui (rebuild)
 # OIDC_ISSUER_URL=https://<tenant>.<region>.auth0.com/            # heka-identity-service, trailing slash
-# OIDC_JWKS_URI=                                                  # heka-identity-service: empty = discovery from the issuer
+# heka-identity-service: empty = discovery from the issuer
+# OIDC_JWKS_URI=
 # OIDC_AUDIENCE=https://heka-identity                             # heka-identity-service
 # OIDC_CLAIM_USER_ID=https://heka/heka_uid                        # heka-identity-service: namespaced claims
 # OIDC_CLAIM_ROLES=https://heka/roles
@@ -268,22 +289,27 @@ SSO_ISSUER_URL=http://localhost:3005                              # heka-sso-ser
 # VITE_AUTH0_CLIENT_ID=<heka-sso-web-ui SPA client id>            # heka-sso-web-ui (rebuild)
 # VITE_AUTH0_CONNECTION=heka-sso                                  # heka-sso-web-ui (rebuild)
 # SSO_ISSUER_URL=https://<ngrok host for 3005>                    # heka-sso-service: Auth0 must reach the bridge over https
-# The auth0-broker callback and logout URLs live in heka-sso-service/env/oidc-clients.json (section 5.3), not here.
+## The auth0-broker callback and logout URLs live in heka-sso-service/env/oidc-clients.json, not here.
 
 # ==============================================================================
 # 3. PROVIDER-INDEPENDENT
 # ==============================================================================
 
-# ---- Bootstrap values, filled after the first boot (section 7) ----------------
-REACT_APP_DEMO_USER_DID=                                          # heka-identity-web-ui (rebuild): from yarn prepare-demo-user
-IDENTITY_SERVICE_PUBLIC_VERIFIER_ID=                              # heka-sso-service: verifier of the bridge's tenant
-IDENTITY_SERVICE_REQUEST_SIGNER_DID=                              # heka-sso-service: DID signing OID4VP requests
+# ---- Bootstrap values, filled after the first boot (plan section 7.2) ---------
+# heka-identity-web-ui (rebuild): from yarn prepare-demo-user
+REACT_APP_DEMO_USER_DID=
+# heka-sso-service: verifier of the bridge's tenant
+IDENTITY_SERVICE_PUBLIC_VERIFIER_ID=
+# heka-sso-service: DID signing OID4VP requests
+IDENTITY_SERVICE_REQUEST_SIGNER_DID=
 OIDC_STUB_LOGIN=true                                              # heka-sso-service: false once the two values above are set
 
-# ---- Third-party wallet on a phone: https tunnel to port 3003 (section 9) -----
-# Dynamic ngrok hostname: edit, then `docker compose up -d`. Runtime only, no rebuild.
-AGENT_OID4VCI_ENDPOINT=https://<ngrok host for 3003>              # heka-identity-service: baked into offers and requests
-FILE_STORAGE_FS_PUBLIC_URL=https://<ngrok host for 3003>          # heka-identity-service: logo URLs for wallets
+# ---- Third-party wallet on a phone: https tunnel to port 3003 (plan section 9) -
+# A phone wallet cannot reach localhost: put the tunnel hostname here, e.g.
+# https://abc123.ngrok-free.app, then `docker compose up -d`. Runtime only, no rebuild.
+AGENT_OID4VCI_ENDPOINT=http://localhost:3003                      # heka-identity-service: baked into offers and requests
+# heka-identity-service: logo URLs for wallets; empty = FILE_STORAGE_FS_URL
+FILE_STORAGE_FS_PUBLIC_URL=
 FILE_STORAGE_FS_URL=http://localhost:3000                         # heka-identity-service: logo URLs for browsers
 AGENT_HTTP_ENDPOINT=http://localhost:3001                         # heka-identity-service: DIDComm only
 AGENT_WS_ENDPOINT=ws://localhost:3002                             # heka-identity-service: DIDComm only
@@ -292,6 +318,7 @@ AGENT_WS_ENDPOINT=ws://localhost:3002                             # heka-identit
 KC_HOSTNAME=http://localhost:8080                                 # keycloak: browser-facing URL = iss of every token
 WEBHOOK_ALLOW_HTTP=false                                          # heka-identity-service
 WEBHOOK_ALLOW_PRIVATE_ADDRESSES=false                             # heka-identity-service
+SSO_LOG_LEVEL=info                                                # heka-sso-service
 ```
 
 The root `.env` is used only for Compose interpolation and build args. It is not mounted into any container, so a value listed here must be wired explicitly in the Compose file.
@@ -344,7 +371,7 @@ What a user does, in order. This is the text that `docs/root-docker-compose.md` 
    cp .env.example .env
    cp heka-sso-service/env/oidc-clients.example.json heka-sso-service/env/oidc-clients.json
    ```
-   The defaults are complete for Keycloak; nothing needs editing for the first run.
+   The defaults are complete for Keycloak; nothing needs editing for the first run. If the SSO service exits with `OIDC_CLIENTS_FILE could not be read`, the copy was skipped and Docker Desktop created a directory of that name instead: `rmdir heka-sso-service/env/oidc-clients.json`, then copy again.
 3. **Start everything**, Keycloak included:
    ```
    docker compose --profile keycloak up -d --build
@@ -444,9 +471,9 @@ An ngrok static domain (one is included in free accounts) removes steps 1 to 3 f
 | 0 | heka-sso-service PR: `OIDC_CLIENTS_FILE` and `OIDC_LOGIN_CONFIGS_FILE` with README rows and unit tests, plus `env/oidc-login-configs.json`, `env/oidc-clients.example.json` and the gitignore entry for `env/oidc-clients.json` (section 5.3). | Service starts with both values supplied as files; inline variables still take precedence; a missing file is reported by name; both JSON files parse. | **Done** 2026-10-01, uncommitted on `feature/remove-heka-auth-service-6` |
 | 1 | Add `docker/postgres/init-databases.sh` and `docker/nginx/spa.conf`, plus a root `.gitattributes` forcing LF on `*.sh` so the init script survives a Windows checkout. | `psql` lists both databases on a fresh volume; nginx serves `/some/route` as `index.html`. | **Done** 2026-10-01, uncommitted; verified with throwaway `postgres:15` and `nginx:alpine` containers |
 | 2 | Add the two web UI Dockerfiles and `.dockerignore` files. | `docker build` of each package succeeds from a clean checkout with no `.env` present. | **Done** 2026-10-01, uncommitted; both images built with `--build-context nginxconf=../docker/nginx`, serve the SPA fallback, inline the build args, contain no `.env` |
-| 3 | Write the root `docker-compose.yml` with postgres, the two backends and the two UIs.              | `docker compose config` renders without warnings; `up -d --build` reaches healthy.         | Open |
-| 4 | Add the `keycloak` profile services, including `keycloak-realms` and `docker/keycloak/prepare-realms.sh`. | `--profile keycloak up` imports the three realms; login to the identity web UI succeeds; with `SSO_ISSUER_URL` set, the `heka` realm's broker shows that issuer in the admin console. | Open |
-| 5 | Add root `.env.example` (section 5) and ignore `.env`.                                             | `docker compose config` renders with section 1 active, with either role moved to section 2, and fails with a named variable when `.env` is missing. | Open |
+| 3 | Write the root `docker-compose.yml` with postgres, the two backends and the two UIs.              | `docker compose config` renders without warnings; `up -d --build` reaches healthy.         | **Done** 2026-10-01, uncommitted; `docker compose config` renders without warnings, `up -d --build` reaches healthy for all five services. Two fixes outside the file were needed: the identity service's MikroORM CLI pin (section 4.2) and nginx listening on IPv6 for the healthcheck (section 4.4) |
+| 4 | Add the `keycloak` profile services, including `keycloak-realms` and `docker/keycloak/prepare-realms.sh`. | `--profile keycloak up` imports the three realms; login to the identity web UI succeeds; with `SSO_ISSUER_URL` set, the `heka` realm's broker shows that issuer in the admin console. | **Done** 2026-10-01, uncommitted; the three realms import, a Keycloak token is accepted by the identity service, the `heka` realm forwards to the bridge's interaction page, and the broker issuer follows `SSO_ISSUER_URL` across a recreate |
+| 5 | Add root `.env.example` (section 5) and ignore `.env`.                                             | `docker compose config` renders with section 1 active, with either role moved to section 2, and fails with a named variable when `.env` is missing. | **Done** 2026-10-01, uncommitted; verified: section 1 renders, each role moved to section 2 renders with the other role untouched, a missing `.env` fails naming `OIDC_ISSUER_URL` |
 | 6 | Run the quick start and first-boot sequence of section 7 and record any deviation in the usage doc. | Demo pages work with the prepared DID; SSO stub login works from the SSO web UI.         | Open |
 | 7 | Write `docs/root-docker-compose.md` from section 7 (quick start, first boot), section 8 (provider switch) and section 9 (tunnels), and link it from the root README and the SSO README. | Docs reviewed. | Open |
 | 8 | Consolidate the per-package Compose files (section 13), sub-steps 8a to 8f below.                | Each package has one Compose file; no file in the repository names a `dev.yml`.           | Open |
