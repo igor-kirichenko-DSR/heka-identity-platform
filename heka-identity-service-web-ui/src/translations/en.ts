@@ -74,6 +74,25 @@ export default {
       startAgain: 'Start again',
     },
   },
+  Connection: {
+    titles: {
+      existing: 'Send to an existing connection',
+      selectConnection: 'Select connection',
+      name: 'Connection name (optional)',
+      nameHint:
+        'Helps you find this connection later. Only you can see it; the holder does not.',
+      unnamed: 'Unnamed connection ({{id}})',
+      waitingOffer:
+        'Credential offer sent. Waiting for the holder to accept it in their wallet.',
+      waitingRequest:
+        'Verification request sent. Waiting for the holder to respond in their wallet.',
+    },
+    buttons: {
+      apply: 'Apply',
+      send: 'Send',
+      useQr: 'Use QR code instead',
+    },
+  },
   Profile: {
     titles: {
       main: 'Profile',
