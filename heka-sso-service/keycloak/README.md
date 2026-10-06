@@ -1,6 +1,6 @@
 # Keycloak realms
 
-`docker-compose.dev.yml` starts Keycloak with `start-dev --import-realm`, which imports every file in this directory on every start. A realm that already exists in the Keycloak database is **not** overwritten; delete the `keycloak` container to re-import. Three realms are defined:
+The root Compose project (`docker compose --profile keycloak up -d keycloak` at the repository root, see [docs/root-docker-compose.md](../../docs/root-docker-compose.md)) starts Keycloak with `start-dev --import-realm`, which imports the `realm-*.json` files of this directory on every start. A realm that already exists in the Keycloak database is **not** overwritten; delete the `keycloak` container to re-import. Three realms are defined:
 
 | File                        | Realm           | Purpose                                                                                                                                                                                            |
 | --------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -55,9 +55,9 @@ OIDC_ISSUER_URL=http://localhost:8080/realms/heka-platform
 OIDC_AUDIENCE=heka-identity-service
 ```
 
-The claim paths keep their defaults (`sub`, `roles`, `name,preferred_username,nickname`, `org_id`). When the identity service runs in a container, keep `OIDC_ISSUER_URL` at the browser-facing value and point `OIDC_JWKS_URI` at `http://host.docker.internal:8080/realms/heka-platform/protocol/openid-connect/certs` (see `heka-identity-service/docker-compose.dev.yml`).
+The claim paths keep their defaults (`sub`, `roles`, `name,preferred_username,nickname`, `org_id`). When the identity service runs in a container, keep `OIDC_ISSUER_URL` at the browser-facing value and point `OIDC_JWKS_URI` at `http://host.docker.internal:8080/realms/heka-platform/protocol/openid-connect/certs` (see `heka-identity-service/docker-compose.yml`).
 
-`KC_HOSTNAME` is pinned to `http://localhost:8080` in `docker-compose.dev.yml`, so `iss` is the same string whether Keycloak is reached from the host or from a container. Change both `KC_HOSTNAME` and `OIDC_ISSUER_URL` together when deploying elsewhere.
+`KC_HOSTNAME` is pinned to `http://localhost:8080` in the root `docker-compose.yml`, so `iss` is the same string whether Keycloak is reached from the host or from a container. Change both `KC_HOSTNAME` and `OIDC_ISSUER_URL` together when deploying elsewhere.
 
 ## Roles
 
@@ -89,7 +89,8 @@ The response lists every user as `ADDED` or `SKIPPED`. Try one account first (`-
 Start Keycloak (the theme builder runs first and needs network access on the first run):
 
 ```sh
-docker compose -f docker-compose.dev.yml up -d keycloak
+# at the repository root
+docker compose --profile keycloak up -d keycloak
 ```
 
 Service-account token for heka-sso-service (Client Credentials):

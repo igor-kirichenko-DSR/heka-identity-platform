@@ -247,40 +247,52 @@ yarn migration:create
 
 ## Docker
 
-To build the image locally:
+The whole platform, Keycloak included, starts from the repository root; see
+[docs/root-docker-compose.md](../docs/root-docker-compose.md). `docker-compose.yml` in this directory
+runs the bridge on its own with its Postgres (host port 5434, also used by `yarn test:e2e`);
+heka-identity-service (`:3000`) and the OIDC provider (Keycloak, `:8080`) are expected on the host
+and reached over `host.docker.internal`. The two scopes share port 3005, so run one or the other.
+
+The broker clients and login configurations are files mounted into the container
+(`OIDC_CLIENTS_FILE`, `OIDC_LOGIN_CONFIGS_FILE`); copy the clients template once:
 
 ```bash
-docker compose -f docker-compose.dev.yml build
+cp env/oidc-clients.example.json env/oidc-clients.json
 ```
 
-To run the service in Docker:
+To build the image and run it (plain `docker compose up -d` runs the local or pulled image without
+building):
 
 ```bash
-docker compose -f docker-compose.dev.yml up -d
+docker compose up -d --build
 ```
 
-`docker-compose.dev.yml` builds the image and brings up Keycloak with the `heka` realm (plus the `heka-platform` realm that heka-identity-service uses, see [keycloak/README.md](keycloak/README.md)); it uses the
-dev-only stub login, so no wallet is involved. `docker-compose.yml` runs the published image against
-a real wallet login and needs the verifier heka-identity-service creates sessions under:
+The defaults give the dev stub login, so no wallet is involved. A real wallet login needs the
+verifier heka-identity-service creates sessions under and the DID that signs authorization requests,
+with the stub switched off:
 
 ```bash
 IDENTITY_SERVICE_PUBLIC_VERIFIER_ID=<public verifier id> \
 IDENTITY_SERVICE_REQUEST_SIGNER_DID=<did that signs authorization requests> \
+OIDC_STUB_LOGIN=false \
   docker compose up -d
 ```
 
-Compose refuses to start without those two — a bridge that binds no identity acquirer denies every
-`/authorize`. heka-identity-service (`:3000`) and the OIDC provider (Keycloak, `:8080`) are expected
-on the host and are reached over `host.docker.internal`; override `IDENTITY_SERVICE_BASE_URL` /
-`IDENTITY_SERVICE_TOKEN_URL` when they live elsewhere, and `IDENTITY_SERVICE_CLIENT_ID` /
-`IDENTITY_SERVICE_CLIENT_SECRET` (plus `IDENTITY_SERVICE_TOKEN_PARAMS` for Auth0) when the service
-account is not the dev client from `keycloak/realm-heka.json`.
+Compose reads `./.env` for substitution, not `env/.env` (that one is for `yarn start` and holds
+multi-line JSON); set overrides on the command line or with `--env-file`. Override
+`IDENTITY_SERVICE_BASE_URL` / `IDENTITY_SERVICE_TOKEN_URL` when the identity service or the
+provider live elsewhere, and `IDENTITY_SERVICE_CLIENT_ID` / `IDENTITY_SERVICE_CLIENT_SECRET` (plus
+`IDENTITY_SERVICE_TOKEN_PARAMS` for Auth0) when the service account is not the dev client from
+`keycloak/realm-heka-platform.json`.
 
-The image runs as the unprivileged `node` user and defaults to `NODE_ENV=production`. Both compose
-files override it to `development`, because they ship the dev-only cookie key, `sub` salt and client
-secret that the production guards refuse. A real deployment keeps the default and supplies its own
-secrets — `NODE_ENV=production docker compose up -d` with `OIDC_COOKIE_KEYS`, `OIDC_SUB_HMAC_SALT`
-and `OIDC_CLIENTS` replaced.
+The image runs as the unprivileged `node` user and defaults to `NODE_ENV=production`. The compose
+file overrides it to `development`, because it ships the dev-only cookie key, `sub` salt and broker
+client secret that the production guards refuse. The file no longer enforces anything for
+production: a real deployment sets `NODE_ENV=production`, replaces `OIDC_COOKIE_KEYS`,
+`OIDC_SUB_HMAC_SALT`, every secret in `env/oidc-clients.json` and the identity-service client
+secret, and sets the two verifier values with `OIDC_STUB_LOGIN=false` — the service refuses to start
+in production with any dev default or the stub still on, and a bridge that binds no identity
+acquirer denies every `/authorize`.
 
 ## Testing
 
