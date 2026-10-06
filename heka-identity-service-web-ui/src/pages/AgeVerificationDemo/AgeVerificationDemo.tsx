@@ -52,7 +52,11 @@ interface AgeVerificationFieldsProps {
   onNext: (attributes: Array<string>) => void;
 }
 
-const AgeVerificationResultView = () => {
+const AgeVerificationResultView = ({
+  onStartAgain,
+}: {
+  onStartAgain: () => void;
+}) => {
   const { t } = useTranslation();
   const revealedAttributes = useSelector(getPresentationSharedAttributes);
 
@@ -96,6 +100,9 @@ const AgeVerificationResultView = () => {
           );
         })}
       </Column>
+      <Row className={cls.stepNavigation}>
+        <Button onPress={onStartAgain}>{t('Flow.buttons.startAgain')}</Button>
+      </Row>
     </div>
   );
 };
@@ -242,8 +249,7 @@ const AgeVerificationDemo = () => {
       onChangeContextProperty('schema')(mdlSchema);
       onChangeContextProperty('credentialValues')(MDL_DEFAULT_VALUES);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schemas]);
+  }, [schemas, onChangeContextProperty]);
 
   if (step.name === DemoSteps.CredentialOffer) {
     return (
@@ -279,7 +285,12 @@ const AgeVerificationDemo = () => {
   if (step.name === DemoSteps.PresentationRequest) {
     const handleStartAgain = () => {
       resetFlowState();
-      setFlowContext({ ...initialContext, schema: flowContext.schema });
+      // A fresh run of the same demo: keep the mDL schema and its prefilled values
+      setFlowContext({
+        ...initialContext,
+        schema: flowContext.schema,
+        credentialValues: MDL_DEFAULT_VALUES,
+      });
       onChangeStep(DemoSteps.IssueNewCredential);
     };
 
@@ -290,7 +301,7 @@ const AgeVerificationDemo = () => {
             title={t('AgeVerificationDemo.titles.main')}
             icon="car"
           />
-          <AgeVerificationResultView />
+          <AgeVerificationResultView onStartAgain={handleStartAgain} />
         </Row>
       );
     }

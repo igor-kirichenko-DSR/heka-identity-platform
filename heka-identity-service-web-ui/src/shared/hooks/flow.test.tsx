@@ -99,6 +99,33 @@ describe('useFlow', () => {
     expect(result.current.flowContext).toEqual({ wizardType: 'issue' });
   });
 
+  test('keeps resetFlowState stable while callers pass a new initial context each render', () => {
+    const store = createTestStore(dirtyState());
+    const { result, rerender } = renderHook(
+      ({ context }: { context: TestContext }) =>
+        useFlow<TestContext>({ initialContext: context, steps: [...steps] }),
+      {
+        wrapper: wrapperFor(store),
+        // A fresh object (and steps array) every render, as page components pass them
+        initialProps: { context: { wizardType: 'issue' } as TestContext },
+      },
+    );
+    const firstReset = result.current.resetFlowState;
+
+    rerender({ context: { wizardType: 'issue' } as TestContext });
+    expect(result.current.resetFlowState).toBe(firstReset);
+
+    // Switching the wizard type (the route reuses the mounted wizard) gives a new reset,
+    // which starts from the new type
+    rerender({ context: { wizardType: 'template' } as TestContext });
+    expect(result.current.resetFlowState).not.toBe(firstReset);
+
+    act(() => result.current.onChangeStep('done'));
+    act(() => result.current.resetFlowState());
+    expect(result.current.step).toBe(steps[0]);
+    expect(result.current.flowContext).toEqual({ wizardType: 'template' });
+  });
+
   test('moves to a named step and ignores unknown ones', () => {
     const { result } = renderFlow();
 

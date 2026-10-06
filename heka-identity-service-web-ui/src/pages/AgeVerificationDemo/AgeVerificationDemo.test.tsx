@@ -212,6 +212,26 @@ describe('AgeVerificationDemo', () => {
     }
   });
 
+  test('starts the demo again from the result', async () => {
+    const user = userEvent.setup();
+    renderDemo(stubDemoAgency({ age_over_18: 'true' }));
+
+    await goToFieldSelection(user);
+    await user.click(screen.getByRole('button', { name: 'Request' }));
+    expect(
+      await screen.findByText('Credential verified', {}, { timeout: 4000 }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Start again' }));
+
+    // Back at the first step, with the mDL schema and its values prefilled again
+    expect(await screen.findByText('fill: mDL')).toBeInTheDocument();
+    expect(
+      screen.getByText(/values: .*"age_over_18":"true"/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Credential verified')).not.toBeInTheDocument();
+  });
+
   test('flags a holder who is not over 18', async () => {
     const user = userEvent.setup();
     const demoApi = stubDemoAgency({ age_over_18: 'false' });

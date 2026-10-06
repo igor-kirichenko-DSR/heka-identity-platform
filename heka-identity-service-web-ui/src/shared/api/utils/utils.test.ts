@@ -1,6 +1,7 @@
 import toast from 'react-hot-toast';
 
 import { USER_ID } from '@/entities/User/model/const';
+import { registerSessionBridge } from '@/shared/auth/sessionBridge';
 
 import { ApiError, errorMessage, handleError } from './error';
 import { clearUserId, getUserId, storeUserId } from './token';
@@ -38,6 +39,51 @@ describe('handleError', () => {
     expect(toast.error).toHaveBeenCalledWith('too, short');
     expect(rejectWithValue).toHaveBeenCalledWith('too, short');
     expect(result).toEqual({ rejected: 'too, short' });
+  });
+
+  test('does not toast a 401 while nobody is signed in', () => {
+    const rejectWithValue = jest.fn();
+    const unauthorized = {
+      ...apiError('Authorization token is missing'),
+      response: {
+        status: 401,
+        statusText: 'Unauthorized',
+        data: { message: 'Authorization token is missing' },
+      },
+    } as ApiError;
+
+    handleError(unauthorized, rejectWithValue);
+
+    expect(toast.error).not.toHaveBeenCalled();
+    // The thunk is still rejected with the message
+    expect(rejectWithValue).toHaveBeenCalledWith(
+      'Authorization token is missing',
+    );
+  });
+
+  test('still toasts a 401 for a signed-in user', () => {
+    registerSessionBridge({
+      getAccessToken: () => 'token',
+      refresh: jest.fn(),
+      dropSession: jest.fn(),
+      signOut: jest.fn(),
+    });
+    try {
+      const unauthorized = {
+        ...apiError('Access denied'),
+        response: {
+          status: 401,
+          statusText: 'Unauthorized',
+          data: { message: 'Access denied' },
+        },
+      } as ApiError;
+
+      handleError(unauthorized, jest.fn());
+
+      expect(toast.error).toHaveBeenCalledWith('Access denied');
+    } finally {
+      registerSessionBridge(null);
+    }
   });
 
   test('falls back to a generic message when the server sends none', () => {

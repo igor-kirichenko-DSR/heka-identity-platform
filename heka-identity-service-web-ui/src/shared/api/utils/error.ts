@@ -2,6 +2,8 @@
 import { Dispatch } from '@reduxjs/toolkit';
 import toast from 'react-hot-toast';
 
+import { getSessionAccessToken } from '@/shared/auth/sessionBridge';
+
 export interface ApiError extends Error {
   message: string;
   response: {
@@ -45,7 +47,16 @@ export const handleError = (
   _dispatch?: Dispatch<any>,
 ) => {
   const message = errorMessage(describeError(error));
-  if (message) toast.error(message);
+  if (message && !isUnauthorizedWithoutSession(error)) toast.error(message);
 
   return rejectWithValue(message);
 };
+
+/**
+ * A 401 while nobody is signed in ("Authorization token is missing") is expected, not an
+ * error to show: pages should not call the identity service then, and this keeps any that do
+ * from toasting the visitor.
+ */
+const isUnauthorizedWithoutSession = (error: unknown) =>
+  (error as Partial<ApiError> | undefined)?.response?.status === 401 &&
+  !getSessionAccessToken();
