@@ -1,6 +1,6 @@
 # Root Docker Compose for the Heka Identity Platform
 
-Status: plan, 2026-09-30, revised 2026-10-01. Progress is tracked in the Status column of section 10; steps 0 and 1 are implemented, everything else is open.
+Status: plan, 2026-09-30, revised 2026-10-01. Progress is tracked in the Status column of section 10; steps 0 to 2 are implemented, everything else is open.
 
 ## 1. Goal
 
@@ -142,6 +142,8 @@ COPY docker/nginx/spa.conf /etc/nginx/conf.d/default.conf
 
 The nginx config copy needs the file inside the build context; either duplicate `spa.conf` into each package or use `additional_contexts` (Compose 2.17+) to reference `docker/nginx`. Prefer `additional_contexts`, the installed Compose is 2.40.
 
+Implemented (step 2): the committed `heka-identity-service-web-ui/Dockerfile` follows this sketch with three additions: it copies `.yarn/plugins` as well, sets `HUSKY=0` because the package's `prepare` script runs husky and there is no git inside the build, and writes only non-empty `REACT_APP_*` args into `.env` so an empty arg behaves like an unset variable. A `# check=skip=SecretsUsedInArgOrEnv` directive silences BuildKit's heuristic that flags any arg named with `AUTH`. Standalone build: `docker build --build-context nginxconf=../docker/nginx -t heka-identity-web-ui .`
+
 Compose `build.args` map the `REACT_APP_*` variables of the `[P]` block and the demo DID straight from `.env`; `REACT_APP_AUTH_PROVIDER`, `REACT_APP_OIDC_AUTHORITY` and `REACT_APP_OIDC_CLIENT_ID` are required (`:?`), the agency endpoint defaults to `http://localhost:3000`. Port `8000:80`.
 
 `.dockerignore`: `node_modules`, `build`, `.env`, `reports`, `storybook-static`. Excluding `.env` matters: the developer's host `.env` must not leak into the image.
@@ -151,6 +153,8 @@ Compose `build.args` map the `REACT_APP_*` variables of the `[P]` block and the 
 Same shape. Vite reads `VITE_*` from the process environment during `vite build`, so `ARG` followed by `ENV` is enough, no `.env` materialisation. Build args map the `VITE_*` variables of the `[R]` block from `.env`: `VITE_AUTH_PROVIDER` required, the `VITE_KC_*` quartet and the `VITE_AUTH0_*` trio as `${VAR:-}` pass-through (the inactive provider's variables are simply empty), plus `VITE_AUTO_SIGN_IN` defaulting to `true`. Output directory `dist`. Port `5173:80`.
 
 `preview.html` is not part of the production build, which is fine for this stack.
+
+Implemented (step 2): `heka-sso-web-ui/Dockerfile` follows this sketch; empty `VITE_*` args are passed through unchanged because an empty `VITE_KC_IDP_HINT` is meaningful. Same `check=skip` directive and standalone build command as the identity web UI, with the tag `heka-sso-web-ui`.
 
 ### 4.6 keycloak and keycloak-theme-builder (profile `keycloak`)
 
@@ -439,7 +443,7 @@ An ngrok static domain (one is included in free accounts) removes steps 1 to 3 f
 | - | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------ |
 | 0 | heka-sso-service PR: `OIDC_CLIENTS_FILE` and `OIDC_LOGIN_CONFIGS_FILE` with README rows and unit tests, plus `env/oidc-login-configs.json`, `env/oidc-clients.example.json` and the gitignore entry for `env/oidc-clients.json` (section 5.3). | Service starts with both values supplied as files; inline variables still take precedence; a missing file is reported by name; both JSON files parse. | **Done** 2026-10-01, uncommitted on `feature/remove-heka-auth-service-6` |
 | 1 | Add `docker/postgres/init-databases.sh` and `docker/nginx/spa.conf`, plus a root `.gitattributes` forcing LF on `*.sh` so the init script survives a Windows checkout. | `psql` lists both databases on a fresh volume; nginx serves `/some/route` as `index.html`. | **Done** 2026-10-01, uncommitted; verified with throwaway `postgres:15` and `nginx:alpine` containers |
-| 2 | Add the two web UI Dockerfiles and `.dockerignore` files.                                          | `docker build` of each package succeeds from a clean checkout with no `.env` present.     | Open |
+| 2 | Add the two web UI Dockerfiles and `.dockerignore` files. | `docker build` of each package succeeds from a clean checkout with no `.env` present. | **Done** 2026-10-01, uncommitted; both images built with `--build-context nginxconf=../docker/nginx`, serve the SPA fallback, inline the build args, contain no `.env` |
 | 3 | Write the root `docker-compose.yml` with postgres, the two backends and the two UIs.              | `docker compose config` renders without warnings; `up -d --build` reaches healthy.         | Open |
 | 4 | Add the `keycloak` profile services, including `keycloak-realms` and `docker/keycloak/prepare-realms.sh`. | `--profile keycloak up` imports the three realms; login to the identity web UI succeeds; with `SSO_ISSUER_URL` set, the `heka` realm's broker shows that issuer in the admin console. | Open |
 | 5 | Add root `.env.example` (section 5) and ignore `.env`.                                             | `docker compose config` renders with section 1 active, with either role moved to section 2, and fails with a named variable when `.env` is missing. | Open |
