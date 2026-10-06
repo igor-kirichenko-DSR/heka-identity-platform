@@ -1,10 +1,13 @@
-import { screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import toast from 'react-hot-toast';
 import { Route, Routes } from 'react-router-dom';
 
 import { StateSchema } from '@/app/providers/StoreProvider';
+import { userActions } from '@/entities/User';
 import {
   createMockApi,
+  MockApi,
   renderWithProviders,
 } from '@/shared/lib/tests/renderWithProviders';
 
@@ -31,6 +34,9 @@ const mockApi = (registeredAt?: string) => {
   api.post.mockResolvedValue({ data: { did: 'did:key:z6Mk' } });
   return api;
 };
+
+const userRequests = (api: MockApi) =>
+  api.get.mock.calls.filter(([url]) => url === '/user');
 
 const renderHome = (signedIn: boolean, registeredAt?: string) =>
   renderWithProviders(
@@ -117,5 +123,68 @@ describe('Home', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText('profile page')).not.toBeInTheDocument();
     expect(api.post).not.toHaveBeenCalled();
+  });
+
+  test('does not request a profile for signed-out visitors', async () => {
+    const toastError = jest.spyOn(toast, 'error');
+    const { api } = renderHome(false);
+
+    await screen.findByRole('button', { name: 'Get started' });
+    // Let any request the page would make settle
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    expect(userRequests(api)).toHaveLength(0);
+    // The identity service would answer "Authorization token is missing"
+    expect(toastError).not.toHaveBeenCalled();
+    toastError.mockRestore();
+  });
+
+  test('requests the profile of a signed-in user once', async () => {
+    const { api } = renderHome(true, '2026-01-01T00:00:00Z');
+
+    await screen.findByRole('button', { name: 'Get started' });
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    expect(userRequests(api)).toHaveLength(1);
+  });
+
+  test('a registered user who signs in on this page stays on it', async () => {
+    const { store } = renderHome(false, '2026-01-01T00:00:00Z');
+    await screen.findByRole('button', { name: 'Get started' });
+
+    act(() => {
+      store.dispatch(
+        userActions.setSession({ accessToken: 'token', name: 'Jane' }),
+      );
+    });
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    expect(screen.queryByText('profile page')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Get started' })).toBeEnabled();
+  });
+
+  test('stays home when the profile cannot be loaded', async () => {
+    const api = mockApi();
+    api.get.mockRejectedValue({
+      response: { status: 500, data: { message: 'Profile unavailable' } },
+    });
+    renderWithProviders(
+      <Routes>
+        <Route
+          path="/"
+          element={<Home />}
+        />
+        <Route
+          path="/profile"
+          element={<p>profile page</p>}
+        />
+      </Routes>,
+      { initialState: userState(true), api },
+    );
+
+    expect(
+      await screen.findByRole('button', { name: 'Get started' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('profile page')).not.toBeInTheDocument();
   });
 });

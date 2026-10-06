@@ -45,10 +45,41 @@ const renderIssueFromTemplate = (
 describe('IssueFromTemplate', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  test('shows a loader until a template is chosen', () => {
+  test('goes back to the templates when opened without a template', () => {
+    // e.g. the page was opened in a new tab or its URL typed in
     const { api } = renderIssueFromTemplate(null);
-    expect(screen.queryByText('Issue new credential')).toBeNull();
+
+    expect(screen.getByTestId('pathname')).toHaveTextContent(
+      ROUTES.ISSUE_CREDENTIAL_TEMPLATES,
+    );
     expect(api.get).not.toHaveBeenCalled();
+  });
+
+  test('goes back to the templates when the template cannot be loaded', async () => {
+    const api = createMockApi();
+    api.get.mockRejectedValue({
+      response: { status: 404, data: { message: 'Template not found' } },
+    });
+    renderWithProviders(
+      <>
+        <IssueFromTemplate />
+        <LocationProbe />
+      </>,
+      {
+        api,
+        route: {
+          pathname: ROUTES.ISSUE_CREDENTIAL_FROM_TEMPLATE,
+          state: { context: { templateId: 'gone' } },
+        },
+      },
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('pathname')).toHaveTextContent(
+        ROUTES.ISSUE_CREDENTIAL_TEMPLATES,
+      ),
+    );
+    expect(toast.error).toHaveBeenCalledWith('Template not found');
   });
 
   test('prefills the form from the template and issues with its target', async () => {

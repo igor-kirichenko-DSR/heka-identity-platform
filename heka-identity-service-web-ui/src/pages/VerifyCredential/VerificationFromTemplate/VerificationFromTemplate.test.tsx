@@ -47,13 +47,43 @@ const checkbox = (name: string) =>
     .find((el) => el.getAttribute('name') === name) as HTMLInputElement;
 
 describe('VerificationFromTemplate', () => {
-  test('waits for a template', () => {
+  test('goes back to the templates when opened without a template', () => {
+    // e.g. the page was opened in a new tab or its URL typed in
     const { api } = renderPage();
 
     expect(api.get).not.toHaveBeenCalled();
-    expect(
-      screen.queryByRole('button', { name: 'Request' }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      ROUTES.VERIFY_CREDENTIAL_TEMPLATES,
+    );
+  });
+
+  test('goes back to the templates when the template cannot be loaded', async () => {
+    const toastError = jest.spyOn(toast, 'error');
+    const api = createMockApi();
+    api.get.mockRejectedValue({
+      response: { status: 404, data: { message: 'Template not found' } },
+    });
+    renderWithProviders(
+      <>
+        <VerificationFromTemplate />
+        <LocationDisplay />
+      </>,
+      {
+        api,
+        route: {
+          pathname: ROUTES.VERIFY_CREDENTIAL_FROM_TEMPLATE,
+          state: { context: { templateId: 'gone' } },
+        },
+      },
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location')).toHaveTextContent(
+        ROUTES.VERIFY_CREDENTIAL_TEMPLATES,
+      ),
+    );
+    expect(toastError).toHaveBeenCalledWith('Template not found');
+    toastError.mockRestore();
   });
 
   test('shows the template and requests the selected fields', async () => {

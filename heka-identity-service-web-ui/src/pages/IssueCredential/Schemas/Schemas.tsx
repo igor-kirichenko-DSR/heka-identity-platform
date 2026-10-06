@@ -19,7 +19,7 @@ import { Schema as SchemaType } from '@/entities/Schema';
 import { getSchemaList } from '@/entities/Schema/model/services/getSchemaList';
 import { updateSchema } from '@/entities/Schema/model/services/updateSchema';
 import { RegistrationsList } from '@/pages/IssueCredential/Schemas/RegistrationsList/RegistrationsList';
-import { Button, ButtonType } from '@/shared/ui/Button';
+import { Button } from '@/shared/ui/Button';
 import { Column, Row } from '@/shared/ui/Grid';
 import { LoaderView } from '@/shared/ui/Loader';
 
@@ -87,25 +87,31 @@ export const Schemas = () => {
 
       if (!over || active.id === over.id) return;
 
-      const oldIndex = event.active.data.current?.sortable.index ?? 0;
-      const newIndex = event.over?.data.current?.sortable.index ?? 0;
+      // Resolve positions by id and compute the new order before updating state: a value
+      // assigned inside a state updater is not guaranteed to be set when read right after
+      const oldIndex = localSchemas.findIndex((s) => s.id === active.id);
+      const newIndex = localSchemas.findIndex((s) => s.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
 
-      let prevSchemaId;
-      setLocalSchemas((schemas) => {
-        const updatedLocalSchemas = arrayMove(schemas, oldIndex, newIndex);
-        prevSchemaId =
-          newIndex === 0 ? null : updatedLocalSchemas[newIndex - 1].id;
-        return updatedLocalSchemas;
-      });
+      const previousOrder = localSchemas;
+      const updatedOrder = arrayMove(localSchemas, oldIndex, newIndex);
+      const prevSchemaId =
+        newIndex === 0 ? null : String(updatedOrder[newIndex - 1].id);
+      setLocalSchemas(updatedOrder);
 
-      await dispatch(
-        updateSchema({
-          schemaId: String(active.id),
-          params: { prevSchemaId },
-        }),
-      );
+      try {
+        await dispatch(
+          updateSchema({
+            schemaId: String(active.id),
+            params: { prevSchemaId },
+          }),
+        ).unwrap();
+      } catch {
+        // The thunk has already shown the error; put the list back as the server has it
+        setLocalSchemas(previousOrder);
+      }
     },
-    [dispatch, setLocalSchemas],
+    [dispatch, localSchemas, setLocalSchemas],
   );
 
   const showSchemaEditForm = useCallback(
@@ -174,24 +180,18 @@ export const Schemas = () => {
         justifyContent="space-between"
       >
         <Button
-          buttonType={
-            showActiveSchemas
-              ? (t('Common.buttons.elevatedType') as ButtonType)
-              : (t('Common.buttons.textType') as ButtonType)
-          }
+          buttonType={showActiveSchemas ? 'elevated' : 'text'}
+          aria-pressed={showActiveSchemas}
           onPress={() => handleStatusFilterChange(true)}
         >
-          Active
+          {t('IssueCredential.schema.filters.active')}
         </Button>
         <Button
-          buttonType={
-            !showActiveSchemas
-              ? (t('Common.buttons.elevatedType') as ButtonType)
-              : (t('Common.buttons.textType') as ButtonType)
-          }
+          buttonType={showActiveSchemas ? 'text' : 'elevated'}
+          aria-pressed={!showActiveSchemas}
           onPress={() => handleStatusFilterChange(false)}
         >
-          Hidden
+          {t('IssueCredential.schema.filters.hidden')}
         </Button>
       </Row>
 

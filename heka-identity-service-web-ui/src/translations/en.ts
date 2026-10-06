@@ -18,8 +18,6 @@ export default {
       logo: 'Logo',
       background: 'Background color',
       esc: 'Esc',
-      elevatedType: 'elevated',
-      textType: 'text',
       saveAsTemplate: 'Save as template',
       plus: 'Plus',
       save: 'Save',
@@ -124,6 +122,12 @@ export default {
       verified: 'Age Verified',
       notVerified: 'Age Not Verified',
     },
+    messages: {
+      noMdlSchema:
+        'This demo needs the "{{name}}" schema, which the demo account does not have.',
+      schemasNotLoaded:
+        'The demo schemas could not be loaded. Please try again later.',
+    },
   },
   PresentationOptions: {
     titles: {
@@ -190,6 +194,10 @@ export default {
       issuedBy: 'Issued by {{issuerName}}',
       hidden: 'Schema was hidden successfully',
       activated: 'Schema was activated successfully',
+      filters: {
+        active: 'Active',
+        hidden: 'Hidden',
+      },
       actions: {
         edit: 'Edit',
         register: 'Register',

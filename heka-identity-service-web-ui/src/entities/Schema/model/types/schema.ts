@@ -134,7 +134,8 @@ export interface UpdateSchemaParams {
   params: {
     logo?: File;
     bgColor?: string;
-    prevSchemaId?: string;
+    // `null` moves the schema to the top; omitted leaves the order unchanged
+    prevSchemaId?: string | null;
     isHidden?: boolean;
   };
 }

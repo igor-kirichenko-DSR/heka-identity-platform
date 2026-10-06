@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import { AppDispatch } from '@/app/providers/StoreProvider';
 import { RootState } from '@/app/providers/StoreProvider/config/store';
@@ -49,14 +49,18 @@ export const VerificationFromTemplate = () => {
     resetPresentation();
   }, [resetVerificationTemplates, resetPresentation]);
 
+  const templateId: string | undefined = state?.context?.templateId;
+  const [loadFailed, setLoadFailed] = useState(false);
+
   useEffect(() => {
-    if (!state?.context?.templateId) return;
-    dispatch(
-      getVerificationTemplate({
-        id: state?.context.templateId,
-      }),
-    );
-  }, [dispatch, state?.context?.templateId]);
+    if (!templateId) return;
+    dispatch(getVerificationTemplate({ id: templateId }))
+      .unwrap()
+      .catch(() => {
+        // The thunk has already shown the error
+        setLoadFailed(true);
+      });
+  }, [dispatch, templateId]);
 
   const onChangeSelectedAttributes = useCallback(
     (attributes: Array<string>) => {
@@ -131,6 +135,16 @@ export const VerificationFromTemplate = () => {
         Openid4CredentialFormat.MsoMdoc,
     [verificationTemplate],
   );
+
+  // Opened without a template (new tab, typed URL) or it could not be loaded: back to the list
+  if (!templateId || loadFailed) {
+    return (
+      <Navigate
+        to={ROUTES.VERIFY_CREDENTIAL_TEMPLATES}
+        replace
+      />
+    );
+  }
 
   if (!verificationTemplate) {
     return <LoaderView />;

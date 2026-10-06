@@ -123,8 +123,21 @@ describe('Schemas', () => {
       params: { isHidden: false },
     });
 
+    expect(screen.getByRole('button', { name: 'Active' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Hidden' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+
     routeAgencyGets(api, { schemas: [] });
     await user.click(screen.getByRole('button', { name: 'Hidden' }));
+    expect(screen.getByRole('button', { name: 'Hidden' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
 
     expect(
       await screen.findByText('There are no hidden schemes'),
@@ -205,6 +218,41 @@ describe('Schemas', () => {
       `/v2/schemas/${unregisteredSchema.id}`,
       expect.any(FormData),
     );
+    // Moved to the top: the backend reads "null" as "first"
+    const formData = api.patch.mock.calls[0][1] as FormData;
+    expect(formData.get('previousSchemaId')).toBe('null');
+  });
+
+  test('sends the schema now placed before the moved one', async () => {
+    const { api } = renderSchemas([registeredSchema, unregisteredSchema]);
+    await screen.findByText('Diploma');
+
+    await act(() =>
+      onDragEnd!(
+        dragEvent([registeredSchema.id, 0], [unregisteredSchema.id, 1]),
+      ),
+    );
+
+    const formData = api.patch.mock.calls[0][1] as FormData;
+    expect(formData.get('previousSchemaId')).toBe(unregisteredSchema.id);
+  });
+
+  test('restores the previous order when saving it fails', async () => {
+    const { api } = renderSchemas([registeredSchema, unregisteredSchema]);
+    api.patch.mockRejectedValue({
+      response: { data: { message: 'Reorder failed' } },
+    });
+    await screen.findByText('Diploma');
+
+    await act(() =>
+      onDragEnd!(
+        dragEvent([unregisteredSchema.id, 1], [registeredSchema.id, 0]),
+      ),
+    );
+
+    const cards = screen.getAllByTestId('schema-card');
+    expect(cards[0]).toHaveTextContent('Passport');
+    expect(cards[1]).toHaveTextContent('Diploma');
   });
 
   test('ignores a drag that ends where it started', async () => {

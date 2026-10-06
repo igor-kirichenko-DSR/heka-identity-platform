@@ -177,8 +177,13 @@ const AgeVerificationFields = ({
 };
 
 const AgeVerificationDemo = () => {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const schemas = useSelector(getSchemas);
+  // From this page's own request: the store may still hold another page's schema list
+  const [schemaStatus, setSchemaStatus] = useState<
+    'loading' | 'ready' | 'missing' | 'failed'
+  >('loading');
   const isPresentationCompleted = useSelector(getIsPresentationCompleted);
 
   const initialContext = {
@@ -202,7 +207,24 @@ const AgeVerificationDemo = () => {
 
   useEffect(() => {
     resetFlowState();
-    dispatch(getDemoSchemaList());
+    let isCurrent = true;
+    setSchemaStatus('loading');
+    dispatch(getDemoSchemaList())
+      .unwrap()
+      .then(
+        (list) => {
+          if (!isCurrent) return;
+          const hasMdl = list.some((s) => s.name === MDL_SCHEMA_NAME);
+          setSchemaStatus(hasMdl ? 'ready' : 'missing');
+        },
+        () => {
+          // getDemoSchemaList has already shown the error
+          if (isCurrent) setSchemaStatus('failed');
+        },
+      );
+    return () => {
+      isCurrent = false;
+    };
   }, [resetFlowState, dispatch]);
 
   useEffect(() => {
@@ -280,7 +302,15 @@ const AgeVerificationDemo = () => {
         title="Age Verification Demo"
         icon="car"
       />
-      {!flowContext.schema ? (
+      {schemaStatus === 'missing' || schemaStatus === 'failed' ? (
+        <p role="status">
+          {schemaStatus === 'missing'
+            ? t('AgeVerificationDemo.messages.noMdlSchema', {
+                name: MDL_SCHEMA_NAME,
+              })
+            : t('AgeVerificationDemo.messages.schemasNotLoaded')}
+        </p>
+      ) : !flowContext.schema ? (
         <Loader />
       ) : (
         <PreparationStepLayout

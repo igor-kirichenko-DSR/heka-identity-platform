@@ -96,6 +96,31 @@ const goToFieldSelection = async (user: ReturnType<typeof userEvent.setup>) => {
 };
 
 describe('AgeVerificationDemo', () => {
+  test('explains, instead of loading forever, when the demo has no mDL schema', async () => {
+    const demoApi = createMockApi();
+    demoApi.get.mockResolvedValue({
+      data: { items: [{ ...mdlSchema, id: 'other', name: 'Other' }] },
+    });
+    renderDemo(demoApi);
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'This demo needs the "mDL" schema, which the demo account does not have.',
+    );
+    expect(screen.queryByText('fill: mDL')).not.toBeInTheDocument();
+  });
+
+  test('explains when the demo schemas cannot be loaded', async () => {
+    const demoApi = createMockApi();
+    demoApi.get.mockRejectedValue({
+      response: { status: 503, data: { message: 'Demo unavailable' } },
+    });
+    renderDemo(demoApi);
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'The demo schemas could not be loaded. Please try again later.',
+    );
+  });
+
   test('prefills the mDL credential and offers it as an mso_mdoc', async () => {
     const user = userEvent.setup();
     const demoApi = stubDemoAgency({});
