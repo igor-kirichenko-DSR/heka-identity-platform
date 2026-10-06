@@ -8,6 +8,7 @@ import {
   MockApi,
   renderWithProviders,
 } from '@/shared/lib/tests/renderWithProviders';
+import i18n from '@/translations';
 
 import AgeVerificationDemo from './AgeVerificationDemo';
 
@@ -43,13 +44,16 @@ const mdlSchema = {
   ],
 };
 
-const stubDemoAgency = (sharedAttributes: Record<string, string>) => {
+const stubDemoAgency = (
+  sharedAttributes: Record<string, string>,
+  schema: typeof mdlSchema = mdlSchema,
+) => {
   const demoApi = createMockApi();
   demoApi.get.mockImplementation((url: string) => {
     if (url === '/v2/schemas') {
       return Promise.resolve({
         data: {
-          items: [{ ...mdlSchema, id: 'other', name: 'Other' }, mdlSchema],
+          items: [{ ...schema, id: 'other', name: 'Other' }, schema],
         },
       });
     }
@@ -88,7 +92,7 @@ const checkbox = (name: string) =>
     .find((el) => el.getAttribute('name') === name) as HTMLInputElement;
 
 const ageCheck = () =>
-  screen.getByText('Verify age (18+)').previousSibling as HTMLInputElement;
+  screen.getByRole('checkbox', { name: 'Verify age (18+)' });
 
 const goToFieldSelection = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(await screen.findByRole('button', { name: 'Issue' }));
@@ -177,6 +181,37 @@ describe('AgeVerificationDemo', () => {
     expect(screen.getByText('John')).toBeInTheDocument();
   });
 
+  test('shows its title and yes/no values in the current language', async () => {
+    const overrides: Array<[string, string]> = [
+      ['AgeVerificationDemo.titles.main', 'Altersprüfung'],
+      ['Common.values.no', 'Nein'],
+    ];
+    const originals = overrides.map(
+      ([key]) => [key, i18n.t(key)] as [string, string],
+    );
+    const apply = (entries: Array<[string, string]>) =>
+      entries.forEach(([key, value]) =>
+        i18n.addResource('en', 'translation', key, value),
+      );
+    apply(overrides);
+    try {
+      const user = userEvent.setup();
+      renderDemo(stubDemoAgency({ age_over_18: 'true', organ_donor: 'false' }));
+
+      expect(screen.getByText('Altersprüfung')).toBeInTheDocument();
+
+      await goToFieldSelection(user);
+      await user.click(screen.getByRole('button', { name: 'Request' }));
+
+      expect(
+        await screen.findByText('Credential verified', {}, { timeout: 4000 }),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Nein')).toBeInTheDocument();
+    } finally {
+      apply(originals);
+    }
+  });
+
   test('flags a holder who is not over 18', async () => {
     const user = userEvent.setup();
     const demoApi = stubDemoAgency({ age_over_18: 'false' });
@@ -210,6 +245,40 @@ describe('AgeVerificationDemo', () => {
     const body = JSON.stringify(demoApi.post.mock.calls[0][1]);
     expect(body).toContain('family_name');
     expect(body).not.toContain('age_over_18');
+  });
+
+  test('labels the age check, which its text toggles', async () => {
+    const user = userEvent.setup();
+    renderDemo(stubDemoAgency({}));
+
+    await goToFieldSelection(user);
+    expect(ageCheck()).toBeChecked();
+
+    await user.click(screen.getByText('Verify age (18+)'));
+    expect(ageCheck()).not.toBeChecked();
+  });
+
+  test('does not send an empty request when the schema has no age field', async () => {
+    const user = userEvent.setup();
+    const demoApi = stubDemoAgency(
+      {},
+      {
+        ...mdlSchema,
+        fields: mdlSchema.fields.filter((f) => f.name !== 'age_over_18'),
+      },
+    );
+    renderDemo(demoApi);
+
+    await goToFieldSelection(user);
+
+    // No age check to make and nothing selected yet
+    expect(
+      screen.queryByRole('checkbox', { name: 'Verify age (18+)' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Request' })).toBeDisabled();
+
+    await user.click(checkbox('given_name'));
+    expect(screen.getByRole('button', { name: 'Request' })).toBeEnabled();
   });
 
   test('can skip issuance and go back from the field selection', async () => {

@@ -16,6 +16,7 @@ import {
 } from '@/pages/VerifyCredential/testUtils';
 import {
   createMockApi,
+  createTestStore,
   renderWithProviders,
 } from '@/shared/lib/tests/renderWithProviders';
 
@@ -107,6 +108,24 @@ const checkbox = (name: string) =>
     .find((el) => el.getAttribute('name') === name) as HTMLInputElement;
 
 describe('AdvancedVerification', () => {
+  test('resets the templates once when opened', () => {
+    const api = createMockApi();
+    const store = createTestStore({}, api);
+    const dispatch = jest.spyOn(store, 'dispatch');
+
+    renderWithProviders(<AdvancedVerification />, {
+      api,
+      store,
+      route: ROUTES.ADVANCED_VERIFICATION,
+    });
+
+    const resets = dispatch.mock.calls.filter(
+      ([action]) =>
+        (action as { type?: string }).type === 'verificationTemplates/reset',
+    );
+    expect(resets).toHaveLength(1);
+  });
+
   test('walks an Aries request through every step and opens the verification request', async () => {
     const user = userEvent.setup();
     renderWizard();

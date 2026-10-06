@@ -36,6 +36,11 @@ export default {
     },
     messages: {
       copyLink: 'Copied',
+      notImplemented: 'Not implemented yet',
+    },
+    values: {
+      yes: 'Yes',
+      no: 'No',
     },
   },
   Home: {
@@ -108,6 +113,10 @@ export default {
       submit: 'Save',
       changePassword: 'Change password',
     },
+    validation: {
+      issuerRequired: 'Issuer is required',
+      issuerMaxLength: 'Maximum length is {{max}}',
+    },
   },
   Demo: {
     titles: {
@@ -115,6 +124,9 @@ export default {
     },
   },
   AgeVerificationDemo: {
+    titles: {
+      main: 'Age Verification Demo',
+    },
     ageCheck: {
       label: 'Verify age (18+)',
     },
@@ -281,6 +293,16 @@ export default {
       noCredentialFields: 'No credential fields',
       credentialFieldsRequired: 'Credential fields are required',
       credentialFieldsShouldBeUnique: 'Credential fields names must be unique',
+    },
+    validation: {
+      nameRequired: 'Schema name is required',
+      nameMaxLength:
+        'Schema name length must be less than or equal to {{max}} characters long',
+      fieldRequired: 'Credential field is required',
+      fieldMaxLength:
+        'Credential field length must be less than or equal to {{max}} characters long',
+      fieldPattern:
+        'Credential field must contain only latin chars, digits, parentheses, underscores and dashes',
     },
     buttons: {
       submit: 'Create',

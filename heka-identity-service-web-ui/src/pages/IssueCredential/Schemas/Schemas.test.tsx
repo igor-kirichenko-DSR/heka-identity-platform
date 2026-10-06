@@ -435,6 +435,41 @@ describe('Schemas', () => {
       );
     });
 
+    test('enables Register as soon as a DID is chosen', async () => {
+      // Two key DIDs: the DID is not filled in automatically
+      const secondKeyDid = 'did:key:z6MkSecondIssuer';
+      const { user } = renderSchemas(
+        [unregisteredSchema],
+        [
+          { id: KEY_DID, verificationMethod: [] },
+          { id: secondKeyDid, verificationMethod: [] },
+        ],
+      );
+      await user.click(
+        await screen.findByRole('button', { name: 'Registrations of Diploma' }),
+      );
+      await user.click(
+        await screen.findByRole('button', { name: 'Register schema' }),
+      );
+      const submit = await screen.findByRole('button', { name: 'Register' });
+
+      await user.click(
+        screen.getByRole('button', { name: /Credential format/ }),
+      );
+      await user.click(
+        await screen.findByRole('option', { name: 'jwt_vc_json' }),
+      );
+      expect(submit).toBeDisabled();
+
+      await user.click(screen.getByRole('button', { name: /^DID/ }));
+      await user.click(
+        await screen.findByRole('option', { name: secondKeyDid }),
+      );
+
+      // Nothing else re-renders the form here: the button must follow the DID itself
+      await waitFor(() => expect(submit).toBeEnabled());
+    });
+
     test('keeps the registration form open when registering fails', async () => {
       // Only the indy DID exists, so every field has a single choice
       const { user, api } = renderSchemas(

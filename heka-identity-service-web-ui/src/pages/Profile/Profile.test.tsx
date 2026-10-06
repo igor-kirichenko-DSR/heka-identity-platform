@@ -8,6 +8,7 @@ import {
   createMockApi,
   renderWithProviders,
 } from '@/shared/lib/tests/renderWithProviders';
+import i18n from '@/translations';
 
 import Profile from './Profile';
 
@@ -129,6 +130,34 @@ describe('Profile', () => {
     expect(api.patch.mock.calls[0][0]).toBe('/user');
     expect(patchedField(api, 'name')).toBe('Globex');
     expect(await screen.findByText('Globex')).toBeInTheDocument();
+  });
+
+  test('shows the issuer validation message in the current language', async () => {
+    const key = 'Profile.validation.issuerRequired';
+    const original = i18n.t(key);
+    i18n.addResource(
+      'en',
+      'translation',
+      key,
+      'Bitte einen Aussteller angeben',
+    );
+    try {
+      const user = userEvent.setup();
+      const { api } = renderProfile();
+
+      await user.click(
+        await screen.findByRole('button', { name: /Issuer.*ACME/ }),
+      );
+      await user.clear(await screen.findByPlaceholderText('Issuer'));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+
+      expect(
+        await screen.findByText('Bitte einen Aussteller angeben'),
+      ).toBeInTheDocument();
+      expect(api.patch).not.toHaveBeenCalled();
+    } finally {
+      i18n.addResource('en', 'translation', key, original);
+    }
   });
 
   test('uploads a new logo', async () => {

@@ -6,6 +6,7 @@ import ROUTES from '@/app/routes/RoutePaths';
 import { ProtocolType } from '@/entities/Schema';
 import {
   createMockApi,
+  createTestStore,
   renderWithProviders,
 } from '@/shared/lib/tests/renderWithProviders';
 
@@ -84,6 +85,25 @@ const goToSchemaStep = async (user: ReturnType<typeof userEvent.setup>) => {
 };
 
 describe('AdvancedIssue', () => {
+  test('resets the templates once when opened', () => {
+    const api = createMockApi();
+    routeAgencyGets(api);
+    const store = createTestStore({}, api);
+    const dispatch = jest.spyOn(store, 'dispatch');
+
+    renderWithProviders(<AdvancedIssue />, {
+      api,
+      store,
+      route: ROUTES.ISSUE_ADVANCED_ISSUE,
+    });
+
+    const resets = dispatch.mock.calls.filter(
+      ([action]) =>
+        (action as { type?: string }).type === 'issuanceTemplates/reset',
+    );
+    expect(resets).toHaveLength(1);
+  });
+
   test('issues a credential for a registered schema and passes the context on', async () => {
     const { user } = renderAdvancedIssue();
 

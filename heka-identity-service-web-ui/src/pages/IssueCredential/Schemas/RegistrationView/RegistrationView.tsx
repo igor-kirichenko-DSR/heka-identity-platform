@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -41,11 +41,6 @@ export const RegistrationView = ({
   const { id: schemaId } = schema;
   const isLoading = useSelector(selectSchemaLoading);
 
-  const [isCredentialFormatDisabled, setIsCredentialFormatDisabled] =
-    useState<boolean>(true);
-  const [isNetworkDisabled, setIsNetworkDisabled] = useState<boolean>(true);
-  const [isDidDisabled, setIsDidDisabled] = useState<boolean>(true);
-
   const {
     control,
     handleSubmit,
@@ -54,7 +49,6 @@ export const RegistrationView = ({
     reset,
     resetField,
     watch,
-    getValues,
     setValue,
   } = useForm<RegisterSchemaFormData>({
     defaultValues: RegisterSchemaFormDefaultValues,
@@ -64,21 +58,20 @@ export const RegistrationView = ({
 
   const resetForm = useCallback(() => {
     reset(RegisterSchemaFormDefaultValues);
-    setIsCredentialFormatDisabled(true);
-    setIsNetworkDisabled(true);
-    setIsDidDisabled(true);
   }, [reset]);
 
-  const [protocol, credentialFormat, network] = watch([
+  const [protocol, credentialFormat, network, did] = watch([
     'protocol',
     'credentialFormat',
     'network',
+    'did',
   ]);
 
-  const formComplete = useCallback(() => {
-    const { protocol, credentialFormat, network, did } = getValues();
-    return protocol && credentialFormat && network && did;
-  }, [getValues]);
+  // Each select opens once the one before it has a value; Submit once all four do
+  const isCredentialFormatDisabled = !protocol;
+  const isNetworkDisabled = !credentialFormat;
+  const isDidDisabled = !network;
+  const isFormComplete = !!(protocol && credentialFormat && network && did);
 
   const handleRegisterSchema = useCallback(
     async (data: RegisterSchemaFormData) => {
@@ -154,19 +147,6 @@ export const RegistrationView = ({
   useEffect(() => {
     resetForm();
   }, [resetForm]);
-
-  useEffect(() => {
-    setIsCredentialFormatDisabled(!protocol);
-    setIsNetworkDisabled(!credentialFormat);
-    setIsDidDisabled(!network);
-  }, [
-    setIsCredentialFormatDisabled,
-    setIsNetworkDisabled,
-    setIsDidDisabled,
-    protocol,
-    credentialFormat,
-    network,
-  ]);
 
   useEffect(() => {
     resetField('credentialFormat');
@@ -259,7 +239,7 @@ export const RegistrationView = ({
         <Row className={cls.submitBtn}>
           <Button
             type="submit"
-            isDisabled={!formComplete()}
+            isDisabled={!isFormComplete}
             isLoading={isLoading}
             fullWidth
           >

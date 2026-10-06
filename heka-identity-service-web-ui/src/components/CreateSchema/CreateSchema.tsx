@@ -1,5 +1,11 @@
 import { joiResolver } from '@hookform/resolvers/joi';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -25,7 +31,7 @@ import { TextInput } from '@/shared/ui/TextInput/TextInput';
 import {
   CreateSchemaFormData,
   CreateSchemaFormDefaultValues,
-  CreateSchemaFormSchema,
+  createSchemaFormSchema,
   Credential,
 } from './CreateSchema.form';
 
@@ -60,6 +66,8 @@ export const CreateSchemaModal = ({
 
   const formName = 'schema-form';
 
+  const formSchema = useMemo(() => createSchemaFormSchema(t), [t]);
+
   const {
     handleSubmit,
     control,
@@ -68,7 +76,7 @@ export const CreateSchemaModal = ({
     trigger,
   } = useForm<CreateSchemaFormData>({
     defaultValues: CreateSchemaFormDefaultValues,
-    resolver: joiResolver(CreateSchemaFormSchema),
+    resolver: joiResolver(formSchema),
     mode: 'onChange',
     criteriaMode: 'all',
   });

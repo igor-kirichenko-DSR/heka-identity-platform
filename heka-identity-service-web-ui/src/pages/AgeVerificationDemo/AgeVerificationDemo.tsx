@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
@@ -65,9 +65,9 @@ const AgeVerificationResultView = () => {
         {revealedAttributes?.map((attr) => {
           const displayValue =
             String(attr.value) === 'true'
-              ? 'Yes'
+              ? t('Common.values.yes')
               : String(attr.value) === 'false'
-                ? 'No'
+                ? t('Common.values.no')
                 : String(attr.value);
           const isAgeField = attr.name === AGE_FIELD;
           const isVerified = isAgeField && String(attr.value) === 'true';
@@ -121,14 +121,17 @@ const AgeVerificationFields = ({
 
   const [selectedFields, setSelectedFields] = useState<Array<string>>([]);
   const [ageCheckEnabled, setAgeCheckEnabled] = useState(true);
+  const ageCheckId = useId();
+  // The age check only counts when the schema has the age field
+  const isAgeChecked = hasAgeField && ageCheckEnabled;
 
   const onRequest = useCallback(() => {
     const attrs = [...selectedFields];
-    if (hasAgeField && ageCheckEnabled) {
+    if (isAgeChecked) {
       attrs.push(AGE_FIELD);
     }
     onNext(attrs);
-  }, [selectedFields, hasAgeField, ageCheckEnabled, onNext]);
+  }, [selectedFields, isAgeChecked, onNext]);
 
   return (
     <>
@@ -148,13 +151,17 @@ const AgeVerificationFields = ({
           className={cls.ageCheck}
         >
           <input
+            id={ageCheckId}
             type="checkbox"
             checked={ageCheckEnabled}
             onChange={() => setAgeCheckEnabled((v) => !v)}
           />
-          <p className={cls.ageCheckLabel}>
+          <label
+            htmlFor={ageCheckId}
+            className={cls.ageCheckLabel}
+          >
             {t('AgeVerificationDemo.ageCheck.label')}
-          </p>
+          </label>
         </Row>
       )}
       <Row className={cls.stepNavigation}>
@@ -167,7 +174,8 @@ const AgeVerificationFields = ({
         </Button>
         <Button
           onPress={onRequest}
-          isDisabled={selectedFields.length === 0 && !ageCheckEnabled}
+          // Never send an empty request: nothing selected and no age check to make
+          isDisabled={selectedFields.length === 0 && !isAgeChecked}
         >
           {t('Flow.buttons.request')}
         </Button>
@@ -251,7 +259,7 @@ const AgeVerificationDemo = () => {
     return (
       <Row className={cls.AgeDemo}>
         <BasicPanel
-          title="Age Verification Demo"
+          title={t('AgeVerificationDemo.titles.main')}
           icon="car"
         />
         <div className={cls.contentPanel}>
@@ -279,7 +287,7 @@ const AgeVerificationDemo = () => {
       return (
         <Row className={cls.AgeDemo}>
           <BasicPanel
-            title="Age Verification Demo"
+            title={t('AgeVerificationDemo.titles.main')}
             icon="car"
           />
           <AgeVerificationResultView />
@@ -299,7 +307,7 @@ const AgeVerificationDemo = () => {
   return (
     <Row className={cls.AgeDemo}>
       <BasicPanel
-        title="Age Verification Demo"
+        title={t('AgeVerificationDemo.titles.main')}
         icon="car"
       />
       {schemaStatus === 'missing' || schemaStatus === 'failed' ? (

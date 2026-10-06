@@ -101,18 +101,18 @@ const Profile = () => {
     setValueAs: (value: string) => value.trim(),
     required: {
       value: true,
-      message: 'Issuer is required',
+      message: t('Profile.validation.issuerRequired'),
     },
     maxLength: {
       value: 250,
-      message: 'Maximum length is 250',
+      message: t('Profile.validation.issuerMaxLength', { max: 250 }),
     },
   };
 
   return (
     <Row className={cls.ProfileWrapper}>
       <BasicPanel
-        title="Profile"
+        title={t('Profile.titles.main')}
         icon={'vault'}
       />
       <Row
@@ -134,7 +134,9 @@ const Profile = () => {
                   labelKey="Profile.titles.name"
                   field="username"
                   value={user?.name ?? ''}
-                  onSubmit={() => toast.error('Not implemented yet')}
+                  onSubmit={() =>
+                    toast.error(t('Common.messages.notImplemented'))
+                  }
                   className={
                     session.changePassword
                       ? cls.intermediateField

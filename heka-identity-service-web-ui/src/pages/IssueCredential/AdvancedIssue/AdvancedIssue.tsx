@@ -15,7 +15,6 @@ import {
   SchemaRegistration,
 } from '@/components/Steps';
 import { getIssuanceTemplate } from '@/entities/IssuanceTemplate/model/services/getIssuanceTemplate';
-import { useIssuanceTemplatesActions } from '@/entities/IssuanceTemplate/model/slices/issuanceTemplatesSlice';
 import { ProtocolType, Schema } from '@/entities/Schema';
 import { getSchema } from '@/entities/Schema/model/selectors/schemasSelector';
 import {
@@ -43,7 +42,6 @@ export const AdvancedIssue = ({ type = 'issue' }: AdvancedIssueProps) => {
   const { issuanceTemplate } = useSelector(
     (state: RootState) => state.issuanceTemplates,
   );
-  const { reset: resetTemplates } = useIssuanceTemplatesActions();
   const singleSchema = useSelector(getSchema);
 
   const {
@@ -63,9 +61,9 @@ export const AdvancedIssue = ({ type = 'issue' }: AdvancedIssueProps) => {
   });
 
   useEffect(() => {
-    dispatch(resetTemplates());
+    // Also resets the template slices, so the templates need no reset of their own
     resetFlowState();
-  }, [dispatch, resetFlowState, resetTemplates]);
+  }, [resetFlowState]);
 
   useEffect(() => {
     if (!state?.context?.templateId) return;

@@ -18,7 +18,6 @@ import { getSchema } from '@/entities/Schema/model/selectors/schemasSelector';
 import { AriesCredentialFormat } from '@/entities/Schema/model/types/schema';
 import { getUserDid } from '@/entities/User/model/selectors/userSelector';
 import { getVerificationTemplate } from '@/entities/VerificationTemplate/model/services/getVerificationTemplate';
-import { useVerificationTemplatesActions } from '@/entities/VerificationTemplate/model/slices/verificationTemplatesSlice';
 import {
   steps,
   totalPreparationSteps,
@@ -42,7 +41,6 @@ const AdvancedVerification = ({
   const { verificationTemplate } = useSelector(
     (state: RootState) => state.verificationTemplates,
   );
-  const { reset: resetTemplates } = useVerificationTemplatesActions();
   const singleSchema = useSelector(getSchema);
 
   const {
@@ -63,9 +61,9 @@ const AdvancedVerification = ({
   });
 
   useEffect(() => {
-    dispatch(resetTemplates());
+    // Also resets the template slices, so the templates need no reset of their own
     resetFlowState();
-  }, [dispatch, resetTemplates, resetFlowState]);
+  }, [resetFlowState]);
 
   useEffect(() => {
     if (!state?.context?.templateId) return;

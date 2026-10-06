@@ -63,6 +63,8 @@ export interface RenderWithProvidersOptions
   /** Route pattern to mount the element under, for components that read `useParams` */
   path?: string;
   session?: Partial<AuthSession>;
+  /** A store to render with (e.g. to spy on its `dispatch`); built from `initialState` otherwise */
+  store?: ReturnType<typeof createTestStore>;
 }
 
 /**
@@ -78,10 +80,10 @@ export const renderWithProviders = (
     route = '/',
     path,
     session,
+    store = createTestStore(initialState, api, demoApi),
     ...renderOptions
   }: RenderWithProvidersOptions = {},
 ) => {
-  const store = createTestStore(initialState, api, demoApi);
   const authSession = createTestSession(session);
 
   const result = render(
