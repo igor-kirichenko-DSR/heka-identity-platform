@@ -46,8 +46,8 @@ export const credentialSlice = buildSlice({
           state.issuanceSession = action.payload;
         },
       )
-      .addCase(offerCredential.rejected, (state, error) => {
-        state.error = error.error.message;
+      .addCase(offerCredential.rejected, (state, action) => {
+        state.error = action.payload ?? action.error.message;
         state.isLoading = false;
         state.issuanceSession = undefined;
       })

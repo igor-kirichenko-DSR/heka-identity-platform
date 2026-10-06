@@ -15,6 +15,7 @@
     "lint:scss": "stylelint \"**/*.scss\"",
     "lint:scss:fix": "stylelint \"**/*.scss\" --fix",
     "test:unit": "jest --config ./config/jest/jest.config.ts",
+    "test:coverage": "jest --config ./config/jest/jest.config.ts --coverage",
     "storybook": "storybook dev -p 6006 -c ./config/storybook",
     "storybook:build": "storybook build -c ./config/storybook",
     "prepare-demo-user": "ts-node -P scripts/tsconfig.json scripts/prepare-demo-user.ts",

@@ -13,7 +13,6 @@ import {
   RegisterSchemaFormData,
   RegisterSchemaFormDefaultValues,
 } from '@/pages/IssueCredential/Schemas/RegistrationView/RegisterSchema.form';
-import { ApiError, errorMessage } from '@/shared/api/utils/error';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { Button } from '@/shared/ui/Button/Button';
 import { FormSelect } from '@/shared/ui/FormSelect';
@@ -98,13 +97,8 @@ export const RegistrationView = ({
         );
         resetForm();
         onOpenChange(false);
-      } catch (error) {
-        toast.error(
-          errorMessage(
-            (error as ApiError).response?.data.message ??
-              'Unknown server error',
-          ),
-        );
+      } catch {
+        // The thunk has already shown the error; keep the modal open
       }
     },
     [dispatch, schemaId, onOpenChange, resetForm, t],

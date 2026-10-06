@@ -11,7 +11,7 @@ import ROUTES from '@/app/routes/RoutePaths';
 import { SaveTemplateModal } from '@/components/SaveTemplateModal';
 import * as layoutCls from '@/components/Steps/PreparationStepLayout/PreparationStepLayout.module.scss';
 import { StepHeader } from '@/components/StepTitle';
-import { getIssuanceTemplatesIsLoading } from '@/entities/IssuanceTemplate/model/selectors/issuanceTemplatesSelector';
+import { getIssuanceTemplatesIsMutating } from '@/entities/IssuanceTemplate/model/selectors/issuanceTemplatesSelector';
 import { createIssuanceTemplate } from '@/entities/IssuanceTemplate/model/services/createIssuanceTemplate';
 import { updateIssuanceTemplate } from '@/entities/IssuanceTemplate/model/services/updateIssuanceTemplate';
 import {
@@ -43,7 +43,7 @@ export const FillCredentialData = ({
   const { t } = useTranslation();
   const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
-  const isLoading = useSelector(getIssuanceTemplatesIsLoading);
+  const isLoading = useSelector(getIssuanceTemplatesIsMutating);
   const [isTemplateModalOpen, setTemplateModalOpen] = useState(false);
   const { schema } = context;
 

@@ -13,7 +13,17 @@ const config: Config = {
   },
   clearMocks: true,
   testEnvironment: 'jsdom',
-  coveragePathIgnorePatterns: ['\\\\node_modules\\\\'],
+  // Coverage is collected only with `--coverage` (`yarn test:coverage`)
+  coverageProvider: 'v8',
+  coverageReporters: ['text', 'text-summary', 'lcov', 'json', 'json-summary'],
+  coverageDirectory: '<rootDir>coverage',
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.{test,spec}.{ts,tsx}',
+    '!src/**/*.stories.{ts,tsx}',
+    '!src/**/*.d.ts',
+  ],
+  coveragePathIgnorePatterns: ['/node_modules/'],
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node'],
   moduleDirectories: ['node_modules'],
   modulePaths: ['<rootDir>src'],

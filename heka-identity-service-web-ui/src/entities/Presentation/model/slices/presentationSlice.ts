@@ -43,9 +43,9 @@ export const presentationSlice = buildSlice({
           state.presentationSession = action.payload;
         },
       )
-      .addCase(requestPresentation.rejected, (state, payload) => {
+      .addCase(requestPresentation.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = payload.error.message;
+        state.error = action.payload ?? action.error.message;
         state.presentationSession = undefined;
       })
       .addCase(

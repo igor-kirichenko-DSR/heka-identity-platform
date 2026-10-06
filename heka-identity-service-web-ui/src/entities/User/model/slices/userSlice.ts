@@ -96,10 +96,10 @@ export const userSlice = buildSlice({
           };
         },
       )
-      .addCase(prepareWallet.rejected, (state, payload) => {
+      .addCase(prepareWallet.rejected, (state, action) => {
         state.isLoading = false;
         state.isPreparing = false;
-        state.error = payload.error.message;
+        state.error = action.payload ?? action.error.message;
       })
       .addCase(
         fetchDidMethods.fulfilled,
@@ -112,9 +112,9 @@ export const userSlice = buildSlice({
           };
         },
       )
-      .addCase(fetchDidMethods.rejected, (state, payload) => {
+      .addCase(fetchDidMethods.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = payload.error.message;
+        state.error = action.payload ?? action.error.message;
       })
       .addCase(
         fetchDidDocuments.fulfilled,
@@ -127,9 +127,9 @@ export const userSlice = buildSlice({
           };
         },
       )
-      .addCase(fetchDidDocuments.rejected, (state, payload) => {
+      .addCase(fetchDidDocuments.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = payload.error.message;
+        state.error = action.payload ?? action.error.message;
       })
       .addCase(signOut.pending, (state) => {
         state.isLoading = false;

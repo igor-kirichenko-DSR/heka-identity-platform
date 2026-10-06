@@ -47,10 +47,10 @@ export const schemasSlice = buildSlice({
           state.error = undefined;
         },
       )
-      .addCase(getSchemaList.rejected, (state, payload) => {
+      .addCase(getSchemaList.rejected, (state, action) => {
         state.isLoading = false;
         state.schemas = undefined;
-        state.error = payload.error.message;
+        state.error = action.payload ?? action.error.message;
       })
       // Single schema
       .addCase(getSingleSchema.pending, (state) => {
@@ -65,10 +65,10 @@ export const schemasSlice = buildSlice({
           state.error = undefined;
         },
       )
-      .addCase(getSingleSchema.rejected, (state, payload) => {
+      .addCase(getSingleSchema.rejected, (state, action) => {
         state.isLoading = false;
         state.schema = undefined;
-        state.error = payload.error.message;
+        state.error = action.payload ?? action.error.message;
       })
       // Create schema
       .addCase(createNewSchema.pending, (state) => {
@@ -79,9 +79,9 @@ export const schemasSlice = buildSlice({
         state.isLoading = false;
         state.error = undefined;
       })
-      .addCase(createNewSchema.rejected, (state, payload) => {
+      .addCase(createNewSchema.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = payload.error.message;
+        state.error = action.payload ?? action.error.message;
       })
       // Register schema
       .addCase(registerSchema.pending, (state) => {
@@ -100,9 +100,9 @@ export const schemasSlice = buildSlice({
           state.schema = schema;
         },
       )
-      .addCase(registerSchema.rejected, (state, payload) => {
+      .addCase(registerSchema.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = payload.error.message;
+        state.error = action.payload ?? action.error.message;
       })
       // Update schema
       .addCase(updateSchemaView.pending, (state) => {
@@ -124,9 +124,9 @@ export const schemasSlice = buildSlice({
             : schema;
         });
       })
-      .addCase(updateSchemaView.rejected, (state, payload) => {
+      .addCase(updateSchemaView.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = payload.error.message;
+        state.error = action.payload ?? action.error.message;
       }),
 });
 

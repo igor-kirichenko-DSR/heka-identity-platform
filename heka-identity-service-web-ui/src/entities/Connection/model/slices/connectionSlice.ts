@@ -69,9 +69,9 @@ export const connectionSlice = buildSlice({
           state.connectionSession = action.payload;
         },
       )
-      .addCase(createConnection.rejected, (state, error) => {
+      .addCase(createConnection.rejected, (state, action) => {
         if (isExistingConnectionChosen(state.connectionSession)) return;
-        state.error = error.error.message;
+        state.error = action.payload ?? action.error.message;
         state.isLoading = false;
         state.connectionSession = undefined;
       })

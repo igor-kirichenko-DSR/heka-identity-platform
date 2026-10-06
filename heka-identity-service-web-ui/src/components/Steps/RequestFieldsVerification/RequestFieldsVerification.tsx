@@ -12,7 +12,7 @@ import {
   Openid4CredentialFormat,
   ProtocolType,
 } from '@/entities/Schema/model/types/schema';
-import { getVerificationTemplatesIsLoading } from '@/entities/VerificationTemplate/model/selectors/verificationTemplatesSelector';
+import { getVerificationTemplatesIsMutating } from '@/entities/VerificationTemplate/model/selectors/verificationTemplatesSelector';
 import { createVerificationTemplate } from '@/entities/VerificationTemplate/model/services/createVerificationTemplate';
 import { updateVerificationTemplate } from '@/entities/VerificationTemplate/model/services/updateVerificationTemplate';
 import { VerifyCredentialContext } from '@/pages/VerifyCredential/VerifyCredential.config';
@@ -38,7 +38,7 @@ export const RequestFieldsVerification = ({
   const { t } = useTranslation();
   const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
-  const isLoading = useSelector(getVerificationTemplatesIsLoading);
+  const isLoading = useSelector(getVerificationTemplatesIsMutating);
   const [isTemplateModalOpen, setTemplateModalOpen] = useState(false);
   const { schema, protocolType, credentialType } = context;
 
