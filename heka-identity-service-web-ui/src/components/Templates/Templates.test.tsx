@@ -47,7 +47,8 @@ jest.mock('@/components/Screen/Screen', () => ({
 jest.mock('@/shared/ui/Loader', () => ({ LoaderView: () => null }));
 jest.mock('@/shared/ui/ConfirmDialog', () => ({
   __esModule: true,
-  default: () => ({ ConfirmDialog: () => null, confirm: jest.fn() }),
+  default: () => ({ dialogProps: {}, confirm: jest.fn() }),
+  ConfirmForm: () => null,
 }));
 
 const template = (id: string, name: string) =>

@@ -101,6 +101,30 @@ describe('$agencyApi interceptors', () => {
     expect(bridge.dropSession).not.toHaveBeenCalled();
   });
 
+  test('renews once when several requests fail with 401 together', async () => {
+    // The renewal swaps the session token, as the OIDC bridge does
+    bridge.refresh.mockImplementation(async () => {
+      token = 'token-2';
+      return 'token-2';
+    });
+    adapter.mockImplementation((config) =>
+      authHeader(config) === 'Bearer token-2'
+        ? ok(config, config.url)
+        : fail(config, 401),
+    );
+
+    const responses = await Promise.all([
+      $agencyApi.get('/a'),
+      $agencyApi.get('/b'),
+      $agencyApi.get('/c'),
+    ]);
+
+    expect(responses.map((r) => r.data)).toEqual(['/a', '/b', '/c']);
+    expect(bridge.refresh).toHaveBeenCalledTimes(1);
+    expect(adapter).toHaveBeenCalledTimes(6);
+    expect(bridge.dropSession).not.toHaveBeenCalled();
+  });
+
   test('drops the session when the renewal yields no token', async () => {
     bridge.refresh.mockResolvedValue(null);
     adapter.mockImplementation((config) => fail(config, 401));

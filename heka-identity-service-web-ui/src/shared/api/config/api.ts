@@ -19,6 +19,11 @@ export const $agencyApi = axios.create({
  */
 export const currentAccessToken = (): string | null => getSessionAccessToken();
 
+const bearerToken = (authorization: unknown): string | null =>
+  typeof authorization === 'string' && authorization.startsWith('Bearer ')
+    ? authorization.slice('Bearer '.length)
+    : null;
+
 const setAuthHeader = (config: InternalAxiosRequestConfig) => {
   // A retry after a token renewal already carries the fresh token.
   if (config._retry && config.headers?.Authorization) return config;
@@ -76,10 +81,17 @@ const handleApiError = async (api: AxiosInstance, error: unknown) => {
       if (!originalConfig._retry) {
         originalConfig._retry = true;
 
-        // Use mutex to prevent multiple simultaneous renewals
-        const accessToken = await mutex.runExclusive(() =>
-          refreshSessionToken(),
-        );
+        // The mutex runs one renewal at a time. A request that waited for it checks whether
+        // the session was already renewed since it was sent, and reuses that token instead of
+        // spending another refresh grant (several requests often fail with 401 together).
+        const sentToken = bearerToken(originalConfig.headers?.Authorization);
+        const accessToken = await mutex.runExclusive(() => {
+          const currentToken = getSessionAccessToken();
+          if (currentToken && currentToken !== sentToken) {
+            return currentToken;
+          }
+          return refreshSessionToken();
+        });
 
         if (accessToken) {
           originalConfig.headers.Authorization = `Bearer ${accessToken}`;

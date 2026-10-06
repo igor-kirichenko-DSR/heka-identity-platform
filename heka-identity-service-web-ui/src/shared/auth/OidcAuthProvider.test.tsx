@@ -77,12 +77,17 @@ describe('SessionBridge', () => {
     expect(isLoading).toBe(false);
 
     let renewedToken: string | null = null;
+    let tokenBeforeRerender: string | null = null;
     await act(async () => {
       finishRenewal();
       renewedToken = await refresh;
+      // Read before act flushes the re-render: requests queued behind this renewal must
+      // already see the new token, or they would renew again
+      tokenBeforeRerender = getSessionAccessToken();
     });
 
     expect(renewedToken).toBe('token-2');
+    expect(tokenBeforeRerender).toBe('token-2');
     expect(getSessionAccessToken()).toBe('token-2');
     expect(isLoading).toBe(false);
   });

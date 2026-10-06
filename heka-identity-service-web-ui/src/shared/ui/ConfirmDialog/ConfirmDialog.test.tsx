@@ -117,18 +117,56 @@ describe('useConfirmDialog', () => {
     onAccept?: () => Promise<void>;
     onCancel?: () => Promise<void>;
   }) => {
-    const { ConfirmDialog, confirm } = useConfirmDialog({
+    const { dialogProps, confirm } = useConfirmDialog({
       text: 'Remove template?',
-      onAccept,
-      onCancel,
+      // Inline callbacks change identity on every render, as real callers' often do
+      onAccept: onAccept && (() => onAccept()),
+      onCancel: onCancel && (() => onCancel()),
     });
     return (
       <>
         <button onClick={confirm}>remove</button>
-        <ConfirmDialog />
+        <ConfirmForm {...dialogProps} />
       </>
     );
   };
+
+  test('keeps the open dialog mounted when the caller re-renders', async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <Harness onAccept={jest.fn().mockResolvedValue(undefined)} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'remove' }));
+    const heading = await screen.findByRole('heading', {
+      name: 'Remove template?',
+    });
+
+    // The caller re-renders with new callbacks while the dialog is open
+    rerender(<Harness onAccept={jest.fn().mockResolvedValue(undefined)} />);
+
+    // The same DOM node: the dialog was updated in place, not unmounted and mounted again
+    expect(screen.getByRole('heading', { name: 'Remove template?' })).toBe(
+      heading,
+    );
+  });
+
+  test('closing with Escape cancels once, and opening does not cancel', async () => {
+    const user = userEvent.setup();
+    const onCancel = jest.fn().mockResolvedValue(undefined);
+    render(<Harness onCancel={onCancel} />);
+
+    await user.click(screen.getByRole('button', { name: 'remove' }));
+    await screen.findByRole('heading', { name: 'Remove template?' });
+    expect(onCancel).not.toHaveBeenCalled();
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() =>
+      expect(screen.queryByText('Remove template?')).not.toBeInTheDocument(),
+    );
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
 
   test('opens on confirm and runs onAccept', async () => {
     const user = userEvent.setup();

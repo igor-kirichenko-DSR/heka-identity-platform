@@ -1,6 +1,8 @@
 import { createSlice, ReducersMapObject } from '@reduxjs/toolkit';
-import { render, screen } from '@testing-library/react';
-import { useSelector } from 'react-redux';
+import { act, render, screen } from '@testing-library/react';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { userActions } from '@/entities/User';
 
 import { createReducerManager } from './config/reducerManager';
 import { StateSchema, StateSchemaKey } from './config/StateSchema';
@@ -28,6 +30,33 @@ describe('StoreProvider', () => {
         <UserName />
       </StoreProvider>,
     );
+
+    expect(screen.getByText('Jane Doe')).toBeInTheDocument();
+  });
+
+  test('keeps the same store, and its state, when the provider re-renders', () => {
+    let dispatch: ReturnType<typeof useDispatch> | undefined;
+    const CaptureDispatch = () => {
+      dispatch = useDispatch();
+      return null;
+    };
+    // A fresh element each time, so React really re-renders the provider
+    const tree = () => (
+      <StoreProvider>
+        <CaptureDispatch />
+        <UserName />
+      </StoreProvider>
+    );
+
+    const { rerender } = render(tree());
+    act(() => {
+      dispatch!(
+        userActions.setSession({ accessToken: 'token', name: 'Jane Doe' }),
+      );
+    });
+    expect(screen.getByText('Jane Doe')).toBeInTheDocument();
+
+    rerender(tree());
 
     expect(screen.getByText('Jane Doe')).toBeInTheDocument();
   });

@@ -74,6 +74,9 @@ export const SessionBridge = ({
       refresh: async () => {
         try {
           const renewed = await userManager.signinSilent();
+          // Expose the new token right away, before React re-renders with it, so requests that
+          // queued behind this renewal reuse it instead of renewing again
+          if (renewed) userRef.current = renewed;
           return renewed?.access_token ?? null;
         } catch {
           return null;

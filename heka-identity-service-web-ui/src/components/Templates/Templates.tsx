@@ -9,7 +9,7 @@ import { DesktopView } from '@/components/Screen/Screen';
 import { Template } from '@/components/Template/Template';
 import { IssuanceTemplate } from '@/entities/IssuanceTemplate';
 import { VerificationTemplate } from '@/entities/VerificationTemplate';
-import useConfirmDialog from '@/shared/ui/ConfirmDialog';
+import useConfirmDialog, { ConfirmForm } from '@/shared/ui/ConfirmDialog';
 import { Column, Row } from '@/shared/ui/Grid';
 import { LoaderView } from '@/shared/ui/Loader';
 import { Search } from '@/shared/ui/Search/Search';
@@ -65,7 +65,7 @@ export const Templates = ({
       )
     : localTemplates;
 
-  const { ConfirmDialog, confirm } = useConfirmDialog({
+  const { dialogProps, confirm } = useConfirmDialog({
     text: t('Template.confirmation.deleteTemplate'),
     cancelButtonText: t('Template.buttons.cancelConfirm'),
     acceptButtonText: t('Template.buttons.deleteConfirm'),
@@ -186,7 +186,7 @@ export const Templates = ({
           )}
         </div>
       )}
-      <ConfirmDialog />
+      <ConfirmForm {...dialogProps} />
     </Column>
   );
 };
