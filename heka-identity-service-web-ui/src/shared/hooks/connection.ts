@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { pollTimeout } from '@/const/behaviour';
@@ -17,6 +17,7 @@ import { updateConnectionState } from '@/entities/Connection/model/services/upda
 import { connectionActions } from '@/entities/Connection/model/slices/connectionSlice';
 import { ConnectionState } from '@/entities/Connection/model/types/connection';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
+import { useLatest } from '@/shared/lib/hooks/useLatest';
 
 export interface UseConnectionParams {
   onComplete: (connectionId?: string) => void;
@@ -25,6 +26,10 @@ export interface UseConnectionParams {
 
 export function useConnection({ onComplete, useDemo }: UseConnectionParams) {
   const dispatch = useAppDispatch();
+  const onCompleteRef = useLatest(onComplete);
+  // The connection onComplete last ran for, or null. onComplete sends an offer or a proof
+  // request, so it must run once per completed connection, not again when its identity changes
+  const completedFor = useRef<string | undefined | null>(null);
 
   const [connectionAlias, setConnectionAlias] = useState<string>('');
   // False until this step has replaced whatever session the slice held before it mounted
@@ -68,10 +73,15 @@ export function useConnection({ onComplete, useDemo }: UseConnectionParams) {
   }, [isStarted, connectionId, connectionState, dispatch, useDemo]);
 
   useEffect(() => {
-    if (isStarted && connectionState === ConnectionState.Completed) {
-      onComplete(connectionId);
+    if (!isStarted || connectionState !== ConnectionState.Completed) {
+      // A restarted flow may complete with the same existing connection again
+      completedFor.current = null;
+      return;
     }
-  }, [isStarted, connectionState, onComplete, connectionId]);
+    if (completedFor.current === connectionId) return;
+    completedFor.current = connectionId;
+    onCompleteRef.current(connectionId);
+  }, [isStarted, connectionState, connectionId, onCompleteRef]);
 
   // A new invitation is only safe while no wallet has started connecting to the current one
   const canRename =

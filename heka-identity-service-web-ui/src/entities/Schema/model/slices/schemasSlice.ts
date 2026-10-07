@@ -26,6 +26,7 @@ export const schemasSlice = buildSlice({
       state.error = initialState.error;
       state.schemas = initialState.schemas;
       state.schema = initialState.schema;
+      state.listRequestId = undefined;
     },
 
     updateSchema: (state, action: PayloadAction<Schema>) => {
@@ -114,7 +115,8 @@ export const schemasSlice = buildSlice({
       // (matchers must follow all addCase calls)
       .addMatcher(
         isAnyOf(getSchemaList.pending, getDemoSchemaList.pending),
-        (state) => {
+        (state, action) => {
+          state.listRequestId = action.meta.requestId;
           state.isLoading = true;
           state.error = undefined;
           state.schemas = undefined;
@@ -122,7 +124,9 @@ export const schemasSlice = buildSlice({
       )
       .addMatcher(
         isAnyOf(getSchemaList.fulfilled, getDemoSchemaList.fulfilled),
-        (state, action: PayloadAction<Schema[]>) => {
+        (state, action) => {
+          // A newer list request (another filter, or the demo list) has been sent since
+          if (action.meta.requestId !== state.listRequestId) return;
           state.schemas = action.payload;
           state.isLoading = false;
           state.error = undefined;
@@ -131,6 +135,7 @@ export const schemasSlice = buildSlice({
       .addMatcher(
         isAnyOf(getSchemaList.rejected, getDemoSchemaList.rejected),
         (state, action) => {
+          if (action.meta.requestId !== state.listRequestId) return;
           state.isLoading = false;
           state.schemas = undefined;
           state.error = action.payload ?? action.error.message;

@@ -206,6 +206,7 @@ describe('requestPresentation — OpenID4VP direct_post', () => {
       isLoading: false,
       error: 'verifier missing',
       presentationSession: undefined,
+      latestRequestId: action.meta.requestId,
     });
   });
 });

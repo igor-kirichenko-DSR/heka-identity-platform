@@ -127,6 +127,8 @@ export interface SchemasSchema {
   error?: string;
   schemas?: Schema[];
   schema?: Schema;
+  /** requestId of the latest schema list request: answers to older ones are ignored */
+  listRequestId?: string;
 }
 
 export interface UpdateSchemaParams {

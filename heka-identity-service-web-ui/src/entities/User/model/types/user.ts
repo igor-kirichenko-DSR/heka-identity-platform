@@ -33,4 +33,6 @@ export interface UserSchema {
   isPreparing: boolean;
   data?: User;
   error?: string;
+  /** requestId of the latest fetchDidDocuments: answers for a previously selected network are ignored */
+  didDocumentsRequestId?: string;
 }

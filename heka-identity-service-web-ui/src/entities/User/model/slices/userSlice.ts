@@ -116,7 +116,11 @@ export const userSlice = buildSlice({
         state.isLoading = false;
         state.error = action.payload ?? action.error.message;
       })
+      .addCase(fetchDidDocuments.pending, (state, action) => {
+        state.didDocumentsRequestId = action.meta.requestId;
+      })
       .addCase(fetchDidDocuments.fulfilled, (state, action) => {
+        if (action.meta.requestId !== state.didDocumentsRequestId) return;
         const result: GetDidDocumentsResult = action.payload;
         state.isLoading = false;
         state.error = undefined;
@@ -128,6 +132,7 @@ export const userSlice = buildSlice({
         };
       })
       .addCase(fetchDidDocuments.rejected, (state, action) => {
+        if (action.meta.requestId !== state.didDocumentsRequestId) return;
         state.isLoading = false;
         state.error = action.payload ?? action.error.message;
       })

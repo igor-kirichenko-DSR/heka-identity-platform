@@ -124,4 +124,70 @@ describe('useConnection', () => {
     expect(onComplete).not.toHaveBeenCalledWith('conn-old');
     jest.useRealTimers();
   });
+
+  test('a new onComplete identity after completion does not send again', async () => {
+    const agencyApi = {
+      post: jest.fn().mockResolvedValue({
+        data: { id: 'oob-new', invitationUrl: 'https://agent/?oob=new' },
+      }),
+      get: jest.fn().mockResolvedValue({ data: [] }),
+    } as unknown as AxiosInstance;
+    const store = makeStore(agencyApi);
+    const first = jest.fn();
+    const second = jest.fn();
+
+    const { result, rerender } = renderHook(
+      ({ onComplete }: { onComplete: (id?: string) => void }) =>
+        useConnection({ onComplete }),
+      {
+        initialProps: { onComplete: first },
+        wrapper: ({ children }: { children: React.ReactNode }) => (
+          <Provider store={store}>{children}</Provider>
+        ),
+      },
+    );
+    await waitFor(() =>
+      expect(result.current.connectionInvitation).toBeTruthy(),
+    );
+
+    act(() => result.current.selectConnection('conn-chosen'));
+    await waitFor(() => expect(first).toHaveBeenCalledWith('conn-chosen'));
+
+    // The flow context changed, so the caller's useCallback returns a new function
+    rerender({ onComplete: second });
+
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).not.toHaveBeenCalled();
+  });
+
+  test('restarting with a QR and choosing the same connection sends again', async () => {
+    const agencyApi = {
+      post: jest.fn().mockResolvedValue({
+        data: { id: 'oob-new', invitationUrl: 'https://agent/?oob=new' },
+      }),
+      get: jest.fn().mockResolvedValue({ data: [] }),
+    } as unknown as AxiosInstance;
+    const store = makeStore(agencyApi);
+    const onComplete = jest.fn();
+
+    const { result } = renderHook(() => useConnection({ onComplete }), {
+      wrapper: ({ children }: { children: React.ReactNode }) => (
+        <Provider store={store}>{children}</Provider>
+      ),
+    });
+    await waitFor(() =>
+      expect(result.current.connectionInvitation).toBeTruthy(),
+    );
+
+    act(() => result.current.selectConnection('conn-chosen'));
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+
+    act(() => result.current.restartWithQr());
+    await waitFor(() =>
+      expect(result.current.connectionState).toBe(ConnectionState.Start),
+    );
+    act(() => result.current.selectConnection('conn-chosen'));
+
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(2));
+  });
 });

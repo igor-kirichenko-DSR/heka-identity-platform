@@ -1,5 +1,3 @@
-import { PayloadAction } from '@reduxjs/toolkit';
-
 import {
   updatePresentationState,
   CheckPresentationStateResult,
@@ -26,24 +24,27 @@ export const presentationSlice = buildSlice({
       state.isLoading = initialState.isLoading;
       state.error = initialState.error;
       state.presentationSession = initialState.presentationSession;
+      state.latestRequestId = undefined;
     },
   },
   extraReducers: (builder) =>
     builder
-      .addCase(requestPresentation.pending, (state) => {
+      .addCase(requestPresentation.pending, (state, action) => {
+        state.latestRequestId = action.meta.requestId;
         state.isLoading = true;
         state.error = undefined;
         state.presentationSession = undefined;
       })
-      .addCase(
-        requestPresentation.fulfilled,
-        (state, action: PayloadAction<RequestPresentationResult>) => {
-          state.isLoading = false;
-          state.error = undefined;
-          state.presentationSession = action.payload;
-        },
-      )
+      .addCase(requestPresentation.fulfilled, (state, action) => {
+        // The flow was reset or restarted while this request was in flight
+        if (action.meta.requestId !== state.latestRequestId) return;
+        const result: RequestPresentationResult = action.payload;
+        state.isLoading = false;
+        state.error = undefined;
+        state.presentationSession = result;
+      })
       .addCase(requestPresentation.rejected, (state, action) => {
+        if (action.meta.requestId !== state.latestRequestId) return;
         state.isLoading = false;
         state.error = action.payload ?? action.error.message;
         state.presentationSession = undefined;

@@ -238,6 +238,7 @@ describe('offerCredential', () => {
       error: 'bad did, bad network',
       issuanceSession: undefined,
       credentialsConfig: undefined,
+      offerRequestId: action.meta.requestId,
     });
   });
 

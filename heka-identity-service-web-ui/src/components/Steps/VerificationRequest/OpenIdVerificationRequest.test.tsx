@@ -278,6 +278,34 @@ describe('OpenIdVerificationRequest', () => {
       ).toBeInTheDocument();
     });
 
+    test('leaving the step aborts a pending wallet request', async () => {
+      const user = userEvent.setup();
+      const api = createMockApi();
+      stubVerifier(api);
+      let pickerSignal: AbortSignal | undefined;
+      mockCredentialsGet((options) => {
+        pickerSignal = (options as { signal: AbortSignal }).signal;
+        return new Promise(() => {});
+      });
+      const { unmount } = renderRequest(context, { api });
+
+      await user.click(
+        screen.getByRole('button', { name: 'Digital Credentials API' }),
+      );
+      await user.click(
+        screen.getByRole('button', { name: 'Present credential' }),
+      );
+      await waitFor(() => expect(pickerSignal).toBeDefined());
+
+      unmount();
+
+      expect(pickerSignal?.aborted).toBe(true);
+      expect(api.post).not.toHaveBeenCalledWith(
+        '/openid4vc/verification-session/vs-1/verify',
+        expect.anything(),
+      );
+    });
+
     test('rejects an incomplete context and can go back to the method choice', async () => {
       const user = userEvent.setup();
       const { api } = renderRequest({ ...context, credentialType: undefined });
