@@ -54,7 +54,7 @@ describe('IssueCredential page', () => {
     const { user } = renderAt(ROUTES.ISSUE_CREDENTIAL_TEMPLATES);
 
     // The schemes menu item; the page header also shows the active item
-    const [schemesItem] = screen.getAllByText('Schemes');
+    const [schemesItem] = screen.getAllByText('Schemas');
     await user.click(schemesItem);
     expect(screen.getByTestId('pathname')).toHaveTextContent(
       ROUTES.ISSUE_CREDENTIAL_SCHEMAS,

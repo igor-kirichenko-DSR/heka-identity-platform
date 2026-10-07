@@ -4,7 +4,7 @@ export default {
       logo: 'Heka Identity Service',
       copyLink: 'click this link to copy.',
       scanQR: 'Scan QR code with your mobile wallet or',
-      schemas: 'Schemes',
+      schemas: 'Schemas',
       templates: 'Templates',
       loadingSchemas: 'Loading schemes ...',
       loadingTemplates: 'Loading templates ...',
@@ -186,7 +186,7 @@ export default {
     },
     menuItemNames: {
       templates: 'Templates',
-      schemas: 'Schemes',
+      schemas: 'Schemas',
       credentialDefinitions: 'Credential definitions',
       dids: 'DIDs',
       issuedCredentials: 'Issued credentials',
@@ -257,7 +257,7 @@ export default {
     },
     warnings: {
       schemaIsNotRegistered:
-        'The scheme is not yet registered. For verification, please register it first in the "Issue credential.Schemes" section.',
+        'The schema is not yet registered. For verification, please register it first in the "Issue credential.Schemas" section.',
     },
     errors: {
       BadContext: 'Credential verification context is invalid',
@@ -363,7 +363,7 @@ export default {
     warnings: {
       verification: {
         schemaIsNotRegistered:
-          'The scheme is not yet registered. For create verification template, please register it first in the "Issue credential.Schemes" section.',
+          'The schema is not yet registered. For create verification template, please register it first in the "Issue credential.Schemas" section.',
       },
     },
     confirmation: {
