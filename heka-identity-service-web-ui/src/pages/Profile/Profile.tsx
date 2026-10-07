@@ -34,6 +34,8 @@ import { Loader } from '@/shared/ui/Loader';
 
 import * as cls from './Profile.module.scss';
 
+const ISSUER_NAME_MAX_LENGTH = 250;
+
 const Profile = () => {
   const user = useSelector(getUser);
   const isPreparingUser = useSelector(getIsPreparingUser);
@@ -69,7 +71,7 @@ const Profile = () => {
 
   const handleUpdateAgencyUser = useCallback(
     (data: TextFieldFormData) => {
-      patchAgencyUserProperty({ key: data.field, value: data.value });
+      patchAgencyUserProperty({ key: data.field, value: data.value?.trim() });
     },
     [patchAgencyUserProperty],
   );
@@ -97,15 +99,18 @@ const Profile = () => {
     }
   }, [t, user, isUserFetching, firstLoginNotified]);
 
+  // Validates the name as it will be saved, i.e. trimmed: `setValueAs` would never run, because
+  // TextInput writes the value through a Controller rather than a registered input
   const issuerNameValidation = {
-    setValueAs: (value: string) => value.trim(),
-    required: {
-      value: true,
-      message: t('Profile.validation.issuerRequired'),
-    },
-    maxLength: {
-      value: 250,
-      message: t('Profile.validation.issuerMaxLength', { max: 250 }),
+    validate: (value?: string) => {
+      const name = (value ?? '').trim();
+      if (!name) return t('Profile.validation.issuerRequired');
+      if (name.length > ISSUER_NAME_MAX_LENGTH) {
+        return t('Profile.validation.issuerMaxLength', {
+          max: ISSUER_NAME_MAX_LENGTH,
+        });
+      }
+      return true;
     },
   };
 

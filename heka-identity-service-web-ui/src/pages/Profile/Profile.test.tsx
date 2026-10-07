@@ -132,6 +132,52 @@ describe('Profile', () => {
     expect(await screen.findByText('Globex')).toBeInTheDocument();
   });
 
+  describe('issuer name', () => {
+    const editIssuer = async (value: string) => {
+      const user = userEvent.setup();
+      const result = renderProfile();
+      await user.click(
+        await screen.findByRole('button', { name: /Issuer.*ACME/ }),
+      );
+      const input = await screen.findByPlaceholderText('Issuer');
+      await user.clear(input);
+      // Set directly: typing a long or padded value key by key is slow and adds nothing
+      fireEvent.change(input, { target: { value } });
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+      return result;
+    };
+
+    test('is saved without surrounding spaces', async () => {
+      const { api } = await editIssuer('  Globex  ');
+
+      await waitFor(() => expect(api.patch).toHaveBeenCalled());
+      expect(patchedField(api, 'name')).toBe('Globex');
+    });
+
+    test('of only spaces counts as missing', async () => {
+      const { api } = await editIssuer('   ');
+
+      expect(await screen.findByText('Issuer is required')).toBeInTheDocument();
+      expect(api.patch).not.toHaveBeenCalled();
+    });
+
+    test('is limited to 250 characters, not counting surrounding spaces', async () => {
+      const { api } = await editIssuer(` ${'a'.repeat(251)} `);
+
+      expect(
+        await screen.findByText('Maximum length is 250'),
+      ).toBeInTheDocument();
+      expect(api.patch).not.toHaveBeenCalled();
+    });
+
+    test('accepts 250 characters padded with spaces', async () => {
+      const { api } = await editIssuer(`  ${'a'.repeat(250)}  `);
+
+      await waitFor(() => expect(api.patch).toHaveBeenCalled());
+      expect(patchedField(api, 'name')).toBe('a'.repeat(250));
+    });
+  });
+
   test('shows the issuer validation message in the current language', async () => {
     const key = 'Profile.validation.issuerRequired';
     const original = i18n.t(key);

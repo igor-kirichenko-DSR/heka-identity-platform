@@ -50,13 +50,15 @@ describe('VerifyCredential', () => {
     expect(screen.getByText('advanced page (issue)')).toBeInTheDocument();
   });
 
-  test('routes the template editor and the verify-from-template page', () => {
-    const { unmount } = renderAt(ROUTES.VERIFY_TEMPLATE);
+  test('routes the template editor', () => {
+    renderAt(ROUTES.VERIFY_TEMPLATE);
     expect(screen.getByText('advanced page (template)')).toBeInTheDocument();
-    unmount();
+  });
 
+  test('has no nested verify-from-template route', () => {
+    // The page lives at ROUTES.VERIFY_CREDENTIAL_FROM_TEMPLATE, routed by the app Router
     renderAt('/verify-credential/verify-from-template');
-    expect(screen.getByText('from template page')).toBeInTheDocument();
+    expect(screen.queryByText('from template page')).not.toBeInTheDocument();
   });
 });
 

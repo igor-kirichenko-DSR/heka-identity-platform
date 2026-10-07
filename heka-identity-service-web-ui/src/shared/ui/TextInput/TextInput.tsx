@@ -1,7 +1,13 @@
 import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { FieldError, Input, Label, TextField } from 'react-aria-components';
-import { Controller, FieldValues, Path } from 'react-hook-form';
-import { Control, UseFormClearErrors } from 'react-hook-form/dist/types/form';
+import {
+  Control,
+  Controller,
+  FieldValues,
+  Path,
+  UseControllerProps,
+  UseFormClearErrors,
+} from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import VisibilityOffIcon from '@/shared/assets/icons/visibility-off.svg';
@@ -19,6 +25,8 @@ export interface TextInputProps<T extends FieldValues> {
   clearErrors?: UseFormClearErrors<T>;
   hideText?: boolean;
   onChangeValue?: (value: string) => void;
+  /** Validation rules for the field (register it through this component, not `register()`) */
+  rules?: UseControllerProps<T>['rules'];
 }
 
 export const TextInput = <T extends FieldValues>({
@@ -29,6 +37,7 @@ export const TextInput = <T extends FieldValues>({
   clearErrors,
   hideText,
   onChangeValue,
+  rules,
 }: TextInputProps<T>) => {
   const { t } = useTranslation();
   const [isTextHidden, setIsTextHidden] = useState<boolean>(!!hideText);
@@ -41,6 +50,7 @@ export const TextInput = <T extends FieldValues>({
     <Controller
       control={control}
       name={name}
+      rules={rules}
       render={({ field, fieldState: { error } }) => (
         <TextField
           className={cls.inputWrapper}

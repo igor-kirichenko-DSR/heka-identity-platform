@@ -57,6 +57,26 @@ describe('EditField', () => {
     expect(screen.getByRole('button', { name: /Name/ })).toBeDisabled();
     expect(screen.getByText('Jane')).toBeInTheDocument();
   });
+
+  test('stays disabled when editing is disabled and loading has finished', async () => {
+    const user = userEvent.setup();
+    const onPress = jest.fn();
+    render(
+      <EditField
+        labelKey="Profile.titles.name"
+        isLoading={false}
+        isEditDisabled
+        onPress={onPress}
+      >
+        <span>Jane</span>
+      </EditField>,
+    );
+
+    const field = screen.getByRole('button', { name: /Name/ });
+    expect(field).toBeDisabled();
+    await user.click(field);
+    expect(onPress).not.toHaveBeenCalled();
+  });
 });
 
 describe('EditForm', () => {

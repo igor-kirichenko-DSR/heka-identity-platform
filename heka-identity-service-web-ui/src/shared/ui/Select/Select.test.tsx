@@ -23,6 +23,28 @@ describe('Select', () => {
     expect(screen.getByText('Select value')).toBeInTheDocument();
   });
 
+  test('stays controlled from an empty start, without React warnings', async () => {
+    const user = userEvent.setup();
+    const consoleError = jest.spyOn(console, 'error');
+    // react-aria reports "A component changed from uncontrolled to controlled" as a warning
+    const consoleWarn = jest.spyOn(console, 'warn');
+
+    render(
+      <Select
+        placeholder="Pick one"
+        items={items}
+      />,
+    );
+    await user.click(screen.getByRole('button'));
+    await user.click(screen.getByRole('option', { name: 'Option two' }));
+
+    expect(screen.getByRole('button')).toHaveTextContent('Option two');
+    expect(consoleError).not.toHaveBeenCalled();
+    expect(consoleWarn).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+    consoleWarn.mockRestore();
+  });
+
   test('opens the list and reports the selected value', async () => {
     const user = userEvent.setup();
     const onSelect = jest.fn();

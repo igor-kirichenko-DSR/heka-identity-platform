@@ -44,7 +44,6 @@ export const RegistrationView = ({
   const {
     control,
     handleSubmit,
-    register,
     clearErrors,
     reset,
     resetField,
@@ -198,7 +197,7 @@ export const RegistrationView = ({
     >
       <form onSubmit={handleSubmit(handleRegisterSchema)}>
         <FormSelect
-          {...register('protocol')}
+          name="protocol"
           control={control}
           clearErrors={clearErrors}
           placeholder={t('IssueCredential.schema.registrationDetails.protocol')}
@@ -207,7 +206,7 @@ export const RegistrationView = ({
         />
         {
           <FormSelect
-            {...register('credentialFormat')}
+            name="credentialFormat"
             control={control}
             clearErrors={clearErrors}
             placeholder={t(
@@ -219,7 +218,7 @@ export const RegistrationView = ({
           />
         }
         <FormSelect
-          {...register('network')}
+          name="network"
           control={control}
           clearErrors={clearErrors}
           placeholder={t('IssueCredential.schema.registrationDetails.network')}
@@ -228,7 +227,7 @@ export const RegistrationView = ({
           isDisabled={isNetworkDisabled}
         />
         <FormSelect
-          {...register('did')}
+          name="did"
           control={control}
           clearErrors={clearErrors}
           placeholder={t('IssueCredential.schema.registrationDetails.did')}
