@@ -119,7 +119,7 @@ describe('SelectSchema', () => {
 
     expect(
       await screen.findByText(
-        /The scheme is not yet registered\. For verification/,
+        /The schema is not yet registered\. For verification/,
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Next/ })).toBeDisabled();
@@ -128,7 +128,7 @@ describe('SelectSchema', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /Next/ })).toBeEnabled(),
     );
-    expect(screen.queryByText(/The scheme is not yet registered/)).toBeNull();
+    expect(screen.queryByText(/The schema is not yet registered/)).toBeNull();
     await user.click(screen.getByRole('button', { name: /Next/ }));
     expect(onNext).toHaveBeenCalled();
   });

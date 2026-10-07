@@ -1,5 +1,5 @@
 import { useSortable } from '@dnd-kit/sortable';
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Draggable, DraggableArea } from '@/components/Draggable/Draggable';

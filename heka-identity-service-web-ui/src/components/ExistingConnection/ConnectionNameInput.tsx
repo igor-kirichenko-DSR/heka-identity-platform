@@ -1,4 +1,4 @@
-import React, { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Input, Label, TextField } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 

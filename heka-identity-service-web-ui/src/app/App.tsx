@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Toaster } from 'react-hot-toast';
 
 import Router from '@/app/routes/Router';

@@ -1,6 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React from 'react';
 import toast from 'react-hot-toast';
 
 import { ConnectionState } from '@/entities/Connection/model/types/connection';

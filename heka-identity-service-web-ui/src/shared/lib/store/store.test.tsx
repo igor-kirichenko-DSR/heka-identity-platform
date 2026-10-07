@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { act, renderHook } from '@testing-library/react';
-import React, { PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react';
 import { Provider } from 'react-redux';
 
 import { StateSchema } from '@/app/providers/StoreProvider';

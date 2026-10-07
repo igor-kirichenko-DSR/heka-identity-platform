@@ -1,5 +1,4 @@
 import { act, screen } from '@testing-library/react';
-import React from 'react';
 import toast from 'react-hot-toast';
 
 import ROUTES from '@/app/routes/RoutePaths';

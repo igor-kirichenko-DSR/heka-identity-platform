@@ -1,7 +1,7 @@
 import { DragEndEvent } from '@dnd-kit/core';
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React, { PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react';
 import toast from 'react-hot-toast';
 
 import { SchemaProps } from '@/components/Schema/types';

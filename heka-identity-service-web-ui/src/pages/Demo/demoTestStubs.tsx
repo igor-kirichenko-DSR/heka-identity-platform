@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { CredentialOfferContext } from '@/components/Steps/CredentialOffer/CredentialOffer';
 import { NextStepName, StepDetails } from '@/components/Steps/Step.types';
 import { PresentationRequestContext } from '@/components/Steps/VerificationRequest/VerificationRequest';

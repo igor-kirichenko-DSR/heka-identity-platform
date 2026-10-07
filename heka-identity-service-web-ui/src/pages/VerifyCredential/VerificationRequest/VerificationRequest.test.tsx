@@ -1,6 +1,5 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React from 'react';
 
 import ROUTES from '@/app/routes/RoutePaths';
 import { NextStepName } from '@/components/Steps/Step.types';

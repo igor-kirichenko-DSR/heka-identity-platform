@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Label } from 'react-aria-components';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';

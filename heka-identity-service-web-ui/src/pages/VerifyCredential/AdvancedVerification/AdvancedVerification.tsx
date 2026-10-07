@@ -104,7 +104,7 @@ const AdvancedVerification = ({
       );
       onChangeContextProperty('attributes')(attributes);
     }
-  }, [verificationTemplate, onChangeContextProperty]);
+  }, [verificationTemplate, onChangeContextProperty, editedTemplateId]);
 
   const onChangeNetwork = useMemo(
     () => onChangeContextProperty('network'),

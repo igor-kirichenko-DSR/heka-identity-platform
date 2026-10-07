@@ -1,6 +1,6 @@
 import { render, RenderOptions } from '@testing-library/react';
 import { AxiosInstance } from 'axios';
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { Provider } from 'react-redux';
 import {
   MemoryRouter,

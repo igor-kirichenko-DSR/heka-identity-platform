@@ -1,5 +1,3 @@
-import React from 'react';
-
 /** Stand-ins for the QR code and the react-aria Select, which are awkward to drive in jsdom. */
 export const QRCodeStub = ({ content }: { content: string }) => (
   <div data-testid="qr">{content}</div>

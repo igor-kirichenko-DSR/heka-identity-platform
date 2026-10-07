@@ -1,4 +1,4 @@
-import React, { CSSProperties } from 'react';
+import { CSSProperties } from 'react';
 import { Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import { classNames } from '@/shared/lib/classNames';

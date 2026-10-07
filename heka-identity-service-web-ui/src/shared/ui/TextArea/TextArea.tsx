@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { TextArea } from 'react-aria-components';
 
 import { classNames } from '@/shared/lib/classNames';

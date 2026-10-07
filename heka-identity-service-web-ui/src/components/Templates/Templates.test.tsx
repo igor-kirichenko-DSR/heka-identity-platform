@@ -1,6 +1,6 @@
 import { DragEndEvent } from '@dnd-kit/core';
 import { act, render, screen } from '@testing-library/react';
-import React, { PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
 import { IssuanceTemplate } from '@/entities/IssuanceTemplate';

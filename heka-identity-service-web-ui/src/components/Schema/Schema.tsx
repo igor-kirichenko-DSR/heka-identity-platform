@@ -1,5 +1,5 @@
 import { useSortable } from '@dnd-kit/sortable';
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';

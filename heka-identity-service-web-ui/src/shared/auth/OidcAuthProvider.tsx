@@ -1,5 +1,5 @@
 import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
-import React, { PropsWithChildren, useEffect, useMemo, useRef } from 'react';
+import { PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 import { AuthProvider, useAuth } from 'react-oidc-context';
 
 import { userActions } from '@/entities/User';

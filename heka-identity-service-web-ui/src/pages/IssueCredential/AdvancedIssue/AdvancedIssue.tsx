@@ -108,7 +108,7 @@ export const AdvancedIssue = ({ type = 'issue' }: AdvancedIssueProps) => {
       );
       onChangeContextProperty('credentialValues')(fields);
     }
-  }, [issuanceTemplate, onChangeContextProperty]);
+  }, [editedTemplateId, issuanceTemplate, onChangeContextProperty]);
 
   const onChangeDid = useMemo(
     () => onChangeContextProperty('did'),

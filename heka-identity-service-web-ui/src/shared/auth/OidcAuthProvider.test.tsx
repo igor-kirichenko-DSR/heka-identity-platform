@@ -6,7 +6,6 @@ import {
   UserManager,
   WebStorageStateStore,
 } from 'oidc-client-ts';
-import React from 'react';
 import { AuthProvider } from 'react-oidc-context';
 
 import { SessionBridge } from './OidcAuthProvider';
