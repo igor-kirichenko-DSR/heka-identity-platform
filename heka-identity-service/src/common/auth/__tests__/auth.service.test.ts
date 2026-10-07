@@ -2,25 +2,29 @@ import { IncomingMessage } from 'http'
 
 import { createMock } from '@golevelup/ts-vitest'
 import { EntityManager } from '@mikro-orm/core'
-import { UnauthorizedException } from '@nestjs/common'
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common'
 
 import { Agent } from 'common/agent'
 import { Role } from 'common/auth'
 import { User, Wallet } from 'common/entities'
 import { Logger } from 'common/logger'
-import { getWalletId } from 'utils/auth'
+import { getDidControllerWalletId, getWalletId } from 'utils/auth'
 
 import { AuthService } from '../auth.service'
 import { TokenVerifier } from '../token-verifier.service'
 
 describe('getWalletId', () => {
   test.each([
-    [{ role: Role.Admin, userId: '11' }, 'Administration_11'],
+    // Every Admin acts as the platform identity
+    [{ role: Role.Admin, userId: '11' }, 'Administration'],
+    // OrgAdmin / OrgManager / OrgMember share the organization wallet
     [{ role: Role.OrgAdmin, userId: '12', orgId: '1' }, 'Organization_1'],
     [{ role: Role.OrgManager, userId: '13', orgId: '1' }, 'Organization_1'],
     [{ role: Role.OrgMember, userId: '14', orgId: '1' }, 'Organization_1'],
+    // Issuer / Verifier have a personal wallet per role and organization
     [{ role: Role.Issuer, userId: '15', orgId: '1' }, 'Issuer_15_in_Organization_1'],
-    [{ role: Role.Verifier, userId: '16', orgId: '2' }, 'Verifier_16_in_Organization_2'],
+    [{ role: Role.Issuer, userId: '15', orgId: '2' }, 'Issuer_15_in_Organization_2'],
+    [{ role: Role.Verifier, userId: '16', orgId: '1' }, 'Verifier_16_in_Organization_1'],
     [{ role: Role.User, userId: '17' }, 'User_17'],
   ])("for %o returns '%s'", (params: { role: Role; userId: string; orgId?: string }, expected: string) => {
     const actual = getWalletId(params)
@@ -38,6 +42,35 @@ describe('getWalletId', () => {
   ])('for %o throws UnauthorizedException', (params: { role: Role; userId: string; orgId?: string }) => {
     expect(() => getWalletId(params)).toThrow(UnauthorizedException)
   })
+})
+
+describe('getDidControllerWalletId', () => {
+  test.each([
+    [{ role: Role.Admin }, null],
+    [{ role: Role.OrgAdmin, orgId: '1' }, 'Administration'],
+    [{ role: Role.Issuer, orgId: '1' }, 'Organization_1'],
+  ])('for %o returns %s', (params: { role: Role; orgId?: string }, expected: string | null) => {
+    expect(getDidControllerWalletId(params)).toBe(expected)
+  })
+
+  test.each([
+    { role: Role.OrgManager, orgId: '1' },
+    { role: Role.OrgMember, orgId: '1' },
+    { role: Role.Verifier, orgId: '1' },
+    { role: Role.User },
+  ])(
+    'for %o throws ForbiddenException because the role cannot create a public DID',
+    (params: { role: Role; orgId?: string }) => {
+      expect(() => getDidControllerWalletId(params)).toThrow(ForbiddenException)
+    },
+  )
+
+  test.each([{ role: Role.Admin, orgId: '1' }, { role: Role.OrgAdmin }, { role: Role.Issuer }])(
+    'for %o throws UnauthorizedException',
+    (params: { role: Role; orgId?: string }) => {
+      expect(() => getDidControllerWalletId(params)).toThrow(UnauthorizedException)
+    },
+  )
 })
 
 describe('AuthService', () => {
@@ -125,6 +158,56 @@ describe('AuthService', () => {
       expect(result.role).toBe(Role.Issuer)
       expect(result.walletId).toBe('Issuer_11_in_Organization_7')
       expect(result.tenantId).toBe('tenant-xyz')
+    })
+  })
+
+  describe('validateWebSocketToken', () => {
+    // Shape-only JWT: verification is mocked, the service only decodes `exp` from it
+    const makeJwt = (claims: Record<string, unknown>) =>
+      [{ alg: 'RS256' }, claims, 'sig']
+        .map((part) => (typeof part === 'string' ? part : Buffer.from(JSON.stringify(part)).toString('base64url')))
+        .join('.')
+
+    const payload = { sub: '11', org_id: '7', name: 'test', roles: [Role.Issuer] }
+
+    beforeEach(() => {
+      vi.mocked(tokenVerifier.verify).mockResolvedValue(payload)
+      vi.mocked(em.findOne)
+        .mockResolvedValueOnce(makeUser({ id: '11' }))
+        .mockResolvedValueOnce(makeWallet())
+    })
+
+    test('reads the token that follows the bearer marker in Sec-WebSocket-Protocol', async () => {
+      const jwt = makeJwt({ sub: '11', exp: 1_900_000_000 })
+      const request = { headers: { 'sec-websocket-protocol': `heka.bearer, ${jwt}` } } as unknown as IncomingMessage
+
+      const result = await service.validateWebSocketToken(request)
+
+      expect(tokenVerifier.verify).toHaveBeenCalledWith(jwt)
+      expect(result.authInfo.userId).toBe('11')
+      expect(result.expiresAt).toBe(1_900_000_000)
+    })
+
+    test('falls back to the Authorization header', async () => {
+      const jwt = makeJwt({ sub: '11', exp: 1_900_000_000 })
+      const request = { headers: { authorization: `Bearer ${jwt}` } } as IncomingMessage
+
+      await service.validateWebSocketToken(request)
+
+      expect(tokenVerifier.verify).toHaveBeenCalledWith(jwt)
+    })
+
+    test('ignores subprotocols without the bearer marker', async () => {
+      const request = { headers: { 'sec-websocket-protocol': 'chat, something' } } as unknown as IncomingMessage
+
+      await expect(service.validateWebSocketToken(request)).rejects.toThrow('Authorization token is missing')
+      expect(tokenVerifier.verify).not.toHaveBeenCalled()
+    })
+
+    test('rejects a marker without a token', async () => {
+      const request = { headers: { 'sec-websocket-protocol': 'heka.bearer' } } as unknown as IncomingMessage
+
+      await expect(service.validateWebSocketToken(request)).rejects.toThrow('Authorization token is missing')
     })
   })
 

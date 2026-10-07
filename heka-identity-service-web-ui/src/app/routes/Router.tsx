@@ -1,11 +1,8 @@
-import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 
 import ROUTES from '@/app/routes/RoutePaths';
 import AuthenticatedLayout from '@/components/Layout/AuthenticatedLayout';
 import UnauthenticatedLayout from '@/components/Layout/UnauthenticatedLayout';
-import { getUserIsSignedIn } from '@/entities/User/model/selectors/userSelector';
 import AgeVerificationDemo from '@/pages/AgeVerificationDemo/AgeVerificationDemo';
 import Demo from '@/pages/Demo/Demo';
 import Home from '@/pages/Home/Home';
@@ -106,13 +103,9 @@ const UnauthenticatedRoutes = () => (
 );
 
 const Router = () => {
-  const isSignedIn = useSelector(getUserIsSignedIn);
-  const { isLoading } = useAuthSession();
-
-  const routes = useMemo(
-    () => (isSignedIn ? <AuthenticatedRoutes /> : <UnauthenticatedRoutes />),
-    [isSignedIn],
-  );
+  // Read sign-in from the OIDC session itself: its Redux mirror is updated one commit later
+  // (in an effect), so on reload the signed-out routes would redirect a deep link to Home
+  const { isAuthenticated, isLoading } = useAuthSession();
 
   // While the OIDC client restores the session or processes the redirect callback,
   // render neither route set: otherwise the app would flash the signed-out screens.
@@ -120,7 +113,11 @@ const Router = () => {
     return <LoaderView />;
   }
 
-  return <BrowserRouter>{routes}</BrowserRouter>;
+  return (
+    <BrowserRouter>
+      {isAuthenticated ? <AuthenticatedRoutes /> : <UnauthenticatedRoutes />}
+    </BrowserRouter>
+  );
 };
 
 export default Router;

@@ -3,6 +3,7 @@ import { IncomingMessage } from 'http'
 import { EntityManager } from '@mikro-orm/core'
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import { Mutex } from 'async-mutex'
+import { decodeJwt } from 'jose'
 
 import { Agent, AGENT_TOKEN } from 'common/agent'
 import { User, Wallet } from 'common/entities'
@@ -47,6 +48,30 @@ export class AuthService {
     logger.traceObject({ payload })
 
     return this.validateTokenPayload(payload)
+  }
+
+  /**
+   * Authenticates a WebSocket upgrade request. Browsers cannot set headers on a WebSocket, so the token
+   * may arrive as the second entry of `Sec-WebSocket-Protocol` after {@link WEBSOCKET_BEARER_PROTOCOL};
+   * the `Authorization` header still works for other clients.
+   * Returns the token's `exp` (seconds since epoch) so the caller can close the socket when it expires.
+   */
+  public async validateWebSocketToken(request: IncomingMessage): Promise<{ authInfo: AuthInfo; expiresAt?: number }> {
+    const logger = this.logger.child('validateWebSocketToken', { url: request.url })
+    logger.trace('>')
+
+    const token = extractTokenFromProtocolHeader(request) ?? extractTokenFromHeader(request)
+    if (!token) {
+      throw new UnauthorizedException('Authorization token is missing')
+    }
+
+    const payload = await this.tokenVerifier.verify(token)
+    const authInfo = await this.validateTokenPayload(payload)
+    // The signature and `exp` were verified above, so reading the claim without verification is safe here
+    const { exp } = decodeJwt(token)
+
+    logger.trace({ userId: authInfo.userId, expiresAt: exp }, '<')
+    return { authInfo, expiresAt: exp }
   }
 
   public async validateTokenPayload(tokenPayload: TokenPayload): Promise<AuthInfo> {
@@ -145,4 +170,14 @@ export class AuthService {
 function extractTokenFromHeader(request: IncomingMessage): string | undefined {
   const [type, token] = request.headers.authorization?.split(' ') ?? []
   return type === 'Bearer' ? token : undefined
+}
+
+/** Subprotocol a browser offers first, followed by its access token, when opening the notifications socket. */
+export const WEBSOCKET_BEARER_PROTOCOL = 'heka.bearer'
+
+function extractTokenFromProtocolHeader(request: IncomingMessage): string | undefined {
+  const protocols = (request.headers['sec-websocket-protocol'] ?? '').split(',').map((value) => value.trim())
+  const markerIndex = protocols.indexOf(WEBSOCKET_BEARER_PROTOCOL)
+  if (markerIndex === -1) return undefined
+  return protocols[markerIndex + 1] || undefined
 }

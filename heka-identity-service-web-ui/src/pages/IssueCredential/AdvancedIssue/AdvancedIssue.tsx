@@ -15,7 +15,6 @@ import {
   SchemaRegistration,
 } from '@/components/Steps';
 import { getIssuanceTemplate } from '@/entities/IssuanceTemplate/model/services/getIssuanceTemplate';
-import { useIssuanceTemplatesActions } from '@/entities/IssuanceTemplate/model/slices/issuanceTemplatesSlice';
 import { ProtocolType, Schema } from '@/entities/Schema';
 import { getSchema } from '@/entities/Schema/model/selectors/schemasSelector';
 import {
@@ -43,7 +42,6 @@ export const AdvancedIssue = ({ type = 'issue' }: AdvancedIssueProps) => {
   const { issuanceTemplate } = useSelector(
     (state: RootState) => state.issuanceTemplates,
   );
-  const { reset: resetTemplates } = useIssuanceTemplatesActions();
   const singleSchema = useSelector(getSchema);
 
   const {
@@ -62,22 +60,34 @@ export const AdvancedIssue = ({ type = 'issue' }: AdvancedIssueProps) => {
     steps,
   });
 
+  const editedTemplateId: string | undefined = state?.context?.templateId;
+
+  // Reset on mount and whenever the wizard switches between creating and editing a template
+  // (the create and edit flows share this route), so nothing from a previous flow leaks in.
   useEffect(() => {
-    dispatch(resetTemplates());
+    // Also resets the template slices, so the templates need no reset of their own
     resetFlowState();
-  }, [dispatch, resetFlowState, resetTemplates]);
+  }, [resetFlowState]);
 
   useEffect(() => {
-    if (!state?.context?.templateId) return;
+    if (!editedTemplateId) return;
     dispatch(
       getIssuanceTemplate({
-        id: state.context.templateId,
+        id: editedTemplateId,
       }),
     );
-  }, [dispatch, state?.context?.templateId]);
+  }, [dispatch, editedTemplateId]);
 
   useEffect(() => {
-    if (!issuanceTemplate) return;
+    // Only the template being edited may seed the context: the store can still hold a template
+    // from another flow (e.g. a template that was just used or edited), and applying it here
+    // would turn a new template into an update of that one.
+    if (
+      !editedTemplateId ||
+      !issuanceTemplate ||
+      issuanceTemplate.id !== editedTemplateId
+    )
+      return;
 
     onChangeContextProperty('templateId')(issuanceTemplate.id);
     onChangeContextProperty('templateName')(issuanceTemplate.name);
@@ -98,7 +108,7 @@ export const AdvancedIssue = ({ type = 'issue' }: AdvancedIssueProps) => {
       );
       onChangeContextProperty('credentialValues')(fields);
     }
-  }, [issuanceTemplate, onChangeContextProperty]);
+  }, [editedTemplateId, issuanceTemplate, onChangeContextProperty]);
 
   const onChangeDid = useMemo(
     () => onChangeContextProperty('did'),
