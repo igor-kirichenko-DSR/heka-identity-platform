@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ServeStaticModule } from '@nestjs/serve-static'
 
+import { AccreditationModule } from 'accreditation'
 import { CredentialV2Module } from 'credential-v2'
 import { DemoModule } from 'demo'
 import { OpenId4VcIssuanceSessionModule } from 'openid4vc/issuance-sessions'
@@ -61,6 +62,7 @@ const _appRoot = typeof __dirname !== 'undefined' ? resolve(__dirname, '..') : p
     OCAModule,
     DemoModule,
     OrganizationAdminModule,
+    AccreditationModule,
     EventEmitterModule.forRoot(),
     LoggerModule.forRoot(), // must be dynamic and the last initialized module in the app except for AppModule itself
   ],

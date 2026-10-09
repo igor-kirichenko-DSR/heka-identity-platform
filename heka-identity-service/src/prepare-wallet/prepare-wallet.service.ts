@@ -1,6 +1,7 @@
 import { EntityManager } from '@mikro-orm/core'
 import { ConflictException, Injectable } from '@nestjs/common'
 
+import { AccreditationService } from 'accreditation/accreditation.service'
 import { TenantAgent } from 'common/agent'
 import { AuthInfo } from 'common/auth'
 import { Wallet } from 'common/entities'
@@ -27,6 +28,7 @@ export class PrepareWalletService {
     private readonly openId4VcVerifierService: OpenId4VcVerifierService,
     private readonly schemaV2Service: SchemaV2Service,
     private readonly userService: UserService,
+    private readonly accreditationService: AccreditationService,
   ) {}
 
   public async prepareWallet(
@@ -106,6 +108,13 @@ export class PrepareWalletService {
 
     if (!mainDid) {
       throw new Error(`Failed to create DID for main method ${PrepareWalletService.mainDidMethod}`)
+    }
+
+    // Accreditations that could not be issued before (the parent wallet had no DID yet) or that expire soon
+    try {
+      await this.accreditationService.ensureForWallet(authInfo, tenantAgent)
+    } catch (error) {
+      logger.error({ err: error }, `Failed to accredit the DIDs of wallet ${authInfo.walletId}`)
     }
 
     if (req.schemas) {

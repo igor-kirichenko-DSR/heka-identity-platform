@@ -1,3 +1,4 @@
+import accreditation from './accreditation'
 import agent from './agent'
 import demo from './demo'
 import express from './express'
@@ -10,4 +11,17 @@ import pino from './pino'
 import roleModel from './role-model'
 import webhook from './webhook'
 
-export default [agent, express, health, oidc, demo, mikroOrm, pino, fileStorage, webhook, roleModel, organizationAdmin]
+export default [
+  agent,
+  express,
+  health,
+  oidc,
+  demo,
+  mikroOrm,
+  pino,
+  fileStorage,
+  webhook,
+  roleModel,
+  organizationAdmin,
+  accreditation,
+]

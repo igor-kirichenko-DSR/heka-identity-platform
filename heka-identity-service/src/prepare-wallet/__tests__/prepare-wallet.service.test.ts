@@ -2,6 +2,7 @@ import { createMock } from '@golevelup/ts-vitest'
 import { EntityManager } from '@mikro-orm/core'
 import { ConflictException } from '@nestjs/common'
 
+import { AccreditationService } from 'accreditation/accreditation.service'
 import { TenantAgent } from 'common/agent'
 import { AuthInfo, Role } from 'common/auth'
 import { Wallet } from 'common/entities'
@@ -25,6 +26,7 @@ describe('PrepareWalletService', () => {
   let tenantAgent: TenantAgent
   let em: EntityManager
   let wallet: Wallet
+  let accreditationService: AccreditationService
 
   const authInfo: AuthInfo = {
     userId: 'user-1',
@@ -36,10 +38,20 @@ describe('PrepareWalletService', () => {
   }
 
   const makeService = () =>
-    new PrepareWalletService(logger, em, didService, issuerService, verifierService, schemaV2Service, userService)
+    new PrepareWalletService(
+      logger,
+      em,
+      didService,
+      issuerService,
+      verifierService,
+      schemaV2Service,
+      userService,
+      accreditationService,
+    )
 
   beforeEach(() => {
     logger = createMock<Logger>()
+    accreditationService = createMock<AccreditationService>({ ensureForWallet: vi.fn().mockResolvedValue([]) })
     didService = createMock<DidService>()
     issuerService = createMock<OpenId4VcIssuerService>()
     verifierService = createMock<OpenId4VcVerifierService>()
@@ -60,6 +72,23 @@ describe('PrepareWalletService', () => {
     expect(em.findOneOrFail).toHaveBeenCalledWith(Wallet, { id: 'Administration' })
     expect(result.did).toBe('did:key:existing')
     expect(didService.create).not.toHaveBeenCalled()
+  })
+
+  test('an already prepared wallet gets missing or expiring accreditations', async () => {
+    wallet.publicDid = 'did:key:existing'
+
+    await prepareWalletService.prepareWallet(authInfo, tenantAgent, {})
+
+    expect(accreditationService.ensureForWallet).toHaveBeenCalledWith(authInfo, tenantAgent)
+  })
+
+  test('a failed accreditation does not fail the wallet preparation', async () => {
+    wallet.publicDid = 'did:key:existing'
+    vi.mocked(accreditationService.ensureForWallet).mockRejectedValue(new Error('signing failed'))
+
+    const result = await prepareWalletService.prepareWallet(authInfo, tenantAgent, {})
+
+    expect(result.did).toBe('did:key:existing')
   })
 
   test('creates DIDs for all methods, initializes OID4VC, and patches user', async () => {

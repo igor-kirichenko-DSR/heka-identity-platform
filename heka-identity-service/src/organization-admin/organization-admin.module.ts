@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 
+import { AccreditationModule } from 'accreditation/accreditation.module'
 import OrganizationAdminConfig from 'config/organization-admin'
 
 import { Auth0Directory } from './directory/auth0.directory'
@@ -42,6 +43,7 @@ export function createOrganizationDirectory(
  * `ORG_ADMIN_URL`, `ORG_ADMIN_CLIENT_ID` and `ORG_ADMIN_CLIENT_SECRET`.
  */
 @Module({
+  imports: [AccreditationModule],
   controllers: [OrganizationAdminController],
   providers: [
     OrganizationAdminService,

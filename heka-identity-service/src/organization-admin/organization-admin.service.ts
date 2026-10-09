@@ -9,9 +9,11 @@ import {
 } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 
+import { AccreditationService } from 'accreditation/accreditation.service'
 import { AuthInfo, Role } from 'common/auth'
 import { InjectLogger, Logger } from 'common/logger'
 import OrganizationAdminConfig from 'config/organization-admin'
+import { getWalletId } from 'utils/auth'
 
 import {
   DirectoryError,
@@ -44,6 +46,7 @@ export class OrganizationAdminService implements OnModuleInit {
     private readonly directory: OrganizationDirectory | undefined,
     @InjectLogger(OrganizationAdminService)
     private readonly logger: Logger,
+    private readonly accreditationService: AccreditationService,
   ) {}
 
   public onModuleInit(): void {
@@ -105,6 +108,13 @@ export class OrganizationAdminService implements OnModuleInit {
       },
       `${authInfo.userName} changed the role of ${member.username} in ${organization.hekaOrgId} from ${member.roles.join(', ') || 'none'} to ${role}`,
     )
+    // An issuer removed from its role is cut off: every credential its DIDs signed fails the accreditation check
+    if (member.roles.includes(Role.Issuer) && role !== Role.Issuer) {
+      await this.accreditationService.revokeWallet(
+        getWalletId({ role: Role.Issuer, userId: member.hekaUid, orgId: organization.hekaOrgId }),
+        `${member.username} is no longer an Issuer of ${organization.hekaOrgId}`,
+      )
+    }
     const updated = await this.call(() => directory.getMember(organization, memberId))
     return this.toDto(updated ?? { ...member, roles: [role] }, authInfo)
   }

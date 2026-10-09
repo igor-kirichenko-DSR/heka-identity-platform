@@ -2,6 +2,7 @@ import { createMock } from '@golevelup/ts-vitest'
 import { BadGatewayException, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 
+import { AccreditationService } from 'accreditation/accreditation.service'
 import { AuthInfo, Role } from 'common/auth'
 import { Logger } from 'common/logger'
 import OrganizationAdminConfig, { organizationAdminDefaults } from 'config/organization-admin'
@@ -65,6 +66,7 @@ describe('OrganizationAdminService', () => {
   let directory: FakeDirectory
   let logger: Logger
   let service: OrganizationAdminService
+  let accreditationService: AccreditationService
 
   beforeEach(() => {
     directory = new FakeDirectory([
@@ -76,7 +78,8 @@ describe('OrganizationAdminService', () => {
     logger = createMock<Logger>()
     // The service logs through child loggers; keep them all on this mock
     vi.mocked(logger.child).mockReturnValue(logger)
-    service = new OrganizationAdminService(config(), directory, logger)
+    accreditationService = createMock<AccreditationService>({ revokeWallet: vi.fn().mockResolvedValue([]) })
+    service = new OrganizationAdminService(config(), directory, logger, accreditationService)
   })
 
   describe('listMembers', () => {
@@ -123,6 +126,18 @@ describe('OrganizationAdminService', () => {
       await service.setRole(authInfo(Role.OrgAdmin), 'newbie', Role.Verifier)
 
       expect(directory.setRoleCalls).toEqual([['newbie', Role.Verifier]])
+    })
+
+    test("revokes the accreditations of an Issuer's wallet when the Issuer loses the role", async () => {
+      await service.setRole(authInfo(Role.OrgAdmin), 'alice', Role.Issuer)
+      expect(accreditationService.revokeWallet).not.toHaveBeenCalled()
+
+      await service.setRole(authInfo(Role.OrgAdmin), 'alice', Role.OrgMember)
+
+      expect(accreditationService.revokeWallet).toHaveBeenCalledWith(
+        'Issuer_uid-alice_in_Organization_acme-org',
+        'alice is no longer an Issuer of acme-org',
+      )
     })
 
     test('does nothing when the member already has exactly that role', async () => {
@@ -187,7 +202,7 @@ describe('OrganizationAdminService', () => {
     })
 
     test('answers 404 while organization administration is disabled', async () => {
-      const disabled = new OrganizationAdminService(config(false), undefined, logger)
+      const disabled = new OrganizationAdminService(config(false), undefined, logger, accreditationService)
 
       await expect(disabled.listMembers(authInfo(Role.OrgAdmin))).rejects.toThrow(
         'Organization administration is not enabled',

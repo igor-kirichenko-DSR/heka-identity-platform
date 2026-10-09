@@ -98,6 +98,15 @@ export class OpenId4VcVerificationSessionCreateRequestDto {
   })
   @IsOptional()
   public expectedOrigins?: string[]
+
+  @ApiPropertyOptional({
+    description:
+      'Accept a presentation only if every credential issuer has an active accreditation chain up to the platform DID. ' +
+      'A presentation that fails the check is reported with state `Error`.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  public requireAccreditation?: boolean
 }
 
 export class OpenId4VcVerifyDcApiRequestDto {

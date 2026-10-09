@@ -2,6 +2,7 @@ import { OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
 import { createMock } from '@golevelup/ts-vitest'
 import { InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common'
 
+import { AccreditationService } from 'accreditation/accreditation.service'
 import { TenantAgent } from 'common/agent'
 
 import { didResolutionResultStub, verificationSessionRecordStub } from '../../../../test/helpers/mock-records'
@@ -10,10 +11,12 @@ import { OpenId4VcVerificationSessionService } from '../verification-session.ser
 describe('OpenId4VcVerificationSessionService', () => {
   let service: OpenId4VcVerificationSessionService
   let tenantAgent: TenantAgent
+  let accreditationService: AccreditationService
 
   const mockFindByQuery = vi.fn()
   const mockGetById = vi.fn()
   const mockDeleteById = vi.fn()
+  const mockUpdate = vi.fn()
   const mockCreateAuthorizationRequest = vi.fn()
   const mockGetVerifiedAuthorizationResponse = vi.fn()
   const mockVerifyAuthorizationResponse = vi.fn()
@@ -29,11 +32,13 @@ describe('OpenId4VcVerificationSessionService', () => {
     })
 
   beforeEach(() => {
-    service = new OpenId4VcVerificationSessionService()
+    accreditationService = createMock<AccreditationService>({ check: vi.fn() })
+    service = new OpenId4VcVerificationSessionService(accreditationService)
 
     mockFindByQuery.mockReset()
     mockGetById.mockReset()
     mockDeleteById.mockReset()
+    mockUpdate.mockReset()
     mockCreateAuthorizationRequest.mockReset()
     mockGetVerifiedAuthorizationResponse.mockReset()
     mockVerifyAuthorizationResponse.mockReset()
@@ -51,6 +56,7 @@ describe('OpenId4VcVerificationSessionService', () => {
           findByQuery: mockFindByQuery,
           getById: mockGetById,
           deleteById: mockDeleteById,
+          update: mockUpdate,
         }),
       },
       context: {},
@@ -562,6 +568,105 @@ describe('OpenId4VcVerificationSessionService', () => {
 
       expect(mockGetVerifiedAuthorizationResponse).not.toHaveBeenCalled()
       expect(result.sharedAttributes).toBeUndefined()
+    })
+  })
+
+  describe('accreditation policy', () => {
+    const sdJwtPresentation = (iss: string) => ({
+      claimFormat: 'dc+sd-jwt',
+      payload: { iss },
+      prettyClaims: { vct: 'https://example.com/vct', iss, name: 'John Doe' },
+    })
+    const verifiedRecord = (requireAccreditation: boolean) => {
+      const record = makeSessionRecord({ state: OpenId4VcVerificationSessionState.ResponseVerified })
+      if (requireAccreditation) record.metadata.set('_heka/requireAccreditation', { required: true })
+      return record
+    }
+
+    test('createRequest stores the policy on the verification session record', async () => {
+      const verificationSession = makeSessionRecord()
+      mockCreateAuthorizationRequest.mockResolvedValue({ authorizationRequest: 'openid://', verificationSession })
+
+      await service.createRequest(tenantAgent, {
+        publicVerifierId: 'verifier-1',
+        requestSigner: undefined,
+        responseMode: 'dc_api',
+        dcql: { query: { credentials: [] } },
+        requireAccreditation: true,
+      } as any)
+
+      expect(verificationSession.metadata.get('_heka/requireAccreditation')).toEqual({ required: true })
+      expect(mockUpdate).toHaveBeenCalledWith(expect.anything(), verificationSession)
+    })
+
+    test('without the policy the issuers are not checked', async () => {
+      mockGetById.mockResolvedValue(verifiedRecord(false))
+      mockGetVerifiedAuthorizationResponse.mockResolvedValue({
+        presentationExchange: { presentations: [sdJwtPresentation('did:key:issuer')] },
+      })
+
+      const result = await service.getVerificationSession(tenantAgent, 'vs-1')
+
+      expect(accreditationService.check).not.toHaveBeenCalled()
+      expect(result.accreditation).toBeUndefined()
+      expect(result.state).toBe(OpenId4VcVerificationSessionState.ResponseVerified)
+    })
+
+    test('a presentation from an accredited issuer is accepted', async () => {
+      mockGetById.mockResolvedValue(verifiedRecord(true))
+      mockGetVerifiedAuthorizationResponse.mockResolvedValue({
+        presentationExchange: { presentations: [sdJwtPresentation('did:key:issuer')] },
+      })
+      const check = { verified: true, issuers: [{ did: 'did:key:issuer', verified: true }] }
+      vi.mocked(accreditationService.check).mockResolvedValue(check)
+
+      const result = await service.getVerificationSession(tenantAgent, 'vs-1')
+
+      expect(accreditationService.check).toHaveBeenCalledWith(['did:key:issuer'])
+      expect(result.state).toBe(OpenId4VcVerificationSessionState.ResponseVerified)
+      expect(result.sharedAttributes).toEqual({ name: 'John Doe' })
+      expect(result.accreditation).toEqual(check)
+    })
+
+    test('a presentation from an issuer without an active chain is reported as an error without attributes', async () => {
+      mockGetById.mockResolvedValue(verifiedRecord(true))
+      mockGetVerifiedAuthorizationResponse.mockResolvedValue({
+        dcql: { presentations: { pid: [sdJwtPresentation('did:key:removed')] } },
+      })
+      vi.mocked(accreditationService.check).mockResolvedValue({
+        verified: false,
+        issuers: [
+          { did: 'did:key:removed', verified: false, reason: 'The accreditation of did:key:removed is revoked' },
+        ],
+      })
+
+      const result = await service.getVerificationSession(tenantAgent, 'vs-1')
+
+      expect(result.state).toBe(OpenId4VcVerificationSessionState.Error)
+      expect(result.errorMessage).toBe('The accreditation of did:key:removed is revoked')
+      expect(result.sharedAttributes).toBeUndefined()
+    })
+
+    test('checks the issuers of W3C credentials and cannot accredit mdoc issuers', async () => {
+      mockGetById.mockResolvedValue(verifiedRecord(true))
+      mockGetVerifiedAuthorizationResponse.mockResolvedValue({
+        presentationExchange: {
+          presentations: [
+            {
+              jwt: { header: { typ: 'JWT' } },
+              presentation: {
+                verifiableCredential: [{ issuerId: 'did:key:w3c-issuer', credentialSubject: { claims: {} } }],
+              },
+            },
+            { claimFormat: 'mso_mdoc', issuerClaims: {} },
+          ],
+        },
+      })
+      vi.mocked(accreditationService.check).mockResolvedValue({ verified: false, issuers: [] })
+
+      await service.getVerificationSession(tenantAgent, 'vs-1')
+
+      expect(accreditationService.check).toHaveBeenCalledWith(['did:key:w3c-issuer', 'an mdoc issuer'])
     })
   })
 })
