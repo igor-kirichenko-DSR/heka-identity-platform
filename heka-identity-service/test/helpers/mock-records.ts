@@ -17,6 +17,8 @@ import type {
   OpenId4VcVerificationSessionRecord,
 } from '@credo-ts/openid4vc'
 
+import { Metadata } from '@credo-ts/core'
+
 /**
  * Loose stub overrides: keys must exist on T (so typos fail), but values are not type-checked.
  * This lets tests provide enum values as plain strings (e.g. `state: 'completed'`) without
@@ -45,7 +47,7 @@ export const issuanceSessionRecordStub = (overrides: LooseStub<OpenId4VcIssuance
   stub<OpenId4VcIssuanceSessionRecord>(overrides)
 
 export const verificationSessionRecordStub = (overrides: LooseStub<OpenId4VcVerificationSessionRecord> = {}) =>
-  stub<OpenId4VcVerificationSessionRecord>(overrides)
+  stub<OpenId4VcVerificationSessionRecord>({ metadata: new Metadata({}), ...overrides })
 
 export const didResolutionResultStub = (overrides: LooseStub<DidResolutionResult> = {}): DidResolutionResult =>
   ({ didResolutionMetadata: {}, didDocumentMetadata: {}, ...overrides }) as DidResolutionResult

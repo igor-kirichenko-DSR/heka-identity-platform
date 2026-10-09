@@ -1,10 +1,16 @@
 import type { W3cJwtVerifiablePresentation } from '@credo-ts/core'
-import type { OpenId4VcJwtIssuerDid } from '@credo-ts/openid4vc'
+import type {
+  OpenId4VcJwtIssuerDid,
+  OpenId4VcVerificationSessionRecord,
+  OpenId4VpVerifiedAuthorizationResponse,
+} from '@credo-ts/openid4vc'
 
 import { ClaimFormat, MdocDeviceResponse, SdJwtVc, VerifiablePresentation, W3cCredentialSubject } from '@credo-ts/core'
 import { OpenId4VcVerificationSessionRepository, OpenId4VcVerificationSessionState } from '@credo-ts/openid4vc'
 import { Injectable, InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common'
 
+import { AccreditationService } from 'accreditation/accreditation.service'
+import { AccreditationCheckDto } from 'accreditation/dto'
 import { TenantAgent } from 'common/agent'
 
 import {
@@ -14,8 +20,22 @@ import {
   OpenId4VcVerificationSessionRecordDto,
 } from './dto'
 
+/** Metadata of a verification session record created with `requireAccreditation`. */
+const REQUIRE_ACCREDITATION = '_heka/requireAccreditation'
+
+/** The parts of a W3C presentation (JWT or JSON-LD, v1 or v2) that name the credential issuers. */
+interface W3cPresentationLike {
+  verifiableCredential?: W3cCredentialLike | W3cCredentialLike[]
+}
+interface W3cCredentialLike {
+  issuerId?: string
+  credential?: { issuerId?: string }
+}
+
 @Injectable()
 export class OpenId4VcVerificationSessionService {
+  public constructor(private readonly accreditationService: AccreditationService) {}
+
   /**
    * Create a Verification Sessions request
    */
@@ -53,6 +73,13 @@ export class OpenId4VcVerificationSessionService {
         responseMode: req.responseMode,
         expectedOrigins: isDcApi && requestSigner.method === 'none' ? undefined : req.expectedOrigins,
       })
+
+    if (req.requireAccreditation) {
+      verificationSession.metadata.set(REQUIRE_ACCREDITATION, { required: true })
+      await tenantAgent.dependencyManager
+        .resolve(OpenId4VcVerificationSessionRepository)
+        .update(tenantAgent.context, verificationSession)
+    }
 
     return {
       verificationSession:
@@ -96,15 +123,38 @@ export class OpenId4VcVerificationSessionService {
       verificationSessionId,
     )
 
-    let sharedAttributes: Record<string, unknown> | undefined = undefined
+    return await this.toDto(tenantAgent, verificationSessionRecord)
+  }
 
-    if (verificationSessionRecord.state === OpenId4VcVerificationSessionState.ResponseVerified) {
-      sharedAttributes = await this.getSharedAttributes(tenantAgent, verificationSessionId)
+  /** The record with, once the response is verified, the disclosed attributes and the accreditation check. */
+  private async toDto(
+    tenantAgent: TenantAgent,
+    record: OpenId4VcVerificationSessionRecord,
+  ): Promise<OpenId4VcVerificationSessionRecordDto> {
+    if (record.state !== OpenId4VcVerificationSessionState.ResponseVerified) {
+      return OpenId4VcVerificationSessionRecordDto.fromOpenId4VcVerificationSessionRecord(record)
+    }
+
+    const verifiedAuthorizationResponse = await tenantAgent.openid4vc.verifier.getVerifiedAuthorizationResponse(
+      record.id,
+    )
+    const sharedAttributes = OpenId4VcVerificationSessionService.getSharedAttributes(verifiedAuthorizationResponse)
+
+    let accreditation: AccreditationCheckDto | undefined
+    if (record.metadata.get<{ required: boolean }>(REQUIRE_ACCREDITATION)?.required) {
+      const presentations = [
+        ...(verifiedAuthorizationResponse.presentationExchange?.presentations ?? []),
+        ...Object.values(verifiedAuthorizationResponse.dcql?.presentations ?? {}).flat(),
+      ]
+      accreditation = await this.accreditationService.check(
+        presentations.flatMap((presentation) => OpenId4VcVerificationSessionService.issuersOf(presentation)),
+      )
     }
 
     return OpenId4VcVerificationSessionRecordDto.fromOpenId4VcVerificationSessionRecord(
-      verificationSessionRecord,
+      record,
       sharedAttributes,
+      accreditation,
     )
   }
 
@@ -112,13 +162,9 @@ export class OpenId4VcVerificationSessionService {
    * Resolve the disclosed attributes of a verified authorization response, supporting
    * both Presentation Exchange and DCQL presentations across SD-JWT, JWT VC and mdoc.
    */
-  private async getSharedAttributes(
-    tenantAgent: TenantAgent,
-    verificationSessionId: string,
-  ): Promise<Record<string, unknown> | undefined> {
-    const verifiedAuthorizationResponse =
-      await tenantAgent.openid4vc.verifier.getVerifiedAuthorizationResponse(verificationSessionId)
-
+  private static getSharedAttributes(
+    verifiedAuthorizationResponse: OpenId4VpVerifiedAuthorizationResponse,
+  ): Record<string, unknown> | undefined {
     if (verifiedAuthorizationResponse.presentationExchange?.presentations?.length) {
       const presentation = verifiedAuthorizationResponse.presentationExchange.presentations[0]
       return OpenId4VcVerificationSessionService.extractAttributesFromPresentation(presentation)
@@ -150,15 +196,23 @@ export class OpenId4VcVerificationSessionService {
       origin,
     })
 
-    let sharedAttributes: Record<string, unknown> | undefined = undefined
-    if (verificationSession.state === OpenId4VcVerificationSessionState.ResponseVerified) {
-      sharedAttributes = await this.getSharedAttributes(tenantAgent, verificationSessionId)
-    }
+    return await this.toDto(tenantAgent, verificationSession)
+  }
 
-    return OpenId4VcVerificationSessionRecordDto.fromOpenId4VcVerificationSessionRecord(
-      verificationSession,
-      sharedAttributes,
+  /** The issuers of the credentials in a presentation; an issuer that isn't a DID can't be accredited. */
+  private static issuersOf(presentation: VerifiablePresentation): string[] {
+    if (OpenId4VcVerificationSessionService.isSdJwtPresentation(presentation)) {
+      return [typeof presentation.payload.iss === 'string' ? presentation.payload.iss : 'an SD-JWT VC without iss']
+    }
+    if (OpenId4VcVerificationSessionService.isMdocPresentation(presentation)) {
+      return ['an mdoc issuer']
+    }
+    const w3c = presentation as { presentation?: W3cPresentationLike } & W3cPresentationLike
+    const credentials = w3c.presentation?.verifiableCredential ?? w3c.verifiableCredential
+    const issuers = (Array.isArray(credentials) ? credentials : credentials ? [credentials] : []).map(
+      (credential) => credential.issuerId ?? credential.credential?.issuerId ?? 'an unknown issuer',
     )
+    return issuers.length ? issuers : ['an unknown issuer']
   }
 
   /**

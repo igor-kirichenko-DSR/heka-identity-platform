@@ -14,6 +14,14 @@ export class Wallet extends Identified {
   @Property({ nullable: true, type: 'string' })
   public publicDid?: string
 
+  /**
+   * The DID of each method that acts for this wallet as the parent of its children's DIDs: their `controller` and
+   * the issuer of their accreditations. It is the first DID the wallet created with that method, so it stays the
+   * same when more DIDs are created.
+   */
+  @Property({ type: 'json', nullable: true })
+  public designatedDids?: Record<string, string>
+
   @ManyToMany({ entity: () => User, mappedBy: 'wallets' })
   public users = new Collection<User>(this)
 

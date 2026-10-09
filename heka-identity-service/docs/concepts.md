@@ -63,7 +63,23 @@ DIDs of the methods without a controller are created without one. `POST /prepare
 - **It is a self-declaration.** The new DID's own key writes the `controller` to the ledger; the controller DID neither signs nor approves it. A relying party can't conclude from it that the platform approved an organization, or that an organization approved an issuer.
 - **It gives the controller no power.** On Hedera, only the DID's own root key can update or deactivate it; a message signed by the controller DID is ignored by resolvers. The Identity Service also has no API to update or deactivate a DID.
 
-So the platform can't revoke an organization's DID through it, and an organization can't revoke an issuer's DID. Control over who acts for an organization comes from role assignment in the OIDC provider. Making the hierarchy verifiable, for example with accreditation credentials signed by the parent, is planned in [docs/role-model-and-oidc-providers.md](../../docs/role-model-and-oidc-providers.md) (phases 7 and 9).
+So the platform can't revoke an organization's DID through it, and an organization can't revoke an issuer's DID. Control over who acts for an organization comes from role assignment in the OIDC provider. Each wallet has one designated DID per method that its children name as `controller`: the first DID it created with that method.
+
+#### Accreditation
+
+With `ACCREDITATION_ENABLED=true` (and `ROLE_MODEL_ENABLED=true`), the hierarchy is verifiable. The parent signs an **accreditation credential** for every public DID of its child:
+
+- `Administration` accredits each DID of an organization;
+- the organization accredits each DID of its issuers.
+
+An accreditation is an SD-JWT VC with issuer = the parent DID, `sub` = the child DID, `org_id`, `role` (`Organization` or `Issuer`) and a validity period. It works for every DID method. Each accreditation has an entry in a Token Status List of the parent, so the parent can revoke it.
+
+- **Issuing.** It happens when the DID is created, and on `POST /prepare-wallet` for DIDs whose parent had no DID yet or whose accreditation expires soon.
+- **Publishing.** `GET /accreditations/{did}` (no token) returns the chain from the DID up to the platform, with the credentials. A relying party verifies each credential and its status list, checks that each `iss` is the `sub` of the next one, and that the last `iss` is the platform DID it trusts.
+- **Revoking.** `POST /accreditations/revoke` takes `did` (the parent wallet: an `OrgAdmin` for its issuers, an `Admin` for organizations) or `orgId` (an `Admin` offboarding an organization). Changing an `Issuer`'s role through `PUT /organization/members/{id}/role` revokes its accreditations. After a revocation, verifiers that check the chain reject every credential the DID signed, including earlier ones. Only the parent can undo it, with `POST /accreditations/reinstate`.
+- **Checking.** A verification session created with `requireAccreditation: true` accepts a presentation only if every credential issuer has an active chain to a trust anchor (`ACCREDITATION_TRUST_ANCHORS`, by default the `Administration` DIDs). Otherwise it is returned with `state: Error`. The underlying record and its webhook notification still report `ResponseVerified`.
+
+See phase 7 of [docs/role-model-and-oidc-providers.md](../../docs/role-model-and-oidc-providers.md) for the design and the known gaps.
 
 #### Ownership
 

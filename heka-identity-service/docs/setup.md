@@ -330,6 +330,18 @@ The `tenantId` is **not** a JWT claim — it is derived internally from `(role, 
 
 The flag doesn't change roles or wallets, so it can be changed with a restart without affecting data. See [Concepts — Role model](concepts.md#role-model).
 
+#### Accreditation
+
+| Variable                         | Default | Description                                                                                                                                                           |
+| -------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ACCREDITATION_ENABLED`          | `false` | Set to `true` to issue, revoke and check accreditation credentials. Issuing also needs `ROLE_MODEL_ENABLED=true`.                                                     |
+| `ACCREDITATION_VALIDITY_DAYS`    | `365`   | Lifetime of an accreditation. `POST /prepare-wallet` renews one that expires within a tenth of it.                                                                    |
+| `ACCREDITATION_STATUS_LIST_SIZE` | `16384` | Entries per Token Status List.                                                                                                                                        |
+| `ACCREDITATION_STATUS_LIST_TTL`  | `300`   | Seconds a relying party may cache a status list (`ttl` and `exp` of the `statuslist+jwt`).                                                                            |
+| `ACCREDITATION_TRUST_ANCHORS`    | (empty) | Comma-separated DIDs an accreditation chain must end at. Empty means the DIDs of the `Administration` wallet. Set it when relying parties trust a fixed platform DID. |
+
+Enabling it on an existing deployment issues nothing by itself: each organization and issuer gets its accreditations on its next `POST /prepare-wallet`, the organization before its issuers. See [Concepts — Accreditation](concepts.md#accreditation).
+
 #### Managing roles
 
 Roles are assigned in the OIDC provider, not in the Identity Service. The shipped recipes set safe defaults:

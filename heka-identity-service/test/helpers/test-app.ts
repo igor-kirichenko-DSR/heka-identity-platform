@@ -34,6 +34,7 @@ import { AppModule } from 'src/app.module'
 import { startApp } from 'src/app.starter'
 import { AGENT_MODULES_TOKEN, getAgencyModulesMap } from 'src/common/agent/agent-modules.provider'
 import { HekaHederaModule } from 'src/common/agent/hedera'
+import AccreditationConfig from 'src/config/accreditation'
 import AgentConfig from 'src/config/agent'
 import FileStorageConfig from 'src/config/file-storage'
 import MikroOrmConfig from 'src/config/mikro-orm'
@@ -54,6 +55,8 @@ export interface TestAppOptions {
   // Askar store of the agent. Defaults to a new store per app start; pass the same id to restart an app on the same
   // tenants (e.g. switching ROLE_MODEL_ENABLED with existing data).
   storeId?: string
+  // Issue and check accreditation credentials (`ACCREDITATION_ENABLED=true`). Defaults to `false`, as in production.
+  accreditationEnabled?: boolean
 }
 
 export async function startTestApp(options: TestAppOptions = {}): Promise<INestApplication> {
@@ -69,6 +72,8 @@ export async function startTestApp(options: TestAppOptions = {}): Promise<INestA
     })
     .overrideProvider(RoleModelConfig.KEY)
     .useValue({ enabled: options.roleModelEnabled ?? false })
+    .overrideProvider(AccreditationConfig.KEY)
+    .useValue({ ...AccreditationConfig(), enabled: options.accreditationEnabled ?? false })
     .overrideProvider(AgentConfig.KEY)
     .useFactory({
       factory: TestAgentConfig,

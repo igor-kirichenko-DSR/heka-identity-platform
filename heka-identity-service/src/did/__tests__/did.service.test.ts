@@ -10,9 +10,11 @@ import {
 } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 
+import { AccreditationService } from 'accreditation/accreditation.service'
 import { Agent, TenantAgent } from 'common/agent'
 import { AuthInfo, Role } from 'common/auth'
 import { AuthorizationService } from 'common/authz'
+import { DidHierarchyService } from 'common/did-hierarchy'
 import { DidRegistrarService } from 'common/did-registrar'
 import { User, Wallet } from 'common/entities'
 import { Logger } from 'common/logger'
@@ -22,12 +24,26 @@ import AgentConfig from '../../config/agent'
 import { DidService } from '../did.service'
 
 describe('DidService', () => {
+  const makeService = (enabled: boolean) =>
+    new DidService(
+      agent,
+      em,
+      logger,
+      didRegistrarService,
+      agentConfig,
+      new AuthorizationService({ enabled }),
+      didHierarchyService,
+      accreditationService,
+    )
+
   let didService: DidService
   let agent: Agent
   let em: EntityManager
   let logger: Logger
   let didRegistrarService: DidRegistrarService
   let tenantAgent: TenantAgent
+  let didHierarchyService: DidHierarchyService
+  let accreditationService: AccreditationService
   const agentConfig = createMock<ConfigType<typeof AgentConfig>>({ didMethods: ['key', 'indy'] })
 
   beforeEach(() => {
@@ -37,14 +53,13 @@ describe('DidService', () => {
     em = createMock<EntityManager>()
     logger = createMock<Logger>()
     didRegistrarService = createMock<DidRegistrarService>()
-    didService = new DidService(
-      agent,
-      em,
-      logger,
-      didRegistrarService,
-      agentConfig,
-      new AuthorizationService({ enabled: true }),
-    )
+    didHierarchyService = createMock<DidHierarchyService>({
+      designatedDid: vi.fn().mockResolvedValue(undefined),
+      parentDid: vi.fn().mockResolvedValue(undefined),
+      recordLink: vi.fn(),
+    })
+    accreditationService = createMock<AccreditationService>({ accreditNewDid: vi.fn().mockResolvedValue(undefined) })
+    didService = makeService(true)
     tenantAgent = createMock<TenantAgent>({
       dids: {
         getCreatedDids: vi.fn(),
@@ -169,9 +184,6 @@ describe('DidService', () => {
       tenantId: 'tenant-1',
     })
 
-    const makeService = (enabled: boolean) =>
-      new DidService(agent, em, logger, didRegistrarService, agentConfig, new AuthorizationService({ enabled }))
-
     test('creates the main-method DID in the caller tenant and persists it as the wallet public DID', async () => {
       const wallet = entityStub<Wallet>({ id: 'Administration', publicDid: undefined })
       vi.mocked(em.findOneOrFail).mockResolvedValue(wallet)
@@ -258,46 +270,24 @@ describe('DidService', () => {
     })
 
     describe('DID controller (role model enabled)', () => {
-      let controllerTenantAgent: TenantAgent
-
       beforeEach(() => {
         // Only hedera can set a controller other than the DID itself
         vi.mocked(didRegistrarService.supportsController).mockImplementation((method) => method === 'hedera')
-        controllerTenantAgent = createMock<TenantAgent>({ dids: { getCreatedDids: vi.fn().mockResolvedValue([]) } })
-        Object.assign(agent, {
-          modules: {
-            tenants: {
-              withTenantAgent: vi.fn(
-                async (_options: unknown, callback: (tenantAgent: TenantAgent) => Promise<void>) => {
-                  await callback(controllerTenantAgent)
-                },
-              ),
-            },
-          },
-        })
         vi.mocked(didRegistrarService.createDid).mockResolvedValue(didDocumentStub({ id: 'did:hedera:testnet:new' }))
       })
 
       test.each([
         [Role.OrgAdmin, 'Organization_org-1', 'Administration'],
         [Role.Issuer, 'Issuer_user-1_in_Organization_org-1', 'Organization_org-1'],
-      ])('%s is controlled by the hedera DID of %s', async (role, walletId, controllerWalletId) => {
+      ])('%s is controlled by the designated hedera DID of %s', async (role, walletId, controllerWalletId) => {
         vi.mocked(em.findOneOrFail).mockResolvedValue(entityStub<Wallet>({ id: walletId, publicDid: 'did:key:own' }))
-        vi.mocked(em.findOne).mockResolvedValue(
-          entityStub<Wallet>({ id: controllerWalletId, tenantId: 'controller-tenant' }),
+        vi.mocked(didHierarchyService.designatedDid).mockImplementation((id) =>
+          Promise.resolve(id === controllerWalletId ? 'did:hedera:testnet:controller' : undefined),
         )
-        vi.mocked(controllerTenantAgent.dids.getCreatedDids).mockResolvedValue([
-          didRecordStub({ did: 'did:hedera:testnet:controller' }),
-        ])
 
         await didService.create(makeAuthInfo(role, walletId, 'org-1'), { method: 'hedera' })
 
-        expect(em.findOne).toHaveBeenCalledWith(Wallet, { id: controllerWalletId })
-        expect(agent.modules.tenants.withTenantAgent).toHaveBeenCalledWith(
-          { tenantId: 'controller-tenant' },
-          expect.any(Function),
-        )
-        expect(controllerTenantAgent.dids.getCreatedDids).toHaveBeenCalledWith({ method: 'hedera' })
+        expect(didHierarchyService.designatedDid).toHaveBeenCalledWith(controllerWalletId, 'hedera')
         // The DID is created in the caller's own tenant, with the controller in its DID document
         expect(didRegistrarService.createDid).toHaveBeenCalledWith('tenant-1', 'hedera', {
           namespace: 'test-ns',
@@ -305,28 +295,66 @@ describe('DidService', () => {
         })
       })
 
+      test('records the link to the parent and asks the parent to accredit the new DID', async () => {
+        const authInfo = makeAuthInfo(Role.Issuer, 'Issuer_user-1_in_Organization_org-1', 'org-1')
+        vi.mocked(em.findOneOrFail).mockResolvedValue(
+          entityStub<Wallet>({ id: authInfo.walletId, publicDid: 'did:key:own' }),
+        )
+        vi.mocked(didHierarchyService.designatedDid).mockResolvedValue('did:hedera:testnet:controller')
+
+        await didService.create(authInfo, { method: 'hedera' })
+
+        expect(didHierarchyService.recordLink).toHaveBeenCalledWith({
+          did: 'did:hedera:testnet:new',
+          method: 'hedera',
+          walletId: authInfo.walletId,
+          role: Role.Issuer,
+          orgId: 'org-1',
+          parentWalletId: 'Organization_org-1',
+          parentDid: 'did:hedera:testnet:controller',
+          controllerDeclared: true,
+        })
+        expect(accreditationService.accreditNewDid).toHaveBeenCalledWith(authInfo, 'did:hedera:testnet:new')
+      })
+
+      test('a DID without a ledger controller still records its parent DID', async () => {
+        vi.mocked(em.findOneOrFail).mockResolvedValue(
+          entityStub<Wallet>({ id: 'Organization_org-1', publicDid: undefined }),
+        )
+        vi.mocked(didRegistrarService.createDid).mockResolvedValue(didDocumentStub({ id: 'did:key:org' }))
+        vi.mocked(didHierarchyService.parentDid).mockResolvedValue('did:key:platform')
+
+        await didService.create(makeAuthInfo(Role.OrgAdmin, 'Organization_org-1', 'org-1'), {})
+
+        expect(didHierarchyService.recordLink).toHaveBeenCalledWith(
+          expect.objectContaining({ did: 'did:key:org', parentDid: 'did:key:platform', controllerDeclared: false }),
+        )
+      })
+
+      test('a failed accreditation does not fail the DID creation', async () => {
+        vi.mocked(em.findOneOrFail).mockResolvedValue(
+          entityStub<Wallet>({ id: 'Organization_org-1', publicDid: 'did:key:own' }),
+        )
+        vi.mocked(didHierarchyService.designatedDid).mockResolvedValue('did:hedera:testnet:controller')
+        vi.mocked(accreditationService.accreditNewDid).mockRejectedValue(new Error('signing failed'))
+
+        const result = await didService.create(makeAuthInfo(Role.OrgAdmin, 'Organization_org-1', 'org-1'), {
+          method: 'hedera',
+        })
+
+        expect(result.id).toBe('did:hedera:testnet:new')
+      })
+
       test('returns 422 until the controller wallet has a DID of the same method', async () => {
         vi.mocked(em.findOneOrFail).mockResolvedValue(
           entityStub<Wallet>({ id: 'Organization_org-1', publicDid: 'did:key:own' }),
         )
-        vi.mocked(em.findOne).mockResolvedValue(entityStub<Wallet>({ id: 'Administration', tenantId: 'admin-tenant' }))
 
         await expect(
           didService.create(makeAuthInfo(Role.OrgAdmin, 'Organization_org-1', 'org-1'), { method: 'hedera' }),
         ).rejects.toThrow(UnprocessableEntityException)
         expect(didRegistrarService.createDid).not.toHaveBeenCalled()
-      })
-
-      test('returns 422 when the controller wallet does not exist yet', async () => {
-        vi.mocked(em.findOneOrFail).mockResolvedValue(
-          entityStub<Wallet>({ id: 'Organization_org-1', publicDid: 'did:key:own' }),
-        )
-        vi.mocked(em.findOne).mockResolvedValue(null)
-
-        await expect(
-          didService.create(makeAuthInfo(Role.OrgAdmin, 'Organization_org-1', 'org-1'), { method: 'hedera' }),
-        ).rejects.toThrow(UnprocessableEntityException)
-        expect(agent.modules.tenants.withTenantAgent).not.toHaveBeenCalled()
+        expect(accreditationService.accreditNewDid).not.toHaveBeenCalled()
       })
 
       test('an Admin DID is self-controlled', async () => {

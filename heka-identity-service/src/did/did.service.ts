@@ -12,15 +12,16 @@ import {
 import { ConfigType } from '@nestjs/config'
 import { Mutex } from 'async-mutex'
 
+import { AccreditationService } from 'accreditation/accreditation.service'
 import { Agent, AGENT_TOKEN, TenantAgent } from 'common/agent'
 import { AuthInfo, Role } from 'common/auth'
 import { AuthorizationService } from 'common/authz'
+import { DidHierarchyService } from 'common/did-hierarchy'
 import { DidRegistrarService } from 'common/did-registrar'
 import { Wallet } from 'common/entities'
 import { InjectLogger, Logger } from 'common/logger'
 import { DidMethod, MAIN_DID_METHOD } from 'common/types'
 import { getDidControllerWalletId } from 'utils/auth'
-import { withTenantAgent } from 'utils/multi-tenancy'
 
 import AgentConfig from '../config/agent'
 
@@ -40,6 +41,8 @@ export class DidService {
     @Inject(AgentConfig.KEY)
     private readonly agentConfig: ConfigType<typeof AgentConfig>,
     private readonly authorizationService: AuthorizationService,
+    private readonly didHierarchyService: DidHierarchyService,
+    private readonly accreditationService: AccreditationService,
   ) {
     this.logger.child('constructor').trace('<>')
   }
@@ -91,14 +94,16 @@ export class DidService {
       // create a self-controlled did:key (no ledger write), enough to prepare its wallet and sign verification
       // requests. Other roles that cannot create a public DID are rejected here as well
       let controller: string | undefined
+      let didControllerWalletId: string | null = null
       if (this.authorizationService.isEnforced && authInfo.role === Role.Verifier) {
         if (method !== DidMethod.Key) {
           throw new ForbiddenException(`Role '${authInfo.role}' can only create did:key DIDs, not '${method}'`)
         }
       } else if (this.authorizationService.isEnforced) {
-        const didControllerWalletId = getDidControllerWalletId({ role: authInfo.role, orgId: authInfo.orgId })
+        didControllerWalletId = getDidControllerWalletId({ role: authInfo.role, orgId: authInfo.orgId })
         if (didControllerWalletId && this.didRegistrarService.supportsController(method)) {
-          controller = await this.findCreatedDid(didControllerWalletId, method)
+          // The parent wallet's designated DID, so every child of one parent names the same DID
+          controller = await this.didHierarchyService.designatedDid(didControllerWalletId, method)
           if (!controller) {
             throw new UnprocessableEntityException(
               `A ${method} DID created by ${didControllerWalletId} is required in order to be set as controller but it has not been created yet`,
@@ -118,28 +123,40 @@ export class DidService {
         wallet.publicDid = didDocument.id
       }
       await this.em.flush()
+
+      // 4. The first DID of a method becomes the wallet's designated DID; the link to the parent is recorded
+      await this.didHierarchyService.designatedDid(wallet.id, method)
+      if (didControllerWalletId) {
+        await this.didHierarchyService.recordLink({
+          did: didDocument.id,
+          method,
+          walletId: wallet.id,
+          role: authInfo.role,
+          orgId: authInfo.orgId,
+          parentWalletId: didControllerWalletId,
+          parentDid: controller ?? (await this.didHierarchyService.parentDid(didControllerWalletId, method)),
+          controllerDeclared: Boolean(controller),
+        })
+      }
       return didDocument
     }
 
     // The main-method DID check, creation and write are serialized, so concurrent requests cannot both create one
     const didDocument = method === MAIN_DID_METHOD ? await this.mainDidMutex.runExclusive(run) : await run()
 
+    // 5. The parent accredits the new DID. The DID exists either way: a missing accreditation is issued by the next
+    // `POST /prepare-wallet`
+    try {
+      await this.accreditationService.accreditNewDid(authInfo, didDocument.id)
+    } catch (error) {
+      logger.error({ err: error }, `Failed to accredit ${didDocument.id}`)
+    }
+
     const res = new DidDocumentDto(didDocument)
 
     logger.trace('<')
     return res
     /* jscpd:ignore-end */
-  }
-
-  private async findCreatedDid(walletId: string, method: string): Promise<string | undefined> {
-    const wallet = await this.em.findOne(Wallet, { id: walletId })
-    if (!wallet) {
-      return undefined
-    }
-    const didRecords = await withTenantAgent({ agent: this.agent, tenantId: wallet.tenantId }, (tenantAgent) =>
-      tenantAgent.dids.getCreatedDids({ method }),
-    )
-    return didRecords[0]?.did
   }
 
   public async get(tenantAgent: TenantAgent, did: string): Promise<DidDocumentDto> {

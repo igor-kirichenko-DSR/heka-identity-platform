@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 
+import { AccreditationModule } from 'accreditation/accreditation.module'
 import { AgentModule } from 'common/agent'
 import { DidModule } from 'did'
 import { OpenId4VcIssuerModule } from 'openid4vc/issuer/issuer.module'
@@ -10,7 +11,15 @@ import { SchemaV2Module } from 'schema-v2'
 import { UserModule } from 'user'
 
 @Module({
-  imports: [DidModule, OpenId4VcIssuerModule, OpenId4VcVerifierModule, SchemaV2Module, UserModule, AgentModule],
+  imports: [
+    DidModule,
+    OpenId4VcIssuerModule,
+    OpenId4VcVerifierModule,
+    SchemaV2Module,
+    UserModule,
+    AgentModule,
+    AccreditationModule,
+  ],
   controllers: [PrepareWalletController],
   providers: [PrepareWalletService],
 })
