@@ -63,6 +63,7 @@
         "post.logout.redirect.uris": "http://localhost:8000/*",
         "use.refresh.tokens": "true"
       },
+      "defaultClientScopes": ["web-origins", "acr", "roles", "profile", "basic", "email"],
       "optionalClientScopes": ["offline_access", "address", "phone", "microprofile-jwt", "organization"],
       "protocolMappers": [
         {
