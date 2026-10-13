@@ -38,12 +38,12 @@ exports[`route coverage of the role model > the role matrix only changes on purp
 | \`PUT /openid4vc/issuer/:issuerId\` | ✓ | ✓ | ✓ |  | ✓ |  |  |
 | \`GET /openid4vc/issuer/supported-credentials\` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | \`GET /openid4vc/verification-session\` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| \`DELETE /openid4vc/verification-session/:verificationSessionId\` | ✓ | ✓ | ✓ |  |  | ✓ |  |
+| \`DELETE /openid4vc/verification-session/:verificationSessionId\` | ✓ | ✓ | ✓ |  | ✓ | ✓ |  |
 | \`GET /openid4vc/verification-session/:verificationSessionId\` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| \`POST /openid4vc/verification-session/:verificationSessionId/verify\` | ✓ | ✓ | ✓ |  |  | ✓ |  |
-| \`POST /openid4vc/verification-session/request\` | ✓ | ✓ | ✓ |  |  | ✓ |  |
+| \`POST /openid4vc/verification-session/:verificationSessionId/verify\` | ✓ | ✓ | ✓ |  | ✓ | ✓ |  |
+| \`POST /openid4vc/verification-session/request\` | ✓ | ✓ | ✓ |  | ✓ | ✓ |  |
 | \`GET /openid4vc/verifier\` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| \`POST /openid4vc/verifier\` | ✓ | ✓ | ✓ |  |  | ✓ |  |
+| \`POST /openid4vc/verifier\` | ✓ | ✓ | ✓ |  | ✓ | ✓ |  |
 | \`GET /organization/members\` |  | ✓ |  |  |  |  |  |
 | \`PUT /organization/members/:memberId/role\` |  | ✓ |  |  |  |  |  |
 | \`POST /prepare-wallet\` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
