@@ -83,6 +83,10 @@ describe('route coverage of the role model', () => {
     ['POST /verification-templates', VERIFYING],
     ['PATCH /verification-templates/:id', VERIFYING],
     ['DELETE /verification-templates/:id', VERIFYING],
+    ['POST /openid4vc/verifier', VERIFYING],
+    ['POST /openid4vc/verification-session/request', VERIFYING],
+    ['POST /openid4vc/verification-session/:verificationSessionId/verify', VERIFYING],
+    ['DELETE /openid4vc/verification-session/:verificationSessionId', VERIFYING],
     ['POST /dids', [Role.Admin, Role.OrgAdmin, Role.Issuer, Role.Verifier]],
   ])('%s is limited to the roles of its purpose', (route, roles) => {
     const found = routes.find((candidate) => key(candidate) === route)

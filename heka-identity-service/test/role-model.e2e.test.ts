@@ -113,7 +113,10 @@ describe('E2E role model', () => {
       ['post', '/credentials/offer', Role.Verifier, false],
       ['post', '/proofs/request', Role.Issuer, true],
       ['post', '/proofs/request', Role.User, false],
-      ['post', '/openid4vc/verifier', Role.Issuer, false],
+      ['post', '/openid4vc/verifier', Role.Issuer, true],
+      ['post', '/openid4vc/verifier', Role.User, false],
+      ['post', '/openid4vc/verification-session/request', Role.Issuer, true],
+      ['post', '/openid4vc/verification-session/request', Role.OrgMember, false],
       // Former bypasses: these writes had no role list before
       ['post', '/v2/credentials/offer-by-template', Role.Verifier, false],
       ['post', '/v2/credentials/offer-by-template', Role.User, false],
@@ -196,6 +199,29 @@ describe('E2E role model', () => {
 
       // A did:hedera is controlled by the organization's did:hedera, which does not exist yet
       expect((await post('/dids', token, { method: 'hedera' })).status).toBe(422)
+
+      // An Issuer also verifies through OID4VP, with the verifier prepare-wallet created for its did:key
+      const did = prepareResponse.body.did as string
+      const didDocument = await request(app).get(`/dids/${did}`).auth(token, { type: 'bearer' })
+      expect(didDocument.status).toBe(200)
+      const verificationResponse = await post('/openid4vc/verification-session/request', token, {
+        publicVerifierId: did,
+        requestSigner: { method: 'did', did: didDocument.body.authentication[0] },
+        dcql: {
+          query: {
+            credentials: [
+              {
+                id: 'credential_1',
+                format: 'vc+sd-jwt',
+                meta: { vct_values: ['https://example.com/vct'] },
+                claims: [{ path: ['first_name'], id: 'first_name_claim' }],
+              },
+            ],
+          },
+        },
+      })
+      expect(verificationResponse.status).toBe(200)
+      expect(verificationResponse.body.authorizationRequest).toBeDefined()
     })
 
     test('a Verifier prepares its own wallet with a did:key, but may not create a ledger DID', async () => {

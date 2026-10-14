@@ -43,7 +43,7 @@ export class OpenId4VcVerifierController {
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post()
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier)
   public async create(
     @ReqTenantAgent() tenantAgent: TenantAgent,
     @Body() req: OpenId4VcVerifierCreateDto,
