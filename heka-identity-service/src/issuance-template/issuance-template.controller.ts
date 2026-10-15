@@ -80,7 +80,7 @@ export class IssuanceTemplateController {
   @ApiOperation({ summary: 'Create template' })
   @ApiBody({ type: CreateIssuanceTemplateRequest })
   @ApiResponse({ type: CreateIssuanceTemplateResponse })
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
   @Post('')
   public async createTemplate(
     @ReqAuthInfo() authInfo: AuthInfo,
@@ -98,7 +98,7 @@ export class IssuanceTemplateController {
   @ApiBody({ type: PatchIssuanceTemplateRequest })
   @ApiResponse({ type: PatchIssuanceTemplateResponse })
   @ApiOkResponse()
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
   @Patch(':id')
   public async patchTemplate(
     @ReqAuthInfo() authInfo: AuthInfo,
@@ -115,7 +115,7 @@ export class IssuanceTemplateController {
   @ApiOperation({ summary: 'Delete template' })
   @ApiParam({ name: 'id', format: 'uuid', type: 'string', description: 'Template id' })
   @ApiOkResponse()
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
   @Delete(':id')
   public async deleteTemplate(@ReqAuthInfo() authInfo: AuthInfo, @Param('id') id: string): Promise<void> {
     const logger = this.logger.child('deleteTemplate', { authInfo })

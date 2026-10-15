@@ -64,7 +64,7 @@ export class CredentialDefinitionController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post()
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
   public async create(
     @ReqTenantAgent() tenantAgent: TenantAgent,
     @Body() req: CreateCredentialDefinitionDto,

@@ -14,8 +14,8 @@ const SRC = join(__dirname, '..', '..', '..')
 /** Routes reachable without a token, on purpose. */
 const PUBLIC_ROUTES = ['GET /credentials/status/:id', 'GET /demo/token', 'GET /health', 'GET /revocation/tails/:hash']
 
-const ISSUING = [Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer]
-const VERIFYING = [Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier]
+const ISSUING = [Role.Admin, Role.OrgManager, Role.Issuer]
+const VERIFYING = [Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier]
 
 async function loadControllers(): Promise<Type[]> {
   const files = readdirSync(SRC, { recursive: true, encoding: 'utf8' }).filter((file) =>
@@ -62,12 +62,7 @@ describe('route coverage of the role model', () => {
   })
 
   test('every read is open to every authenticated role (data is confined to the caller’s own wallet)', () => {
-    const restrictedReads = routes
-      .filter(
-        (route) =>
-          route.method === 'GET' && route.access.kind === 'roles' && route.controller !== 'OrganizationAdminController',
-      )
-      .map(key)
+    const restrictedReads = routes.filter((route) => route.method === 'GET' && route.access.kind === 'roles').map(key)
     expect(restrictedReads).toEqual([])
   })
 
@@ -83,7 +78,7 @@ describe('route coverage of the role model', () => {
     ['POST /verification-templates', VERIFYING],
     ['PATCH /verification-templates/:id', VERIFYING],
     ['DELETE /verification-templates/:id', VERIFYING],
-    ['POST /dids', [Role.Admin, Role.OrgAdmin, Role.Issuer, Role.Verifier]],
+    ['POST /dids', [Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier]],
   ])('%s is limited to the roles of its purpose', (route, roles) => {
     const found = routes.find((candidate) => key(candidate) === route)
     expect(found?.access).toEqual({ kind: 'roles', roles })
@@ -93,9 +88,13 @@ describe('route coverage of the role model', () => {
     expect(formatRoleMatrix(routes)).toMatchSnapshot()
   })
 
-  test('loads every controller, the organization administration API included', () => {
+  test('loads every controller, nested modules included', () => {
     const controllers = new Set(routes.map((route) => route.controller))
     expect(controllers.size).toBeGreaterThan(15)
-    expect(controllers).toContain('OrganizationAdminController')
+    expect(controllers).toContain('OpenId4VcVerificationSessionController')
+  })
+
+  test('the organization administration API is gone', () => {
+    expect(routes.filter((route) => route.path.startsWith('/organization')).map(key)).toEqual([])
   })
 })

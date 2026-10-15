@@ -40,7 +40,7 @@ describe('E2E authorization', () => {
       {
         name: 'Test',
         type: 'access',
-        roles: [Role.OrgAdmin],
+        roles: [Role.OrgManager],
         org_id: uuid(),
       },
       {
@@ -61,7 +61,7 @@ describe('E2E authorization', () => {
       {
         name: 'Test',
         type: 'access',
-        roles: [Role.OrgAdmin],
+        roles: [Role.OrgManager],
         org_id: uuid(),
       },
       {
@@ -88,7 +88,7 @@ describe('E2E authorization', () => {
       {
         name: 'Test',
         type: 'access',
-        roles: [Role.OrgAdmin],
+        roles: [Role.OrgManager],
         org_id: uuid(),
       },
       {
@@ -115,7 +115,7 @@ describe('E2E authorization', () => {
       {
         name: 'Test',
         type: 'access',
-        roles: [Role.OrgAdmin],
+        roles: [Role.OrgManager],
         org_id: uuid(),
       },
       {

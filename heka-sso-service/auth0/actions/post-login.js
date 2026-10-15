@@ -8,8 +8,8 @@
  *
  */
 
-const HEKA_ROLES = ['Admin', 'OrgAdmin', 'OrgManager', 'OrgMember', 'Issuer', 'Verifier', 'User']
-const ORGANIZATION_ROLES = ['OrgAdmin', 'OrgManager', 'OrgMember', 'Issuer', 'Verifier']
+const HEKA_ROLES = ['Admin', 'OrgManager', 'OrgMember', 'Issuer', 'Verifier', 'User']
+const ORGANIZATION_ROLES = ['OrgManager', 'OrgMember', 'Issuer', 'Verifier']
 
 /**
  * @param {Event} event - Details about the user and the context in which they are logging in.

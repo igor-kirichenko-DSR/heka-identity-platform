@@ -36,7 +36,7 @@ export class CredentialV2Controller {
   @ApiOperation({ summary: 'Make VC offer by template' })
   @ApiBody({ type: OfferByIssuanceTemplateRequest })
   @ApiResponse({ type: OfferByIssuanceTemplateResponse })
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
   @Post('offer-by-template')
   public async offerByTemplate(
     @ReqTenantAgent() tenantAgent: TenantAgent,
@@ -53,7 +53,7 @@ export class CredentialV2Controller {
   @ApiOperation({ summary: 'Proof VC by template' })
   @ApiBody({ type: ProofByVerificationTemplateRequest })
   @ApiResponse({ type: ProofByVerificationTemplateResponse })
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier)
   @Post('proof-by-template')
   public async proofByTemplate(
     @ReqTenantAgent() tenantAgent: TenantAgent,

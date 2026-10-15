@@ -214,20 +214,6 @@
       ]
     },
     {
-      "clientId": "heka-identity-admin",
-      "name": "Heka Identity Service organization administration (service account)",
-      "description": "Confidential client the identity service uses to read organization members and change their Heka client roles for OrgAdmins (ORG_ADMIN_*). Never used to log in.",
-      "enabled": true,
-      "publicClient": false,
-      "protocol": "openid-connect",
-      "clientAuthenticatorType": "client-secret",
-      "secret": "dev-only-heka-identity-admin-secret-do-not-use-in-production",
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": true
-    },
-    {
       "clientId": "heka-demo",
       "name": "Heka demo service account",
       "description": "Confidential client whose Client Credentials token the identity service demo-token broker (GET /demo/token) hands to the public demo pages of the web UI.",
@@ -306,12 +292,6 @@
         {
           "name": "Admin",
           "description": "Platform administrator: acts in the shared Administration wallet. Assigned only through the heka-admins group, never by default",
-          "composite": false,
-          "clientRole": true
-        },
-        {
-          "name": "OrgAdmin",
-          "description": "Organization administrator (requires org_id)",
           "composite": false,
           "clientRole": true
         },
@@ -425,15 +405,7 @@
         "org_id": ["heka-sso"]
       },
       "clientRoles": {
-        "heka-identity-service": ["OrgAdmin"]
-      }
-    },
-    {
-      "username": "service-account-heka-identity-admin",
-      "enabled": true,
-      "serviceAccountClientId": "heka-identity-admin",
-      "clientRoles": {
-        "realm-management": ["manage-users", "view-users", "view-clients", "query-groups", "manage-realm"]
+        "heka-identity-service": ["OrgManager"]
       }
     },
     {

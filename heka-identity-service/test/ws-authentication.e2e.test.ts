@@ -82,7 +82,7 @@ describe('E2E WebSocket authentication', () => {
     })
   })
 
-  test('authenticates for valid bearer token with OrgAdmin role', async () => {
+  test('rejects a bearer token whose only role is the removed OrgAdmin role', async () => {
     const userAuthToken = await signJwt(
       {
         name: 'John',
@@ -105,10 +105,7 @@ describe('E2E WebSocket authentication', () => {
 
     await userWebSocket
 
-    await sleep(10)
-    await userWebSocket.exec((ws) => {
-      expect(ws.readyState).toBe(WebSocket.OPEN)
-    })
+    await userWebSocket.expectClosed(3000)
   })
 
   test('authenticates for valid bearer token with OrgManager role', async () => {

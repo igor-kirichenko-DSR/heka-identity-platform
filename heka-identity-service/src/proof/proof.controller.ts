@@ -63,7 +63,7 @@ export class ProofController {
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post('request')
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier)
   public async request(
     @ReqTenantAgent() tenantAgent: TenantAgent,
     @Body() req: ProofRequestDto,
@@ -103,7 +103,7 @@ export class ProofController {
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post(':id/present')
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier, Role.User)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier, Role.User)
   public async present(@ReqTenantAgent() tenantAgent: TenantAgent, @Param('id') id: string): Promise<ProofRecordDto> {
     const logger = this.logger.child('present', { id })
     logger.trace('>')

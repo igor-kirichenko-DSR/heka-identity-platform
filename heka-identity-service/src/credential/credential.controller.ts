@@ -63,7 +63,7 @@ export class CredentialController {
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post('offer')
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
   public async offer(
     @ReqTenantAgent() tenantAgent: TenantAgent,
     @Body() req: CredentialOfferDto,
@@ -115,7 +115,7 @@ export class CredentialController {
   @ApiConflictResponse({ description: 'Conflict' })
   @Post(':id/accept')
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier, Role.User)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier, Role.User)
   public async accept(
     @ReqTenantAgent() tenantAgent: TenantAgent,
     @Param('id') id: string,
@@ -133,7 +133,7 @@ export class CredentialController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post(':id/revoke')
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
   public async revoke(@ReqTenantAgent() tenantAgent: TenantAgent, @Param('id') id: string): Promise<void> {
     const logger = this.logger.child('revoke', { id })
     logger.trace('>')

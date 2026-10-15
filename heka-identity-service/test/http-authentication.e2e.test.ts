@@ -54,7 +54,7 @@ describe('E2E HTTP authentication', () => {
     expect(getUserResponse.status).toBe(200)
   })
 
-  test('authenticates for valid bearer token with OrgAdmin role', async () => {
+  test('rejects a bearer token whose only role is the removed OrgAdmin role', async () => {
     const userAuthToken = await signJwt(
       {
         name: 'John',
@@ -72,7 +72,7 @@ describe('E2E HTTP authentication', () => {
 
     const getUserResponse = await request(app).get('/user').auth(userAuthToken, { type: 'bearer' })
 
-    expect(getUserResponse.status).toBe(200)
+    expect(getUserResponse.status).toBe(401)
   })
 
   test('authenticates for valid bearer token with OrgManager role', async () => {

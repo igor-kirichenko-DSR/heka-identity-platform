@@ -89,7 +89,7 @@ export class DidService {
       }
 
       // 2. With the role model enabled, the new DID is controlled by the DID of the same method held by the
-      // controller wallet (Admin -> OrgAdmin -> Issuer), for methods that support a controller. A Verifier may only
+      // controller wallet (Admin -> OrgManager -> Issuer), for methods that support a controller. A Verifier may only
       // create a self-controlled did:key (no ledger write), enough to prepare its wallet and sign verification
       // requests. Other roles that cannot create a public DID are rejected here as well
       let controller: string | undefined

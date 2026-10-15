@@ -2,7 +2,6 @@ import { User } from '../entities'
 
 export enum Role {
   Admin = 'Admin',
-  OrgAdmin = 'OrgAdmin',
   OrgManager = 'OrgManager',
   OrgMember = 'OrgMember',
   Issuer = 'Issuer',

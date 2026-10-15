@@ -4,7 +4,7 @@
  * Adds the heka-identity-service claim contract to Client Credentials access tokens, e.g. the one
  * heka-sso-service uses. Machine-to-machine clients have no user, so the role and the optional
  * organization come from the application's metadata (Application → Settings → Application Metadata):
- *   heka_role   one of Admin, OrgAdmin, OrgManager, OrgMember, Issuer, Verifier, User (required)
+ *   heka_role   one of Admin, OrgManager, OrgMember, Issuer, Verifier, User (required)
  *   org_id      organization id (required for org roles, forbidden for Admin/User)
  *   heka_uid    stable Heka user id; defaults to the token subject `<client_id>@clients`
  *   heka_name   display name; defaults to the application name
@@ -12,8 +12,8 @@
  * Secrets: HEKA_AUDIENCE (default `https://heka-identity`), HEKA_CLAIM_NAMESPACE (default `https://heka`).
  */
 
-const HEKA_ROLES = ['Admin', 'OrgAdmin', 'OrgManager', 'OrgMember', 'Issuer', 'Verifier', 'User']
-const ORGANIZATION_ROLES = ['OrgAdmin', 'OrgManager', 'OrgMember', 'Issuer', 'Verifier']
+const HEKA_ROLES = ['Admin', 'OrgManager', 'OrgMember', 'Issuer', 'Verifier', 'User']
+const ORGANIZATION_ROLES = ['OrgManager', 'OrgMember', 'Issuer', 'Verifier']
 
 /**
  * @param {Event} event - Details about the client credentials exchange.

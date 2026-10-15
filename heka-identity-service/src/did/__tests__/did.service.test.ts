@@ -203,7 +203,7 @@ describe('DidService', () => {
         entityStub<Wallet>({ id: 'Organization_org-1', publicDid: undefined }),
       )
 
-      await expect(didService.create(makeAuthInfo(Role.OrgManager, 'Organization_org-1', 'org-1'), {})).rejects.toThrow(
+      await expect(didService.create(makeAuthInfo(Role.OrgMember, 'Organization_org-1', 'org-1'), {})).rejects.toThrow(
         ForbiddenException,
       )
       expect(didRegistrarService.createDid).not.toHaveBeenCalled()
@@ -281,7 +281,7 @@ describe('DidService', () => {
       })
 
       test.each([
-        [Role.OrgAdmin, 'Organization_org-1', 'Administration'],
+        [Role.OrgManager, 'Organization_org-1', 'Administration'],
         [Role.Issuer, 'Issuer_user-1_in_Organization_org-1', 'Organization_org-1'],
       ])('%s is controlled by the hedera DID of %s', async (role, walletId, controllerWalletId) => {
         vi.mocked(em.findOneOrFail).mockResolvedValue(entityStub<Wallet>({ id: walletId, publicDid: 'did:key:own' }))
@@ -314,7 +314,7 @@ describe('DidService', () => {
         vi.mocked(em.findOne).mockResolvedValue(entityStub<Wallet>({ id: 'Administration', tenantId: 'admin-tenant' }))
 
         await expect(
-          didService.create(makeAuthInfo(Role.OrgAdmin, 'Organization_org-1', 'org-1'), { method: 'hedera' }),
+          didService.create(makeAuthInfo(Role.OrgManager, 'Organization_org-1', 'org-1'), { method: 'hedera' }),
         ).rejects.toThrow(UnprocessableEntityException)
         expect(didRegistrarService.createDid).not.toHaveBeenCalled()
       })
@@ -326,7 +326,7 @@ describe('DidService', () => {
         vi.mocked(em.findOne).mockResolvedValue(null)
 
         await expect(
-          didService.create(makeAuthInfo(Role.OrgAdmin, 'Organization_org-1', 'org-1'), { method: 'hedera' }),
+          didService.create(makeAuthInfo(Role.OrgManager, 'Organization_org-1', 'org-1'), { method: 'hedera' }),
         ).rejects.toThrow(UnprocessableEntityException)
         expect(agent.modules.tenants.withTenantAgent).not.toHaveBeenCalled()
       })

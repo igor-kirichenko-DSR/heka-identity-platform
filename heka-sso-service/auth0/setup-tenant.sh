@@ -7,7 +7,7 @@
 # reused by name, and the role settings below (application metadata, Action secrets, API token lifetime,
 # dev users' app_metadata) are re-applied to them.
 #
-# Role defaults: new users get User, the heka-sso-service application is OrgAdmin of its own organization
+# Role defaults: new users get User, the heka-sso-service application is OrgManager of its own organization
 # (SSO_ORG_ID), the heka-demo application (whose token is public) is User. Admin is never a default: every Admin
 # acts in the one shared Administration wallet of heka-identity-service.
 #
@@ -60,7 +60,7 @@ fi
 # --- 2. Roles (optional way of assigning the Heka role to users) ----------------
 echo "== Roles"
 ROLES_JSON="$(auth0 roles list --json 2>/dev/null)"
-for role in Admin OrgAdmin OrgManager OrgMember Issuer Verifier User; do
+for role in Admin OrgManager OrgMember Issuer Verifier User; do
   if [ "$(printf '%s' "$ROLES_JSON" | json 'const a=JSON.parse(require("fs").readFileSync(0,"utf8"));console.log(a.some(r=>r.name===process.argv[1]))' "$role")" = "true" ]; then
     echo "   $role exists"
   else
@@ -89,23 +89,23 @@ api patch "clients/${SPA_ID}" --data '{"oidc_conformant":true,"grant_types":["au
 echo "   grants: authorization_code + refresh_token, rotation on"
 
 # --- 4. Machine-to-machine application for heka-sso-service ---------------------
-# OrgAdmin of its own organization: its verifier and signing DID live in Organization_${SSO_ORG_ID}, not in the
-# shared Administration wallet. Not Verifier: with ROLE_MODEL_ENABLED=true only Admin, OrgAdmin and Issuer can
+# OrgManager of its own organization: its verifier and signing DID live in Organization_${SSO_ORG_ID}, not in the
+# shared Administration wallet. Not Verifier: with ROLE_MODEL_ENABLED=true only Admin, OrgManager and Issuer can
 # create the signing DID.
 echo "== Application heka-sso-service (M2M)"
 M2M_ID="$(find_app heka-sso-service)"
 if [ -z "$M2M_ID" ]; then
   M2M_JSON="$(auth0 apps create --name heka-sso-service --type m2m --description "Heka SSO Service service account" \
-    --metadata "heka_role=OrgAdmin" --metadata "org_id=${SSO_ORG_ID}" --reveal-secrets --json 2>/dev/null)"
+    --metadata "heka_role=OrgManager" --metadata "org_id=${SSO_ORG_ID}" --reveal-secrets --json 2>/dev/null)"
   M2M_ID="$(printf '%s' "$M2M_JSON" | json 'console.log(JSON.parse(require("fs").readFileSync(0,"utf8")).client_id)')"
   M2M_SECRET="$(printf '%s' "$M2M_JSON" | json 'console.log(JSON.parse(require("fs").readFileSync(0,"utf8")).client_secret)')"
   echo "   created ${M2M_ID}"
 else
   M2M_SECRET="(existing application: read it in the dashboard)"
-  api patch "clients/${M2M_ID}" --data "{\"client_metadata\":{\"heka_role\":\"OrgAdmin\",\"org_id\":\"${SSO_ORG_ID}\"}}" >/dev/null
+  api patch "clients/${M2M_ID}" --data "{\"client_metadata\":{\"heka_role\":\"OrgManager\",\"org_id\":\"${SSO_ORG_ID}\"}}" >/dev/null
   echo "   exists ${M2M_ID}"
 fi
-echo "   heka_role=OrgAdmin, org_id=${SSO_ORG_ID}"
+echo "   heka_role=OrgManager, org_id=${SSO_ORG_ID}"
 # Grant it the API (no scopes; the role comes from the application metadata via the Action).
 if [ "$(api get client-grants --query "client_id=${M2M_ID}" | json 'const a=JSON.parse(require("fs").readFileSync(0,"utf8"));console.log(a.some(g=>g.audience===process.argv[1]))' "$HEKA_AUDIENCE")" != "true" ]; then
   api post client-grants --data "{\"client_id\":\"${M2M_ID}\",\"audience\":\"${HEKA_AUDIENCE}\",\"scope\":[]}" >/dev/null
@@ -138,33 +138,6 @@ if [ "$(api get client-grants --query "client_id=${DEMO_ID}" | json 'const a=JSO
   echo "   client grant created"
 else
   echo "   client grant exists"
-fi
-
-# --- 4c. Machine-to-machine application for delegated organization administration ----
-# heka-identity-service calls the Management API with it when an OrgAdmin changes a member's role in their own
-# organization (ORG_ADMIN_* settings). Only the scopes for organizations, memberships, roles and users.
-echo "== Application heka-identity-admin (M2M, Management API)"
-TENANT_DOMAIN="$(auth0 tenants list --json 2>/dev/null | json 'const a=JSON.parse(require("fs").readFileSync(0,"utf8"));const t=a.find(x=>x.active)||a[0];console.log(t?t.name:"")')"
-MGMT_AUDIENCE="https://${TENANT_DOMAIN}/api/v2/"
-ORG_ADMIN_SCOPES='["read:organizations","read:organization_members","read:organization_member_roles","create:organization_member_roles","delete:organization_member_roles","read:roles","read:users"]'
-ADMIN_APP_ID="$(find_app heka-identity-admin)"
-if [ -z "$ADMIN_APP_ID" ]; then
-  ADMIN_JSON="$(auth0 apps create --name heka-identity-admin --type m2m --description "Heka Identity Service organization administration (Management API)" \
-    --reveal-secrets --json 2>/dev/null)"
-  ADMIN_APP_ID="$(printf '%s' "$ADMIN_JSON" | json 'console.log(JSON.parse(require("fs").readFileSync(0,"utf8")).client_id)')"
-  ADMIN_APP_SECRET="$(printf '%s' "$ADMIN_JSON" | json 'console.log(JSON.parse(require("fs").readFileSync(0,"utf8")).client_secret)')"
-  echo "   created ${ADMIN_APP_ID}"
-else
-  ADMIN_APP_SECRET="(existing application: read it in the dashboard)"
-  echo "   exists ${ADMIN_APP_ID}"
-fi
-GRANT_ID="$(api get client-grants --query "client_id=${ADMIN_APP_ID}" | json 'const a=JSON.parse(require("fs").readFileSync(0,"utf8"));const g=a.find(x=>x.audience===process.argv[1]);console.log(g?g.id:"")' "$MGMT_AUDIENCE")"
-if [ -z "$GRANT_ID" ]; then
-  api post client-grants --data "{\"client_id\":\"${ADMIN_APP_ID}\",\"audience\":\"${MGMT_AUDIENCE}\",\"scope\":${ORG_ADMIN_SCOPES}}" >/dev/null
-  echo "   Management API grant created"
-else
-  api patch "client-grants/${GRANT_ID}" --data "{\"scope\":${ORG_ADMIN_SCOPES}}" >/dev/null
-  echo "   Management API grant updated"
 fi
 
 # --- 5. Actions ---------------------------------------------------------------
@@ -326,10 +299,4 @@ heka-identity-service demo-token broker (phase 6)
   DEMO_CLIENT_ID=${DEMO_ID}
   DEMO_CLIENT_SECRET=${DEMO_SECRET}
   DEMO_TOKEN_PARAMS={"audience":"${HEKA_AUDIENCE}"}
-
-heka-identity-service organization administration (OrgAdmins manage their organization's members)
-  ORG_ADMIN_PROVIDER=auth0
-  ORG_ADMIN_URL=https://${DOMAIN}
-  ORG_ADMIN_CLIENT_ID=${ADMIN_APP_ID}
-  ORG_ADMIN_CLIENT_SECRET=${ADMIN_APP_SECRET}
 EOF

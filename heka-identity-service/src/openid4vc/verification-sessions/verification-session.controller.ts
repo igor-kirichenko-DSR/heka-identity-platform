@@ -66,7 +66,7 @@ export class OpenId4VcVerificationSessionController {
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post('request')
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgManager, Role.Verifier)
   public async createRequest(
     @ReqTenantAgent() tenantAgent: TenantAgent,
     @Body() req: OpenId4VcVerificationSessionCreateRequestDto,
@@ -141,7 +141,7 @@ export class OpenId4VcVerificationSessionController {
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post(':verificationSessionId/verify')
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgManager, Role.Verifier)
   public async verifyDcApiResponse(
     @ReqTenantAgent() tenantAgent: TenantAgent,
     @Param('verificationSessionId') verificationSessionId: string,
@@ -171,7 +171,7 @@ export class OpenId4VcVerificationSessionController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgManager, Role.Verifier)
   @Delete(':verificationSessionId')
   public async deleteVerificationSession(
     @ReqTenantAgent() tenantAgent: TenantAgent,

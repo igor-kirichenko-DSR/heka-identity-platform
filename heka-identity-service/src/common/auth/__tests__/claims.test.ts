@@ -155,7 +155,7 @@ describe('mapClaims', () => {
     })
 
     test('ignores an organization for Admin and User, who act outside any organization', () => {
-      // e.g. a new sign-up added to a Keycloak organization before an OrgAdmin gives them an organization role
+      // e.g. a new sign-up added to a Keycloak organization before an administrator gives them an organization role
       const keycloakOrgs = { ...defaults, orgId: ['heka_organization', 'org_id'], orgIdField: 'heka_org_id' }
       const organization = { heka_organization: { acme: { heka_org_id: ['org-1'] } }, org_id: 'legacy' }
 
@@ -189,6 +189,16 @@ describe('mapClaims', () => {
       expect(() => mapClaims({ sub: 'user-1', roles: ['User', 'Issuer'] }, defaults)).toThrow(
         "Token claim 'roles' contains 2 Heka roles (User, Issuer); exactly one is required",
       )
+    })
+
+    test('rejects the removed OrgAdmin role like any non-Heka role', () => {
+      expect(() => mapClaims({ sub: 'user-1', roles: ['OrgAdmin'], org_id: 'org-1' }, defaults)).toThrow(
+        "Token claim 'roles' contains no Heka role",
+      )
+      // A provider still sending OrgAdmin next to a Heka role: OrgAdmin is ignored, the other role is used
+      expect(mapClaims({ sub: 'user-1', roles: ['OrgAdmin', 'OrgManager'], org_id: 'org-1' }, defaults).roles).toEqual([
+        'OrgManager',
+      ])
     })
   })
 

@@ -71,26 +71,26 @@ describe('E2E wallet scope', () => {
     expect(await getOwnDidsCount(userAuthToken)).toBe(0)
   })
 
-  test('OrgAdmin, OrgManager and OrgMember share the organization wallet', async () => {
+  test('OrgManagers and OrgMembers share the organization wallet', async () => {
     const bigOrgId = uuid()
     const smallOrgId = uuid()
 
-    const bigOrgAdminAuthToken = await createAuthToken(uuid(), Role.OrgAdmin, bigOrgId)
     const bigOrgManagerAuthToken = await createAuthToken(uuid(), Role.OrgManager, bigOrgId)
+    const secondBigOrgManagerAuthToken = await createAuthToken(uuid(), Role.OrgManager, bigOrgId)
     const bigOrgMemberAuthToken = await createAuthToken(uuid(), Role.OrgMember, bigOrgId)
-    const smallOrgAdminAuthToken = await createAuthToken(uuid(), Role.OrgAdmin, smallOrgId)
+    const smallOrgManagerAuthToken = await createAuthToken(uuid(), Role.OrgManager, smallOrgId)
 
-    await createDid(bigOrgAdminAuthToken)
-    await createSchema(bigOrgAdminAuthToken, 'Organization schema')
+    await createDid(bigOrgManagerAuthToken)
+    await createSchema(bigOrgManagerAuthToken, 'Organization schema')
 
-    expect(await getOwnDidsCount(bigOrgManagerAuthToken)).toBe(1)
+    expect(await getOwnDidsCount(secondBigOrgManagerAuthToken)).toBe(1)
     expect(await getOwnDidsCount(bigOrgMemberAuthToken)).toBe(1)
     // Schemas belong to the organization wallet, not to the user who created them
-    expect(await getSchemaNames(bigOrgManagerAuthToken)).toEqual(['Organization schema'])
+    expect(await getSchemaNames(secondBigOrgManagerAuthToken)).toEqual(['Organization schema'])
     expect(await getSchemaNames(bigOrgMemberAuthToken)).toEqual(['Organization schema'])
 
-    expect(await getOwnDidsCount(smallOrgAdminAuthToken)).toBe(0)
-    expect(await getSchemaNames(smallOrgAdminAuthToken)).toEqual([])
+    expect(await getOwnDidsCount(smallOrgManagerAuthToken)).toBe(0)
+    expect(await getSchemaNames(smallOrgManagerAuthToken)).toEqual([])
   })
 
   test('Issuer and Verifier have a personal wallet per role and organization', async () => {
