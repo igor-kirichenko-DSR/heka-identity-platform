@@ -138,14 +138,13 @@ describe('Auth0 post-login Action', () => {
     test('falls back to the Auth0 organization id without heka_org_id metadata', async () => {
       const api = makeLoginApi()
 
-      await onExecutePostLogin({ ...baseEvent, organization: { id: 'org_abc123' }, authorization: { roles: ['OrgManager'] } }, api)
+      await onExecutePostLogin({ ...baseEvent, organization: { id: 'org_abc123' }, authorization: { roles: ['OrgAdmin'] } }, api)
 
       expect(claimsOf(api.accessToken.setCustomClaim)['https://heka/org_id']).toBe('org_abc123')
     })
 
     test.each([
       ['no role in the organization', []],
-      ['only the removed OrgAdmin role', ['OrgAdmin']],
       ['two Heka roles', ['Issuer', 'Verifier']],
       ['a role that has no organization (Admin)', ['Admin']],
       ['a role that has no organization (User)', ['User']],
@@ -179,8 +178,8 @@ describe('Auth0 credentials-exchange Action', () => {
     accessToken: { setCustomClaim: vi.fn() },
     access: { deny: vi.fn() },
   })
-  // The heka-sso-service application as setup-tenant.sh configures it: OrgManager of its own organization
-  const client = { client_id: 'abc123', name: 'heka-sso-service', metadata: { heka_role: 'OrgManager', org_id: 'heka-sso' } }
+  // The heka-sso-service application as setup-tenant.sh configures it: OrgAdmin of its own organization
+  const client = { client_id: 'abc123', name: 'heka-sso-service', metadata: { heka_role: 'OrgAdmin', org_id: 'heka-sso' } }
 
   test('adds the claim contract from the application metadata, including org_id for an organization role', async () => {
     const api = makeApi()
@@ -188,7 +187,7 @@ describe('Auth0 credentials-exchange Action', () => {
     await onExecuteCredentialsExchange({ resource_server: { identifier: HEKA_AUDIENCE }, client }, api)
 
     expect(claimsOf(api.accessToken.setCustomClaim)).toEqual({
-      'https://heka/roles': ['OrgManager'],
+      'https://heka/roles': ['OrgAdmin'],
       'https://heka/name': 'heka-sso-service',
       'https://heka/heka_uid': 'abc123@clients',
       'https://heka/org_id': 'heka-sso',
@@ -223,7 +222,7 @@ describe('Auth0 credentials-exchange Action', () => {
     }
 
     const invalidMetadata: Record<string, string>[] = [
-      { heka_role: 'OrgManager' },
+      { heka_role: 'OrgAdmin' },
       { heka_role: 'Admin', org_id: 'org-1' },
       { heka_role: 'User', org_id: 'org-1' },
     ]
@@ -267,18 +266,6 @@ describe('Auth0 credentials-exchange Action', () => {
 
     expect(api.access.deny).toHaveBeenCalledTimes(2)
     expect(api.access.deny.mock.calls[0][0]).toBe('invalid_client_metadata')
-    expect(api.accessToken.setCustomClaim).not.toHaveBeenCalled()
-  })
-
-  test('denies an application still configured with the removed OrgAdmin role', async () => {
-    const api = makeApi()
-
-    await onExecuteCredentialsExchange(
-      { resource_server: { identifier: HEKA_AUDIENCE }, client: { ...client, metadata: { heka_role: 'OrgAdmin', org_id: 'heka-sso' } } },
-      api
-    )
-
-    expect(api.access.deny).toHaveBeenCalledWith('invalid_client_metadata', expect.stringContaining('heka_role must be one of'))
     expect(api.accessToken.setCustomClaim).not.toHaveBeenCalled()
   })
 

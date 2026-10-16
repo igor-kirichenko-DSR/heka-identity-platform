@@ -68,7 +68,7 @@ export class OpenId4VcIssuerController {
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post()
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   public async create(
     @ReqTenantAgent() tenantAgent: TenantAgent,
     @Body() req: OpenId4VcIssuersCreateDto,
@@ -95,7 +95,7 @@ export class OpenId4VcIssuerController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   @Put(':issuerId')
   public async update(
     @ReqTenantAgent() tenantAgent: TenantAgent,

@@ -86,7 +86,7 @@ export function collectRoutePermissions(controllers: Type[]): RoutePermission[] 
   return routes.sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method))
 }
 
-const MATRIX_ROLES = [Role.Admin, Role.OrgManager, Role.OrgMember, Role.Issuer, Role.Verifier, Role.User]
+const MATRIX_ROLES = [Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.OrgMember, Role.Issuer, Role.Verifier, Role.User]
 
 /** The role matrix as a Markdown table: one row per route, one column per role (enforced mode). */
 export function formatRoleMatrix(routes: RoutePermission[]): string {

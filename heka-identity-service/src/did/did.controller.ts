@@ -80,7 +80,7 @@ export class DidController {
   @ApiConflictResponse({ description: 'Conflict' })
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post()
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.Issuer, Role.Verifier)
   public async create(@ReqAuthInfo() authInfo: AuthInfo, @Body() req: CreateDidRequestDto): Promise<DidDocumentDto> {
     const logger = this.logger.child('create', { authInfo })
     logger.trace('>')

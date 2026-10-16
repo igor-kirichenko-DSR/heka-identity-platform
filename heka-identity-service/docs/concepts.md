@@ -31,22 +31,23 @@ The role model is optional and controlled by [`ROLE_MODEL_ENABLED`](setup.md#rol
 | ------------ | ------------ | --------------------------------------------------------------- | ------------------------------------------------- |
 | `Admin`      | Global       | `Administration`: the platform identity, shared by all `Admin`s | Yes                                               |
 | `User`       | Global       | `User_<sub>`: a personal wallet                                 | No                                                |
-| `OrgManager` | Organization | `Organization_<org_id>`: the organization identity              | Yes                                               |
+| `OrgAdmin`   | Organization | `Organization_<org_id>`: the organization identity              | Yes                                               |
+| `OrgManager` | Organization | `Organization_<org_id>`                                         | No                                                |
 | `OrgMember`  | Organization | `Organization_<org_id>`                                         | No                                                |
 | `Issuer`     | Organization | `Issuer_<sub>_in_Organization_<org_id>`                         | Yes                                               |
 | `Verifier`   | Organization | `Verifier_<sub>_in_Organization_<org_id>`                       | `did:key` only (self-controlled, no ledger write) |
 
 - **Organization roles require `org_id`** (`401` without it). For `Admin` and `User` an organization in the token is ignored: they act in `Administration` and `User_<sub>`.
 - **Roles come from the OIDC provider.**
-  - **Defaults in the shipped recipes:** every sign-up becomes a `User`; operators get `Admin` explicitly; the SSO service account is `OrgManager` of its own organization, and the demo account is a `User`.
+  - **Defaults in the shipped recipes:** every sign-up becomes a `User`; operators get `Admin` explicitly; the SSO service account is `OrgAdmin` of its own organization, and the demo account is a `User`.
   - **Assigning other roles** is done in the provider. See [Setup — Managing roles](setup.md#managing-roles).
   - **A role change** reaches the service with the user's next access token and gives the user a different wallet; the data of the previous wallet stays with it.
 - **Role model disabled (default):** roles aren't checked. Every user can call every endpoint in the wallet they act in, and no DID controller is set. This is the self-service Web UI mode.
-- **Role model enabled:** each endpoint allows only the roles in its `@Roles` decorator, or every authenticated role when it is marked `@AnyRole()`. A route with neither is denied (fail closed), and a unit test checks that every route has one of the two. Reads are open to every role, because their data is confined to the caller's wallet. Writes follow their purpose: issuing (`Admin`, `OrgManager`, `Issuer`) or verifying (the same plus `Verifier`). A role that can't create a public DID gets `403` from `POST /dids`, and from `POST /prepare-wallet` unless its wallet is already prepared. A `Verifier` may create a `did:key`, so it can prepare its own wallet.
+- **Role model enabled:** each endpoint allows only the roles in its `@Roles` decorator, or every authenticated role when it is marked `@AnyRole()`. A route with neither is denied (fail closed), and a unit test checks that every route has one of the two. Reads are open to every role, because their data is confined to the caller's wallet. Writes follow their purpose: issuing (`Admin`, `OrgAdmin`, `OrgManager`, `Issuer`) or verifying (the same plus `Verifier`). A role that can't create a public DID gets `403` from `POST /dids`, and from `POST /prepare-wallet` unless its wallet is already prepared. A `Verifier` may create a `did:key`, so it can prepare its own wallet.
 
 #### DID controller
 
-With the role model enabled, a public DID created by an `OrgManager` names a DID of `Administration` as its controller, and a DID created by an `Issuer` names a DID of its organization. The controller DID has the same method and is set as the `controller` of the new DID's document ([W3C DID](https://www.w3.org/TR/did-1.1/#did-controller)). `Admin` DIDs are their own controllers. The DID is always created in the caller's own wallet, which holds its keys.
+With the role model enabled, a public DID created by an `OrgAdmin` names a DID of `Administration` as its controller, and a DID created by an `Issuer` names a DID of its organization. The controller DID has the same method and is set as the `controller` of the new DID's document ([W3C DID](https://www.w3.org/TR/did-1.1/#did-controller)). `Admin` DIDs are their own controllers. The DID is always created in the caller's own wallet, which holds its keys.
 
 | Method     | Controller                                                                                                         |
 | ---------- | ------------------------------------------------------------------------------------------------------------------ |

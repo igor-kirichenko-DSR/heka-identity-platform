@@ -35,7 +35,7 @@ export class StatusListController {
   @ApiOperation({ summary: 'Create status list' })
   @ApiOkResponse({ type: CreateStatusListRequest })
   @Post()
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   @UseInterceptors(TenantAgentInterceptor)
   public async create(
     @ReqAuthInfo() authInfo: AuthInfo,
@@ -53,7 +53,7 @@ export class StatusListController {
   @ApiOperation({ summary: 'Update status list' })
   @ApiOkResponse({ type: UpdateStatusListRequest })
   @Put(':id')
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   @UseInterceptors(TenantAgentInterceptor)
   public async update(
     @ReqAuthInfo() authInfo: AuthInfo,

@@ -103,13 +103,13 @@ describe.skipIf(!keycloakUrl)('Keycloak live: TokenVerifier against the heka-pla
     expect(payload.name).toBe('service-account-heka-sso-service')
   })
 
-  test('makes heka-sso-service OrgManager of its own organization, not Admin', async () => {
+  test('makes heka-sso-service OrgAdmin of its own organization, not Admin', async () => {
     const token = await clientCredentialsToken(clients.sso)
 
     const payload = await buildVerifier().verify(token)
 
-    // Exactly OrgManager: the realm's default group (User) must not add a second role to the service account
-    expect(payload.roles).toEqual(['OrgManager'])
+    // Exactly OrgAdmin: the realm's default group (User) must not add a second role to the service account
+    expect(payload.roles).toEqual(['OrgAdmin'])
     expect(payload.org_id).toBe(SSO_ORG_ID)
     expect(walletOf(payload)).toBe(`Organization_${SSO_ORG_ID}`)
   })

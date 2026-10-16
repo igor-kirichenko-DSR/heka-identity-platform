@@ -13,7 +13,7 @@ import { initializeMikroOrm, startTestApp } from './helpers'
 import { createAuthToken } from './helpers/jwt'
 
 const PLATFORM_ORG_ID = 'platform-org'
-const orgRoles = new Set([Role.OrgManager, Role.OrgMember, Role.Issuer, Role.Verifier])
+const orgRoles = new Set([Role.OrgAdmin, Role.OrgManager, Role.OrgMember, Role.Issuer, Role.Verifier])
 const tokenFor = (role: Role, userId: string = uuid(), orgId: string = PLATFORM_ORG_ID) =>
   createAuthToken(userId, role, orgRoles.has(role) ? orgId : undefined)
 
@@ -106,7 +106,7 @@ describe('E2E role model', () => {
       ['post', '/connections/accept-invitation', Role.OrgMember, false],
       ['post', '/connections/create-invitation', Role.User, false],
       ['post', '/connections/create-invitation', Role.Verifier, true],
-      ['post', '/dids', Role.OrgManager, true],
+      ['post', '/dids', Role.OrgManager, false],
       ['post', '/dids', Role.Verifier, true],
       ['post', '/dids', Role.OrgMember, false],
       ['post', '/dids', Role.Admin, true],
@@ -181,7 +181,7 @@ describe('E2E role model', () => {
 
     const bootstrapOrganization = async () => {
       expect((await post('/prepare-wallet', await tokenFor(Role.Admin))).status).toBe(201)
-      expect((await post('/prepare-wallet', await tokenFor(Role.OrgManager, uuid(), orgId))).status).toBe(201)
+      expect((await post('/prepare-wallet', await tokenFor(Role.OrgAdmin, uuid(), orgId))).status).toBe(201)
     }
 
     beforeEach(() => startApp(true))
@@ -212,16 +212,16 @@ describe('E2E role model', () => {
       ).not.toBe(403)
     })
 
-    test('an OrgMember gets 403 until an OrgManager has prepared the organization wallet, then its DID', async () => {
-      const memberToken = await tokenFor(Role.OrgMember, uuid(), orgId)
-      expect((await post('/prepare-wallet', memberToken)).status).toBe(403)
+    test('an OrgManager gets 403 until an OrgAdmin has prepared the organization wallet, then its DID', async () => {
+      const managerToken = await tokenFor(Role.OrgManager, uuid(), orgId)
+      expect((await post('/prepare-wallet', managerToken)).status).toBe(403)
 
       await bootstrapOrganization()
 
-      const orgManagerDid = (await post('/prepare-wallet', await tokenFor(Role.OrgManager, uuid(), orgId))).body.did
-      const memberResponse = await post('/prepare-wallet', memberToken)
-      expect(memberResponse.status).toBe(201)
-      expect(memberResponse.body.did).toBe(orgManagerDid)
+      const orgAdminDid = (await post('/prepare-wallet', await tokenFor(Role.OrgAdmin, uuid(), orgId))).body.did
+      const managerResponse = await post('/prepare-wallet', managerToken)
+      expect(managerResponse.status).toBe(201)
+      expect(managerResponse.body.did).toBe(orgAdminDid)
     })
   })
 })

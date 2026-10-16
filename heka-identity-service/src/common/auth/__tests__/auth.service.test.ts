@@ -17,7 +17,8 @@ describe('getWalletId', () => {
   test.each([
     // Every Admin acts as the platform identity
     [{ role: Role.Admin, userId: '11' }, 'Administration'],
-    // OrgManager / OrgMember share the organization wallet
+    // OrgAdmin / OrgManager / OrgMember share the organization wallet
+    [{ role: Role.OrgAdmin, userId: '12', orgId: '1' }, 'Organization_1'],
     [{ role: Role.OrgManager, userId: '13', orgId: '1' }, 'Organization_1'],
     [{ role: Role.OrgMember, userId: '14', orgId: '1' }, 'Organization_1'],
     // Issuer / Verifier have a personal wallet per role and organization
@@ -32,6 +33,7 @@ describe('getWalletId', () => {
 
   test.each([
     { role: Role.Admin, userId: '11', orgId: '1' },
+    { role: Role.OrgAdmin, userId: '12' },
     { role: Role.OrgManager, userId: '13' },
     { role: Role.OrgMember, userId: '14' },
     { role: Role.Issuer, userId: '15' },
@@ -45,20 +47,25 @@ describe('getWalletId', () => {
 describe('getDidControllerWalletId', () => {
   test.each([
     [{ role: Role.Admin }, null],
-    [{ role: Role.OrgManager, orgId: '1' }, 'Administration'],
+    [{ role: Role.OrgAdmin, orgId: '1' }, 'Administration'],
     [{ role: Role.Issuer, orgId: '1' }, 'Organization_1'],
   ])('for %o returns %s', (params: { role: Role; orgId?: string }, expected: string | null) => {
     expect(getDidControllerWalletId(params)).toBe(expected)
   })
 
-  test.each([{ role: Role.OrgMember, orgId: '1' }, { role: Role.Verifier, orgId: '1' }, { role: Role.User }])(
+  test.each([
+    { role: Role.OrgManager, orgId: '1' },
+    { role: Role.OrgMember, orgId: '1' },
+    { role: Role.Verifier, orgId: '1' },
+    { role: Role.User },
+  ])(
     'for %o throws ForbiddenException because the role cannot create a public DID',
     (params: { role: Role; orgId?: string }) => {
       expect(() => getDidControllerWalletId(params)).toThrow(ForbiddenException)
     },
   )
 
-  test.each([{ role: Role.Admin, orgId: '1' }, { role: Role.OrgManager }, { role: Role.Issuer }])(
+  test.each([{ role: Role.Admin, orgId: '1' }, { role: Role.OrgAdmin }, { role: Role.Issuer }])(
     'for %o throws UnauthorizedException',
     (params: { role: Role; orgId?: string }) => {
       expect(() => getDidControllerWalletId(params)).toThrow(UnauthorizedException)

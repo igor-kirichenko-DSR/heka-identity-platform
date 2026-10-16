@@ -60,7 +60,7 @@ export class ConnectionController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post('create-invitation')
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier)
   public async createInvitation(
     @ReqAuthInfo() authInfo: AuthInfo,
     @ReqTenantAgent() tenantAgent: TenantAgent,
@@ -82,7 +82,7 @@ export class ConnectionController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post('accept-invitation')
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier, Role.User)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier, Role.User)
   public async acceptInvitation(
     @ReqTenantAgent() tenantAgent: TenantAgent,
     @Body() req: AcceptInvitationDto,

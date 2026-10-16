@@ -102,7 +102,7 @@ export class SchemaV2Controller {
   @UseGuards(JwtAuthGuard, RoleGuard)
   @ApiBearerAuth()
   @UseInterceptors(TenantAgentInterceptor)
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   @Post('')
   public async createSchema(
     @ReqAuthInfo() authInfo: AuthInfo,
@@ -126,7 +126,7 @@ export class SchemaV2Controller {
   @UseGuards(JwtAuthGuard, RoleGuard)
   @ApiBearerAuth()
   @UseInterceptors(TenantAgentInterceptor)
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   @Patch(':id')
   public async patchSchema(
     @ReqAuthInfo() authInfo: AuthInfo,
@@ -148,7 +148,7 @@ export class SchemaV2Controller {
   @UseGuards(JwtAuthGuard, RoleGuard)
   @ApiBearerAuth()
   @UseInterceptors(TenantAgentInterceptor)
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   @Post(':id/registration')
   public async registrationSchema(
     @ReqAuthInfo() authInfo: AuthInfo,

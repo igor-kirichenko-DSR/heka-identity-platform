@@ -79,7 +79,7 @@ export class VerificationTemplateController {
   @ApiOperation({ summary: 'Create template' })
   @ApiBody({ type: CreateVerificationTemplateRequest })
   @ApiResponse({ type: CreateVerificationTemplateResponse, description: 'Created template id' })
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier)
   @Post('')
   public async createTemplate(
     @ReqAuthInfo() authInfo: AuthInfo,
@@ -96,7 +96,7 @@ export class VerificationTemplateController {
   @ApiParam({ name: 'id', format: 'uuid', type: 'string', description: 'Template id' })
   @ApiBody({ type: PatchVerificationTemplateRequest })
   @ApiOkResponse()
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier)
   @Patch(':id')
   public async patchTemplate(
     @ReqAuthInfo() authInfo: AuthInfo,
@@ -112,7 +112,7 @@ export class VerificationTemplateController {
   @ApiOperation({ summary: 'Delete template' })
   @ApiParam({ name: 'id', format: 'uuid', type: 'string', description: 'Template id' })
   @ApiOkResponse()
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier)
   @Delete(':id')
   public async deleteTemplate(@ReqAuthInfo() authInfo: AuthInfo, @Param('id') id: string): Promise<void> {
     const logger = this.logger.child('deleteTemplate', { authInfo })

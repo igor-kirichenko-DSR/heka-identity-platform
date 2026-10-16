@@ -41,7 +41,7 @@ export class RevocationRegistryController {
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post()
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   @UseInterceptors(TenantAgentInterceptor)
   public async create(
     @ReqTenantAgent() tenantAgent: TenantAgent,

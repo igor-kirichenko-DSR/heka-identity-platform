@@ -32,7 +32,7 @@ import {
 
 // Test scenario:
 //
-// The director of a hospital has OrgManager role. He issues a public DID of the hospital and a schema of a drug prescription.
+// The director of a hospital has OrgAdmin role. He issues a public DID of the hospital and a schema of a drug prescription.
 //
 // A doctor working in this hospital has Issuer role.
 // She issues her own public DID as a doctor working in this hospital and her own credential definition based on the hospital drug prescription schema.
@@ -50,13 +50,13 @@ describe('E2E credential issuance and proof presentation', () => {
   let app: Server
 
   let adminAuthToken: string
-  let orgManagerAuthToken: string
+  let orgAdminAuthToken: string
   let issuerAuthToken: string
   let holderAuthToken: string
   let verifierAuthToken: string
 
   let adminWebSocket: WSChain
-  let orgManagerWebSocket: WSChain
+  let orgAdminWebSocket: WSChain
   let issuerWebSocket: WSChain
   let holderWebSocket: WSChain
   let verifierWebSocket: WSChain
@@ -75,7 +75,7 @@ describe('E2E credential issuance and proof presentation', () => {
     const adminId = uuid() // an administrator of Heka Identity Service
 
     const hospitalId = uuid()
-    const orgManagerId = uuid() // the director of the hospital
+    const orgAdminId = uuid() // the director of the hospital
     const issuerId = uuid() // a doctor working in the hospital
 
     const holderId = uuid() // a patient
@@ -105,28 +105,28 @@ describe('E2E credential issuance and proof presentation', () => {
     await adminWebSocket
     await waitForNotificationSocket(nestApp, adminAuthToken)
 
-    orgManagerAuthToken = await signJwt(
+    orgAdminAuthToken = await signJwt(
       {
         name: 'Director',
         type: 'access',
-        roles: ['OrgManager'],
+        roles: ['OrgAdmin'],
         org_id: hospitalId,
       },
       {
-        subject: orgManagerId,
+        subject: orgAdminId,
         issuer: testOidcIssuer,
         audience: testOidcAudience,
         expiresIn: '1w',
       },
     )
 
-    orgManagerWebSocket = request(app)
+    orgAdminWebSocket = request(app)
       .ws('/notifications')
-      .set('Authorization', `Bearer ${orgManagerAuthToken}`)
+      .set('Authorization', `Bearer ${orgAdminAuthToken}`)
       .expectUpgrade((upgradeResponse) => {}) // eslint-disable-line @typescript-eslint/no-empty-function
 
-    await orgManagerWebSocket
-    await waitForNotificationSocket(nestApp, orgManagerAuthToken)
+    await orgAdminWebSocket
+    await waitForNotificationSocket(nestApp, orgAdminAuthToken)
 
     issuerAuthToken = await signJwt(
       {
@@ -199,7 +199,7 @@ describe('E2E credential issuance and proof presentation', () => {
 
   afterEach(async () => {
     await adminWebSocket.close().expectClosed()
-    await orgManagerWebSocket.close().expectClosed()
+    await orgAdminWebSocket.close().expectClosed()
     await issuerWebSocket.close().expectClosed()
     await holderWebSocket.close().expectClosed()
     await verifierWebSocket.close().expectClosed()
@@ -226,39 +226,39 @@ describe('E2E credential issuance and proof presentation', () => {
 
     /*** ORG ADMIN CREATES PUBLIC DID ***/
 
-    const orgManagerPostDidResponse = await request(app).post('/dids').auth(orgManagerAuthToken, { type: 'bearer' })
+    const orgAdminPostDidResponse = await request(app).post('/dids').auth(orgAdminAuthToken, { type: 'bearer' })
 
-    expect(orgManagerPostDidResponse.status).toBe(201)
-    expect(orgManagerPostDidResponse.body).toEqual(
+    expect(orgAdminPostDidResponse.status).toBe(201)
+    expect(orgAdminPostDidResponse.body).toEqual(
       expect.objectContaining({
         id: expect.stringMatching(`^did:key:${DID_OID4VC_PATTERN}$`),
       }),
     )
 
-    const orgManagerPublicDid = orgManagerPostDidResponse.body.id as string
+    const orgAdminPublicDid = orgAdminPostDidResponse.body.id as string
 
     /*** ORG ADMIN CREATES SCHEMA ***/
 
-    const orgManagerPostSchemaResponse = await request(app)
+    const orgAdminPostSchemaResponse = await request(app)
       .post('/schemas')
-      .auth(orgManagerAuthToken, { type: 'bearer' })
+      .auth(orgAdminAuthToken, { type: 'bearer' })
       .send({
-        issuerId: orgManagerPublicDid,
+        issuerId: orgAdminPublicDid,
         name: 'Drug Prescription',
         version: '1.0',
         attrNames: ['name', 'weight', 'customerAge'], // for simplicity we embed customerAge field in Drug Prescription schema
       } satisfies CreateSchemaDto)
 
-    expect(orgManagerPostSchemaResponse.status).toBe(201)
-    expect(orgManagerPostSchemaResponse.body).toEqual({
-      id: expect.stringMatching(`^${orgManagerPublicDid}/resources/${UUID_PATTERN}$`),
-      issuerId: orgManagerPublicDid,
+    expect(orgAdminPostSchemaResponse.status).toBe(201)
+    expect(orgAdminPostSchemaResponse.body).toEqual({
+      id: expect.stringMatching(`^${orgAdminPublicDid}/resources/${UUID_PATTERN}$`),
+      issuerId: orgAdminPublicDid,
       name: 'Drug Prescription',
       version: '1.0',
       attrNames: ['name', 'weight', 'customerAge'],
     } satisfies SchemaDto)
 
-    const schemaId = orgManagerPostSchemaResponse.body.id as string
+    const schemaId = orgAdminPostSchemaResponse.body.id as string
 
     /*** ISSUER CREATES PUBLIC DID ***/
 

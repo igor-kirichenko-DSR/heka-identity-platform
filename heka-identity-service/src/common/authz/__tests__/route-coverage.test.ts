@@ -14,8 +14,8 @@ const SRC = join(__dirname, '..', '..', '..')
 /** Routes reachable without a token, on purpose. */
 const PUBLIC_ROUTES = ['GET /credentials/status/:id', 'GET /demo/token', 'GET /health', 'GET /revocation/tails/:hash']
 
-const ISSUING = [Role.Admin, Role.OrgManager, Role.Issuer]
-const VERIFYING = [Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier]
+const ISSUING = [Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer]
+const VERIFYING = [Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer, Role.Verifier]
 
 async function loadControllers(): Promise<Type[]> {
   const files = readdirSync(SRC, { recursive: true, encoding: 'utf8' }).filter((file) =>
@@ -78,7 +78,7 @@ describe('route coverage of the role model', () => {
     ['POST /verification-templates', VERIFYING],
     ['PATCH /verification-templates/:id', VERIFYING],
     ['DELETE /verification-templates/:id', VERIFYING],
-    ['POST /dids', [Role.Admin, Role.OrgManager, Role.Issuer, Role.Verifier]],
+    ['POST /dids', [Role.Admin, Role.OrgAdmin, Role.Issuer, Role.Verifier]],
   ])('%s is limited to the roles of its purpose', (route, roles) => {
     const found = routes.find((candidate) => key(candidate) === route)
     expect(found?.access).toEqual({ kind: 'roles', roles })

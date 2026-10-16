@@ -54,7 +54,7 @@ export class SchemaController {
   @ApiCreatedResponse({ description: 'Created schema', type: SchemaDto })
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post()
-  @Roles(Role.Admin, Role.OrgManager)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager)
   public async create(@ReqTenantAgent() tenantAgent: TenantAgent, @Body() req: CreateSchemaDto): Promise<SchemaDto> {
     const logger = this.logger.child('create', { req })
     logger.trace('>')

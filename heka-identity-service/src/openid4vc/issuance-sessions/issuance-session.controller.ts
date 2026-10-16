@@ -50,7 +50,7 @@ export class OpenId4VcIssuanceSessionController {
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @Post('offer')
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   public async offer(
     @ReqAuthInfo() authInfo: AuthInfo,
     @ReqTenantAgent() tenantAgent: TenantAgent,
@@ -120,7 +120,7 @@ export class OpenId4VcIssuanceSessionController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiUnprocessableEntityResponse({ description: 'Unprocessable Entity' })
   @HttpCode(204)
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   @Delete(':issuanceSessionId')
   public async deleteIssuanceSession(
     @ReqTenantAgent() tenantAgent: TenantAgent,
@@ -138,7 +138,7 @@ export class OpenId4VcIssuanceSessionController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post(':id/revoke')
   @HttpCode(200)
-  @Roles(Role.Admin, Role.OrgManager, Role.Issuer)
+  @Roles(Role.Admin, Role.OrgAdmin, Role.OrgManager, Role.Issuer)
   public async revoke(
     @ReqAuthInfo() authInfo: AuthInfo,
     @ReqTenantAgent() tenantAgent: TenantAgent,

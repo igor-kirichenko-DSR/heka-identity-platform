@@ -296,6 +296,12 @@
           "clientRole": true
         },
         {
+          "name": "OrgAdmin",
+          "description": "Organization administrator (requires org_id)",
+          "composite": false,
+          "clientRole": true
+        },
+        {
           "name": "OrgManager",
           "description": "Organization manager (requires org_id)",
           "composite": false,
@@ -405,7 +411,7 @@
         "org_id": ["heka-sso"]
       },
       "clientRoles": {
-        "heka-identity-service": ["OrgManager"]
+        "heka-identity-service": ["OrgAdmin"]
       }
     },
     {

@@ -16,6 +16,7 @@ export function getWalletId({ role, userId, orgId }: { role: Role; userId: strin
       }
       // Every Admin acts in the shared administration wallet
       return ADMINISTRATION_WALLET_ID
+    case Role.OrgAdmin:
     case Role.OrgManager:
     case Role.OrgMember:
       if (!orgId) {
@@ -50,7 +51,7 @@ export function getDidControllerWalletId({ role, orgId }: { role: Role; orgId?: 
         throw new UnauthorizedException()
       }
       return null
-    case Role.OrgManager:
+    case Role.OrgAdmin:
       if (!orgId) {
         throw new UnauthorizedException()
       }

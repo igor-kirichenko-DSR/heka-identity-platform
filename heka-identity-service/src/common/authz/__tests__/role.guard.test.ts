@@ -23,7 +23,7 @@ class SampleController {
   public forgotten() {}
 }
 
-@Roles(Role.OrgManager)
+@Roles(Role.OrgAdmin)
 @Controller('class-level')
 class ClassLevelController {
   @Get()
@@ -65,12 +65,10 @@ describe('RoleGuard', () => {
     })
 
     test('uses controller-level @Roles, and a method-level @Roles overrides it', () => {
-      expect(guard(true).canActivate(contextFor(ClassLevelController, 'inherited' as never, Role.OrgManager))).toBe(
-        true,
-      )
+      expect(guard(true).canActivate(contextFor(ClassLevelController, 'inherited' as never, Role.OrgAdmin))).toBe(true)
       expect(guard(true).canActivate(contextFor(ClassLevelController, 'inherited' as never, Role.User))).toBe(false)
       expect(guard(true).canActivate(contextFor(ClassLevelController, 'overridden' as never, Role.User))).toBe(true)
-      expect(guard(true).canActivate(contextFor(ClassLevelController, 'overridden' as never, Role.OrgManager))).toBe(
+      expect(guard(true).canActivate(contextFor(ClassLevelController, 'overridden' as never, Role.OrgAdmin))).toBe(
         false,
       )
     })
