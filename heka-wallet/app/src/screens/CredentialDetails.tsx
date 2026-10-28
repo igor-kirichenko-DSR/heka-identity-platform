@@ -72,12 +72,13 @@ export const CredentialDetails: React.FC<Props> = ({ navigation, route }) => {
     setShown(newShowStates)
   }
 
-  // TODO: Rework current resetShown function to fix eslint error
+  // A loaded credential opens with every value hidden
   useEffect(() => {
-    if (credential) {
-      resetShown()
-    }
-  }, [credential]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (!credential) return
+
+    setShown(credential.display.attributes.map(() => false))
+    setShowAll(true)
+  }, [credential])
 
   useEffect(() => {
     if (credential || !routeWithCredentialId || !agent) return
