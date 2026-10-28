@@ -2,7 +2,7 @@ import { useAuth } from '@bifold/core'
 import { storeWalletSecret } from '@bifold/core/src/services/keychain'
 import { AskarModuleConfig, AskarStoreManager } from '@credo-ts/askar'
 import { agentDependencies } from '@credo-ts/react-native'
-import { askar } from '@openwallet-foundation/askar-react-native'
+import { NativeAskar } from '@openwallet-foundation/askar-react-native'
 import axios from 'axios'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -176,8 +176,7 @@ export const useWalletBackupHelpers = () => {
 
     // We use AskarStoreManager directly here as we want restore functionality to be available without agent initialization
     const askarModuleConfig = new AskarModuleConfig({
-      // TODO: Resolve type issues with askar-shared definitions duplication
-      askar: askar as any,
+      askar: NativeAskar.instance,
       store: { id: backupMetadata.walletConfig.id, key: backupMetadata.walletConfig.key },
     })
     const storeManager = new AskarStoreManager(new agentDependencies.FileSystem(), askarModuleConfig)
