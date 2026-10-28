@@ -48,6 +48,12 @@ const PINCreate: React.FC<PINCreateProps> = ({ setAuthenticated, route }) => {
     setAuthenticated
   )
 
+  const pinEntryHandlers: Record<PinEntry, (PIN: string) => Promise<boolean>> = {
+    [PinEntry.Old]: onPinOldSet,
+    [PinEntry.New]: onPinSet,
+    [PinEntry.NewRepeat]: onPinRepeatSet,
+  }
+
   const { title, details } = useMemo(() => {
     switch (pinEntry) {
       case PinEntry.New: {
@@ -105,9 +111,8 @@ const PINCreate: React.FC<PINCreateProps> = ({ setAuthenticated, route }) => {
         <View style={styles.loaderContainer}>
           {isPinChecking && <Loader size={styles.loaderContainer.minHeight} />}
         </View>
-        {pinEntry === PinEntry.Old && <PinKeyPad onPinEntered={onPinOldSet} />}
-        {pinEntry === PinEntry.New && <PinKeyPad onPinEntered={onPinSet} />}
-        {pinEntry === PinEntry.NewRepeat && <PinKeyPad onPinEntered={onPinRepeatSet} />}
+        {/* A new key per step remounts the pad, so the next step starts empty */}
+        <PinKeyPad key={pinEntry} onPinEntered={pinEntryHandlers[pinEntry]} />
       </View>
     </SafeAreaView>
   )

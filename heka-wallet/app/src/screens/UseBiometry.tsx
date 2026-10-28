@@ -150,6 +150,8 @@ const UseBiometry: React.FC = () => {
     setCanSeeCheckPIN(false)
   }
 
+  const continueTitle = t(biometryEnabled ? 'Global.Continue' : 'Biometry.Skip')
+
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -162,19 +164,15 @@ const UseBiometry: React.FC = () => {
           buttonTitle={t('Biometry.OpenSettings')}
         />
         <View style={styles.textContainer}>
-          {biometryAvailable ? (
-            <View>
-              <Text style={TextTheme.normal}>{t('Biometry.EnabledText1')}</Text>
-              <Text></Text>
-              <Text style={TextTheme.normal}>{t('Biometry.EnabledText2')}</Text>
-            </View>
-          ) : (
-            <View>
-              <Text style={TextTheme.normal}>{t('Biometry.NotEnabledText1')}</Text>
-              <Text></Text>
-              <Text style={TextTheme.normal}>{t('Biometry.NotEnabledText2')}</Text>
-            </View>
-          )}
+          <View>
+            <Text style={TextTheme.normal}>
+              {t(biometryAvailable ? 'Biometry.EnabledText1' : 'Biometry.NotEnabledText1')}
+            </Text>
+            <Text></Text>
+            <Text style={TextTheme.normal}>
+              {t(biometryAvailable ? 'Biometry.EnabledText2' : 'Biometry.NotEnabledText2')}
+            </Text>
+          </View>
         </View>
         <View style={styles.switchContainer}>
           <Pressable accessible accessibilityLabel={t('Biometry.Toggle')} accessibilityRole={'switch'}>
@@ -194,21 +192,12 @@ const UseBiometry: React.FC = () => {
         </View>
         {screenUsage === UseBiometryUsage.InitialSetup && (
           <View style={styles.controlsContainer}>
-            {biometryEnabled ? (
-              <Button
-                title={t('Global.Continue')}
-                accessibilityLabel={t('Global.Continue')}
-                onPress={continueTouched}
-                buttonType={ButtonType.Primary}
-              />
-            ) : (
-              <Button
-                title={t('Biometry.Skip')}
-                accessibilityLabel={t('Biometry.Skip')}
-                onPress={continueTouched}
-                buttonType={ButtonType.Secondary}
-              />
-            )}
+            <Button
+              title={continueTitle}
+              accessibilityLabel={continueTitle}
+              onPress={continueTouched}
+              buttonType={biometryEnabled ? ButtonType.Primary : ButtonType.Secondary}
+            />
           </View>
         )}
       </ScrollView>

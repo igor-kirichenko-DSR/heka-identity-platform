@@ -81,20 +81,17 @@ const PINEnter: React.FC<PINEnterProps> = ({ setAuthenticated, usage = PINEntryU
       )
     }
 
-    if (biometricsEnrollmentChange) {
-      return (
-        <>
-          <Text style={styles.helpText}>{t('PINEnter.BiometricsChanged')}</Text>
-          <Text style={styles.helpText}>{t('PINEnter.BiometricsChangedEnterPIN')}</Text>
-        </>
-      )
-    }
+    const biometricsKeys = biometricsEnrollmentChange
+      ? { message: 'PINEnter.BiometricsChanged', enterPIN: 'PINEnter.BiometricsChangedEnterPIN' }
+      : biometricsErr
+        ? { message: 'PINEnter.BiometricsError', enterPIN: 'PINEnter.BiometricsErrorEnterPIN' }
+        : undefined
 
-    if (biometricsErr) {
+    if (biometricsKeys) {
       return (
         <>
-          <Text style={styles.helpText}>{t('PINEnter.BiometricsError')}</Text>
-          <Text style={styles.helpText}>{t('PINEnter.BiometricsErrorEnterPIN')}</Text>
+          <Text style={styles.helpText}>{t(biometricsKeys.message)}</Text>
+          <Text style={styles.helpText}>{t(biometricsKeys.enterPIN)}</Text>
         </>
       )
     }
