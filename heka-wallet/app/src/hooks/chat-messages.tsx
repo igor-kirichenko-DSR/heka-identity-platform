@@ -15,7 +15,7 @@ import {
   DidCommProofExchangeRecord,
   DidCommProofState,
 } from '@credo-ts/didcomm'
-import { useHekaTheme, ColorPalette } from '@heka-wallet/shared'
+import { useHekaTheme, ColorPalette, GlobalLogger } from '@heka-wallet/shared'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { Fragment, useCallback, useEffect, useState } from 'react'
@@ -26,6 +26,8 @@ import { ChatEvent, EventDetails, EventStates, EventTypes } from '../components/
 import { ExtendedChatMessage } from '../components/chat/ChatMessage'
 import { Role } from '../components/chat/types'
 import { resolveOverlay } from '../credentials'
+
+const logger = GlobalLogger.createContextLogger('ChatMessages')
 
 const pendingEventStyles = {
   backgroundColor: ColorPalette.brand.primaryBackground,
@@ -293,7 +295,7 @@ export const useChatMessagesByConnection = (connection: DidCommConnectionRecord)
   )
 
   useEffect(() => {
-    prepareChatMessages()
+    prepareChatMessages().catch((error: unknown) => logger.error('Failed to prepare chat messages', error))
   }, [prepareChatMessages])
 
   return messages
