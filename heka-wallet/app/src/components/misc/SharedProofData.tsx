@@ -1,18 +1,16 @@
 import { DidCommProofExchangeRecord } from '@credo-ts/didcomm'
 import { HekaTheme, useHekaTheme } from '@heka-wallet/shared'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { FlatList, StyleSheet, View } from 'react-native'
+import { FlatList, StyleSheet, Text, View } from 'react-native'
 
-import { preparePresentationData, PresentationDetails, useCredentials } from '../../credentials'
-import { useHekaAgent } from '../../utils/agent'
-import { formatError } from '../../utils/error'
+import { usePresentationData } from '../../hooks/usePresentationData'
 import { CredentialCard, SectionCard } from '../cards'
 import { Loader } from '../views/LoadingView'
 
 import { Record } from './Record'
 
-const useStyles = ({ Spacing }: HekaTheme) => {
+const useStyles = ({ ColorPalette, Spacing, TextTheme }: HekaTheme) => {
   return StyleSheet.create({
     container: {
       flexGrow: 1,
@@ -25,6 +23,10 @@ const useStyles = ({ Spacing }: HekaTheme) => {
     credentialsContainer: {
       gap: Spacing.md,
     },
+    error: {
+      ...TextTheme.normal,
+      color: ColorPalette.semantic.error,
+    },
   })
 }
 
@@ -33,36 +35,14 @@ interface SharedProofDataProps {
 }
 
 const SharedProofData: React.FC<SharedProofDataProps> = ({ record }) => {
-  const { agent } = useHekaAgent()
-  if (!agent) {
-    throw new Error('Unable to fetch agent from Credo')
-  }
-
   const { t } = useTranslation()
 
   const theme = useHekaTheme()
   const styles = useStyles(theme)
 
-  const [loading, setLoading] = useState<boolean>(true)
-  const [presentationData, setPresentationData] = useState<PresentationDetails[] | undefined>(undefined)
+  const { presentationData, isLoading, error } = usePresentationData(record)
 
-  const { credentials } = useCredentials()
-
-  useEffect(() => {
-    if (!credentials.length) return
-
-    preparePresentationData(record, agent, credentials)
-      .then((data) => setPresentationData(data))
-      .catch((error: unknown) =>
-        agent.config.logger.error('Failed to prepare shared proof data', {
-          proofExchangeRecordId: record.id,
-          error: formatError(error),
-        })
-      )
-      .finally(() => setLoading(false))
-  }, [record, credentials, agent])
-
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.loaderContainer}>
         <Loader />
@@ -73,6 +53,7 @@ const SharedProofData: React.FC<SharedProofDataProps> = ({ record }) => {
   return (
     <View style={styles.container}>
       <SectionCard title={t('Proof.SharedInformation')}>
+        {!!error && <Text style={styles.error}>{t('Error.Problem')}</Text>}
         <FlatList
           data={presentationData}
           contentContainerStyle={styles.credentialsContainer}

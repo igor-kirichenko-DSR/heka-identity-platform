@@ -19,7 +19,7 @@ type MockStoreAction =
   | { type: 'preferences/useBiometry'; payload: boolean[] }
 
 jest.mock('@bifold/core', () => {
-  const { useReducer } = jest.requireActual('react')
+  const { useSyncExternalStore } = jest.requireActual('react')
   const minute = 60000
   const DispatchAction = {
     ATTEMPT_UPDATED: 'loginAttempt/attemptUpdated',
@@ -41,6 +41,17 @@ jest.mock('@bifold/core', () => {
     loginAttempt: { loginAttempts: 0 },
     lockout: { displayNotification: false },
     preferences: { useBiometry: false },
+  }
+  // One store shared by every useStore() caller, as Bifold's StoreProvider context is.
+  let state = initialState
+  const listeners = new Set<() => void>()
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener)
+    return () => listeners.delete(listener)
+  }
+  const dispatch = (action: MockStoreAction) => {
+    state = reducer(state, action)
+    listeners.forEach((listener) => listener())
   }
   const auth = {
     checkWalletPIN: (PIN: string) => mockCheckWalletPIN(PIN),
@@ -64,9 +75,14 @@ jest.mock('@bifold/core', () => {
     TOKENS: { UTIL_LOGGER: 'logger', CONFIG: 'config' },
     useAuth: () => auth,
     useServices: () => services,
-    useStore: () => useReducer(reducer, initialState),
+    useStore: () => [useSyncExternalStore(subscribe, () => state), dispatch],
+    mockResetStore: () => {
+      state = initialState
+    },
   }
 })
+
+const { mockResetStore } = jest.requireMock('@bifold/core')
 
 jest.mock('@heka-wallet/shared', () => ({
   useHekaTheme: () => ({ TextTheme: {}, ColorPalette: { brand: {} }, Spacing: {} }),
@@ -112,6 +128,7 @@ const enterWrongPIN = async (times: number) => {
 
 describe('PINEnter', () => {
   beforeEach(() => {
+    mockResetStore()
     mockOnPinEntered = undefined
     mockCheckWalletPIN.mockResolvedValue(false)
   })
