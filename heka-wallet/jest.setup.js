@@ -7,6 +7,10 @@ import mockRNPermissions from 'react-native-permissions/mock'
 
 import mockLogger from './jest-helpers/__mocks__/logger'
 
+// The RN runtime installs these globals; the Jest preset does not.
+global.requestIdleCallback = (callback) => setTimeout(callback, 0)
+global.cancelIdleCallback = (handle) => clearTimeout(handle)
+
 jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter')
 jest.mock('react-native/Libraries/Linking/Linking')
 jest.mock('axios')
