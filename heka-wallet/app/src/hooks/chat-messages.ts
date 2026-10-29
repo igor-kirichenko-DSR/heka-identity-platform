@@ -25,6 +25,7 @@ import { EventDetails, EventStates, EventTypes } from '../components/chat/ChatEv
 import { ExtendedChatMessage, MessageTextSegment } from '../components/chat/messages'
 import { Role } from '../components/chat/types'
 import { resolveOverlay } from '../credentials'
+import { formatError } from '../utils/error'
 
 const logger = GlobalLogger.createContextLogger('ChatMessages')
 
@@ -63,8 +64,12 @@ const getRecordEventDetails = async (
   connection: DidCommConnectionRecord
 ): Promise<EventDetails> => {
   if (record instanceof DidCommCredentialExchangeRecord) {
-    const bundleOverlay = await resolveOverlay(record, connection)
-    const image = bundleOverlay.brandingOverlay?.logo || connection.imageUrl
+    // The overlay only supplies the logo; a failure must not hide the event or the rest of the chat
+    const bundleOverlay = await resolveOverlay(record, connection).catch((error: unknown) => {
+      logger.error('Failed to resolve the credential overlay', { recordId: record.id, error: formatError(error) })
+      return undefined
+    })
+    const image = bundleOverlay?.brandingOverlay?.logo || connection.imageUrl
 
     if (record.state === DidCommCredentialState.Done || record.state === DidCommCredentialState.CredentialReceived) {
       return {

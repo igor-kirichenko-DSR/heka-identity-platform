@@ -40,7 +40,7 @@ const SharedProofData: React.FC<SharedProofDataProps> = ({ record }) => {
   const theme = useHekaTheme()
   const styles = useStyles(theme)
 
-  const { presentationData, isLoading, error } = usePresentationData(record)
+  const { presentationData, isLoading, error, credentialsError } = usePresentationData(record)
 
   if (isLoading) {
     return (
@@ -53,7 +53,9 @@ const SharedProofData: React.FC<SharedProofDataProps> = ({ record }) => {
   return (
     <View style={styles.container}>
       <SectionCard title={t('Proof.SharedInformation')}>
-        {!!error && <Text style={styles.error}>{t('Error.Problem')}</Text>}
+        {!!error && (
+          <Text style={styles.error}>{t(credentialsError ? 'Credentials.LoadFailed' : 'Error.Problem')}</Text>
+        )}
         <FlatList
           data={presentationData}
           contentContainerStyle={styles.credentialsContainer}

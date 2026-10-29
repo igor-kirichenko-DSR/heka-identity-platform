@@ -50,6 +50,16 @@ describe('usePresentationData', () => {
     expect(preparePresentationData).not.toBeCalled()
   })
 
+  it('returns a credentials load failure without preparing the data', () => {
+    const error = new Error('Storage unavailable')
+    mockFunction(useCredentials).mockReturnValue({ credentials: noCredentials, isLoading: false, error })
+
+    const { result } = renderHook(() => usePresentationData(record))
+
+    expect(result.current).toEqual({ isLoading: false, error, credentialsError: error })
+    expect(preparePresentationData).not.toBeCalled()
+  })
+
   it('returns and logs a failure to prepare the data', async () => {
     const error = new Error('Unsupported format')
     mockFunction(preparePresentationData).mockRejectedValue(error)

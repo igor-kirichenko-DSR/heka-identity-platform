@@ -9,6 +9,8 @@ interface PresentationDataState {
   presentationData?: PresentationDetails[]
   isLoading: boolean
   error?: unknown
+  // Set when the wallet's credentials could not be loaded; `error` holds the same value
+  credentialsError?: unknown
 }
 
 const agentUnavailableError = new Error('Unable to fetch agent from Credo')
@@ -39,6 +41,6 @@ export function usePresentationData(record: DidCommProofExchangeRecord): Present
   }, [record, credentials, isCredentialsLoading, credentialsError, agent])
 
   if (!agent) return { isLoading: false, error: agentUnavailableError }
-  if (credentialsError) return { isLoading: false, error: credentialsError }
+  if (credentialsError) return { isLoading: false, error: credentialsError, credentialsError }
   return state
 }
