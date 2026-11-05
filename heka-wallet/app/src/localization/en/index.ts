@@ -91,9 +91,7 @@ const translation = {
            "Required": "Name is required"
         },
         "Password": {
-          "Label": "Password",
           "Required": "Password is required",
-          "Invalid": "Invalid password",
           "TooShort": "Password must be longer than 8 characters",
         },
         "ConfirmPassword": {
@@ -307,6 +305,10 @@ const translation = {
   },
   "PINEnter": {
     "EnterPIN": "Enter your wallet PIN"
+  },
+  "PINConfirmation": {
+    "Label": "Password",
+    "Invalid": "Invalid password"
   },
   "Proof": {
     "SharedInformation": "Shared Information"

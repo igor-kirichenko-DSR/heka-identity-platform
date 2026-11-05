@@ -87,6 +87,25 @@ No change.
 -   The PIN confirmation modal shows the same label and error text as before.
 -   Each spike has a recorded result and a go / fallback decision; the design's §4 risks are updated with the numbers.
 
+## Results
+
+### Cleanup (2026-11-05)
+
+1.  `ENABLE_KEPLR_INTEGRATION` removed from `app/.env.example`.
+2.  `react-native-scrypt-1.2.1.patch` deleted. `yarn.lock` did not change.
+3.  `elliptic` resolution **removed**. The only consumer, `@ethersproject/signing-key@5.8.0`, asks for `6.6.1` itself; nothing asks for `6.5.4`. `yarn why elliptic` shows `6.6.1` only.
+4.  `app/shim.js`:
+    -   `window` event shims **kept**. Method: grep of an unminified release bundle (`react-native bundle --dev false --minify false`), because a grep of `node_modules` hits many files that are never bundled. One real user: `kotlinx-coroutines` inside `@sphereon/kmp-mdoc-core`. It picks its default dispatcher by `typeof window.addEventListener`: with the shim it uses `WindowDispatcher`, without it `NodeDispatcher`. Removing the shim would change how mdoc code schedules coroutines. Other matches (React `reportGlobalError`, `node-forge`, axios, the `setImmediate` polyfill) only run when `window.ErrorEvent` or `window.postMessage` exists; React Native has neither.
+    -   Risk found: `WindowDispatcher` calls `window.postMessage` to yield after a batch of queued tasks. React Native has no `window.postMessage`, so a long coroutine batch would throw. Not seen so far. Follow-up: test whether `NodeDispatcher` (no shim) works for mdoc, then drop the shim.
+    -   `@ethersproject/shims` **kept**: `@hashgraph/sdk@2.78.0` depends on `@ethersproject/abi`, `bignumber`, `bytes`, `rlp` (ethers v5).
+5.  `Crypto.Register.Form.Password.Label` / `.Invalid` moved to `PINConfirmation.Label` / `.Invalid` in `en`, `fr`, `pt-br`. Same texts. `ConfirmationInputModal` uses the new keys.
+
+Checks: `yarn typecheck`, `yarn lint`, `yarn test` pass at `heka-wallet/`. Not yet run: Android / iOS debug builds and the Maestro flows.
+
+### Spikes A–D
+
+Not started. They need a device, faucet funding and the spike branch.
+
 ## Open questions
 
 -   Who funds the shared test accounts used by integration tests and spikes, and where their keys live (local untracked env file per developer, or a team secret store).
