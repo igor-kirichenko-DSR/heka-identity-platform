@@ -43,6 +43,7 @@ export interface HekaTheme extends ITheme {
   BorderWidth: BorderWidth
   FontWeights: FontWeights
   PaperTheme: PaperTheme
+  LoadingTheme: ITheme['LoadingTheme'] & { indicatorColor: string }
 }
 
 interface SvgAssets extends ISVGAssets {
@@ -887,6 +888,7 @@ const DialogTheme = {
 
 const LoadingTheme = {
   backgroundColor: ColorPalette.brand.primaryBackground,
+  indicatorColor: '#FFE5CF',
 }
 
 const PINEnterTheme = {

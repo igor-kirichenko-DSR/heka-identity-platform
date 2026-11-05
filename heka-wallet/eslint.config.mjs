@@ -8,6 +8,21 @@ import pluginReactNative from 'eslint-plugin-react-native';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+// Crypto packages do amount math in bigint only.
+const cryptoAmountRules = {
+  'no-restricted-globals': ['error', { name: 'parseFloat', message: 'Amounts are bigint; use parseUnits.' }],
+  'no-restricted-properties': [
+    'error',
+    { object: 'Number', property: 'parseFloat', message: 'Amounts are bigint; use parseUnits.' },
+    { property: 'toFixed', message: 'Amounts are bigint; use formatUnits.' },
+    { object: 'Math', property: 'round', message: 'No floating-point amount math in crypto packages.' },
+    { object: 'Math', property: 'floor', message: 'No floating-point amount math in crypto packages.' },
+    { object: 'Math', property: 'ceil', message: 'No floating-point amount math in crypto packages.' },
+    { object: 'Math', property: 'trunc', message: 'No floating-point amount math in crypto packages.' },
+    { object: 'Math', property: 'pow', message: 'No floating-point amount math in crypto packages.' },
+  ],
+};
+
 export default tseslint.config(
   {
     ignores: [
@@ -18,6 +33,7 @@ export default tseslint.config(
       '**/ios/**',
       '**/.yarn/**',
       '**/dist/**',
+      'tools/**',
       '**/build/**',
       '**/coverage/**',
       'app/shim.js',
@@ -117,6 +133,73 @@ export default tseslint.config(
       // https://github.com/Intellicode/eslint-plugin-react-native/issues/241
       // https://github.com/Intellicode/eslint-plugin-react-native/issues/166
       'react-native/no-unused-styles': 'off',
+    },
+  },
+  {
+    // crypto-core stays pure TypeScript (testable in Node) and does amount math in bigint only.
+    files: ['packages/crypto/core/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'react', message: 'crypto-core has no React code; put it in @heka-wallet/crypto-ui.' },
+            { name: 'react-native', message: 'crypto-core has no React Native code; put it in @heka-wallet/crypto-ui.' },
+            { name: '@heka-wallet/crypto-evm', message: 'crypto-core must not depend on a chain adapter.' },
+          ],
+          patterns: [
+            {
+              group: ['react/*', 'react-native/*', '@bifold/*', '@heka-wallet/crypto-evm/*'],
+              message: 'crypto-core has no React, React Native, Bifold or adapter imports.',
+            },
+          ],
+        },
+      ],
+      ...cryptoAmountRules,
+    },
+  },
+  {
+    // crypto-evm stays pure TypeScript (testable in Node); UI lives in @heka-wallet/crypto-ui.
+    files: ['packages/crypto/evm/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'react', message: 'crypto-evm has no React code; put it in @heka-wallet/crypto-ui.' },
+            { name: 'react-native', message: 'crypto-evm has no React Native code; put it in @heka-wallet/crypto-ui.' },
+            { name: 'viem/chains', message: 'The chains index pulls every chain into the bundle; use defineChain.' },
+            { name: '@heka-wallet/crypto-ui', message: 'An adapter must not depend on the UI package.' },
+          ],
+          patterns: [
+            {
+              group: ['react/*', 'react-native/*', '@bifold/*', '@heka-wallet/crypto-ui/*'],
+              message: 'crypto-evm has no React, React Native, Bifold or UI imports.',
+            },
+          ],
+        },
+      ],
+      ...cryptoAmountRules,
+    },
+  },
+  {
+    // crypto-ui reaches chains only through the registry and the app only through CryptoProvider props.
+    files: ['packages/crypto/ui/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [{ name: '@heka-wallet/crypto-evm', message: 'Adapters come from the registry in CryptoProvider.' }],
+          patterns: [
+            { group: ['@heka-wallet/crypto-evm/*'], message: 'Adapters come from the registry in CryptoProvider.' },
+            {
+              group: ['**/app/*', 'heka-ssi-wallet', 'heka-ssi-wallet/*'],
+              message: 'The app passes what crypto-ui needs as CryptoProvider props.',
+            },
+          ],
+        },
+      ],
+      ...cryptoAmountRules,
     },
   },
   prettierRecommended,

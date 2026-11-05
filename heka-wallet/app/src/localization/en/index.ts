@@ -40,6 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Coins",
+    "Payments": "Coins",
     "Settings": "Settings"
   },
   "Passkeys": {
@@ -58,102 +59,170 @@ const translation = {
     "UsePasskeyToAuth": "Please use passkey to authenticate with backup service"
   },
   "Crypto": {
-    "Balance": "Balance",
-    "Token": "Token",
-    "Staked": "Staked",
-    "ConfirmTransaction": "Confirm transaction",
-    "MnemonicSeed": "Mnemonic seed",
-    "HardwareWallet": "Hardware wallet",
-    "PrivateKey": "Private key",
-    "Register" : {
-      "NewWallet": "Create new wallet",
-      "ImportExisting": "Import existing wallet",
-      "ImportLedgerNano": "Import Ledger Nano X",
-      "CompletedTitle": "You’re all set!",
-      "CompletedText": "Your cosmic interchain journey now begins",
-      "MnemonicBackupRecommendation": "Backup your mnemonic seed securely",
+    "Title": "Coins",
+    "Debug": {
+      "PhraseCopied": "Phrase copied (debug build)"
+    },
+    "Wallet": {
+      "LoadFailed": "The payment wallet could not be opened.",
+      "Retry": "Try again"
+    },
+    "Address": {
+      "Copy": "Copy address",
+      "Copied": "Copied"
+    },
+    "Register": {
+      "Intro": {
+        "Title": "Payment wallet",
+        "Text": "Send and receive stablecoins such as USDC. Create a new wallet or import one you already have.",
+        "Empty": "You don't have wallets",
+        "Create": "Create wallet",
+        "Import": "Import existing wallet"
+      },
       "NewMnemonic": {
         "Title": "Back up your wallet",
-        "InfoText1": "Your secret mnemonic phrase is used to recover your crypto if you lose your phone or switch to a different wallet.",
-        "InfoText2": "Save these 12 words in a secure location, such as a password manager, and never share them with anyone."
+        "Text1": "These 12 words are the only way to recover your funds if you lose this phone or move to another wallet.",
+        "Text2": "Write them on paper and keep them safe. Never share them and never store them in a screenshot.",
+        "Written": "I have written it down"
       },
       "VerifyMnemonic": {
         "Title": "You saved it, right?",
-        "InfoText": "Verify that you saved your secret mnemonic phrase by tapping the words in order:"
+        "Text": "Verify that you saved your recovery phrase by tapping the missing words in order.",
+        "WrongOrder": "The words are not in the right order. Tap a word to take it back, or reset.",
+        "Reset": "Start over"
       },
-      "ImportWallet": {
-        "Title": "Import your wallet",
-        "InfoText": "Import your wallet with the 12-word mnemonic phrase that you have backed up."
+      "Done": {
+        "Title": "Your wallet is ready",
+        "BackupPrompt": "Back up the wallet now, so the new wallet is in your backup too. Your recovery phrase stays the main backup.",
+        "PhraseIsBackup": "Your recovery phrase is your backup. Keep it safe: without it, nobody can recover your funds.",
+        "RawKeyText": "Keep your private key safe: without it, nobody can recover your funds.",
+        "BackupNow": "Back up now",
+        "BackupDone": "Backup complete.",
+        "BackupFailed": "The backup failed. Try again later from Settings.",
+        "OpenWallet": "Open wallet"
       },
-      "Form" : {
-        "WalletLabel": {
-          "Label": "Wallet label",
-           "Required": "Name is required"
-        },
-        "Password": {
-          "Label": "Password",
-          "Required": "Password is required",
-          "Invalid": "Invalid password",
-          "TooShort": "Password must be longer than 8 characters",
-        },
-        "ConfirmPassword": {
-          "Label": "Confirm password",
-          "Required": "Confirm password is required",
-          "TooShort": "Password must be longer than 8 characters",
-          "DoesntMatch": "Password doesn't match"
-        },
-        "Mnemonic": {
-          "Label": "Mnemonic seed",
-          "Required": "Mnemonic is required",
-          "TooShort": "Mnemonic must contain at least 8 words",
-          "Invalid": "Invalid mnemonic",
-          "InvalidPrivateKey": "Invalid private key",
-          "InvalidPrivateKeyLength" : "Invalid length of private key"
-        }
-      },
-      "BIP44": {
-        "HDDerivationPath": "HD Derivation path",
-        "Description": "Set custom address derivation path by modifying the indexes below:",
-        "InvalidChange": "Change should be 0 or 1"
+      "Errors": {
+        "Exists": "A payment wallet already exists on this device.",
+        "SaveFailed": "The wallet could not be saved. Try again."
+      }
+    },
+    "Import": {
+      "Title": "Import your wallet",
+      "Text": "Enter your 12 or 24-word recovery phrase, or a private key that starts with 0x.",
+      "Label": "Recovery phrase or private key",
+      "Submit": "Import",
+      "Errors": {
+        "WordCount": "A recovery phrase has 12, 15, 18, 21 or 24 words.",
+        "InvalidPhrase": "This recovery phrase is not valid.",
+        "InvalidKey": "A private key is 0x followed by 64 hexadecimal characters."
       }
     },
     "Home": {
-      "TotalBalance": "Total Balance",
-      "BIP44": {
-        "SelectAccount": "Select Account",
-        "PreviousTxs": "Previous txs"
-      },
-      "Tokens" : {
-        "ViewAll": "View all tokens",
-      }
+      "Receive": "Receive",
+      "Send": "Send",
+      "History": "History",
+      "Settings": "Settings",
+      "NoAccount": "No account on this network yet.",
+      "Balance": "Balance",
+      "BalanceOf": "{{symbol}} balance",
+      "BalanceFailed": "Balances could not be updated. Pull down to try again.",
+      "ActivationPending": "This account becomes active with its first deposit.",
+      "EnableAsset": "Enable {{symbol}}",
+      "EnableAssetConfirm": "Confirm to enable the token",
+      "EnableAssetFailed": "The token could not be enabled. Try again."
     },
-    "Account": {
-      "NoAccount": "No account",
-      "SelectAccount": "Select Account",
-      "Selected": "{{name}} (Selected)",
-      "RemoveAccount": "Remove account {{name}}"
+    "Receive": {
+      "Header": "Receive",
+      "Title": "Receive {{symbol}} on {{chain}}",
+      "Hint": "Only send assets on {{chain}} to this address."
     },
     "Send": {
-      "Recipient": "Recipient",
-      "Amount": "Amount",
-      "Memo": "Memo (Optional)",
-      "Fee": "Fee",
-      "Gas": "Gas"
+      "Header": "Send",
+      "Recipient": "Recipient address",
+      "Scan": "Scan a QR code",
+      "Amount": "Amount ({{symbol}})",
+      "Max": "Max",
+      "SubmitAmount": "Send {{amount}} {{symbol}}",
+      "Confirm": "Confirm the payment",
+      "NewRecipient": "You have not sent to this address before. Check it carefully.",
+      "AddressWarnings": {
+        "no-checksum": "This address has no checksum. Check it carefully."
+      },
+      "Result": {
+        "pending": "Payment sent",
+        "success": "Payment complete",
+        "failed": "Payment failed",
+        "unknown": "Payment status unknown",
+        "Summary": "{{amount}} to {{to}}"
+      },
+      "Errors": {
+        "InvalidAddress": "This is not a valid address on this network.",
+        "InvalidAmount": "Enter a valid amount.",
+        "InsufficientAmount": "The balance is too low for this amount.",
+        "InsufficientFee": "The balance is too low to pay the network fee.",
+        "Pending": "Wait until your previous payment is complete.",
+        "Locked": "The wallet is locked. Unlock it and try again.",
+        "Failed": "The payment could not be sent."
+      }
     },
-    "Unlock": {
-      "SignIn": "Sign in",
-      "UseBiometry": "Use Biometric Authentication"
+    "Fee": {
+      "Estimate": "Network fee: {{amount}}",
+      "UpTo": "Network fee: up to {{amount}}",
+      "UpToShort": "up to {{amount}}",
+      "Usdc": "Pay fee in USDC",
+      "Failed": "The network fee could not be estimated.",
+      "Warnings": {
+        "insufficient-native-balance": "The balance is too low to pay the network fee."
+      }
     },
-    "Error": {
-      "Unknown": "Unknown Error",
-      "ErrorCode": "Error code",
-      "InvalidBech32Error": "Invalid address",
-      "ICNSFailedToFetchError": "Failed to fetch the address from ICNS",
-      "InvalidNumberAmountError": "Invalid number",
-      "ZeroAmountError": "Amount is zero",
-      "NegativeAmountError": "Amount is negative",
-      "InsufficientAmountError": "Insufficient funds",
-      "InsufficientFeeError": "Insufficient available balance for transaction fee"
+    "Status": {
+      "pending": "Pending",
+      "success": "Complete",
+      "failed": "Failed",
+      "unknown": "Unknown"
+    },
+    "History": {
+      "Header": "History",
+      "Empty": "No payments yet.",
+      "LoadFailed": "History could not be loaded. Pull down to try again.",
+      "PartialNote": "Older payments and incoming transfers of the network's own coin may be missing here.",
+      "Direction": {
+        "in": "From {{address}}",
+        "out": "To {{address}}",
+        "self": "To yourself"
+      }
+    },
+    "Scan": {
+      "Header": "Scan",
+      "NotAnAddress": "This QR code does not contain an address.",
+      "Unsupported": "This payment request is for another network or token."
+    },
+    "Settings": {
+      "Header": "Payment settings",
+      "Sections": {
+        "Network": "Network",
+        "Security": "Security",
+        "Wallet": "Wallet"
+      },
+      "DefaultChain": "Default network",
+      "SaveFailed": "The default network could not be saved.",
+      "RevealPhrase": "Show recovery phrase",
+      "RemoveWallet": "Remove payment wallet"
+    },
+    "Reveal": {
+      "Header": "Recovery phrase",
+      "Title": "Your recovery phrase",
+      "Warning": "Anyone with these words can take your funds. Do not share them and do not take a screenshot.",
+      "Confirm": "Confirm to show the recovery phrase",
+      "Failed": "The recovery phrase could not be shown."
+    },
+    "Remove": {
+      "Header": "Remove wallet",
+      "Title": "Remove the payment wallet?",
+      "Warning": "This removes the payment wallet from this device. Without your recovery phrase, these funds cannot be recovered. Your credentials are not affected.",
+      "Confirm": "Confirm to remove the payment wallet",
+      "Submit": "Remove",
+      "Failed": "The wallet could not be removed."
     }
   },
   "Biometry": {
@@ -185,6 +254,7 @@ const translation = {
     "Issuer": "Issuer",
     "AddCredential": "Add Credential",
     "EmptyList": "Your wallet is empty.",
+    "LoadFailed": "Some credentials could not be loaded.",
     "AddFirstCredential": "Add your first credential",
     "UnknownIssuer": "Unknown issuer",
     "UnknownVerifier": "Unknown verifier"
@@ -220,6 +290,8 @@ const translation = {
     "StoredSecurelyBody": "Heka Wallet App holds digital credentials — the digital versions of things like licenses, identities, permits, medical prescriptions and etc. They are stored securely, only on this device.",
     "UsingCredentialsTitle": "Receiving and using credentials",
     "UsingCredentialsBody": "To receive and use credentials you use the “Scan” feature in the app to scan a special QR code. Information is sent and received over a private, encrypted connection.",
+    "PaymentsTitle": "Payments, kept separate",
+    "PaymentsBody": "Heka Wallet App can also hold a payment wallet for test networks. It is optional, and its keys never leave this device. Credentials and payments do not share information.",
     "PrivacyConfidentiality": "Privacy and confidentiality",
     "PrivacyParagraph": "You approve every use of information from your Heka Wallet App. You also only share what is needed for a situation. App administration or other third parties are not informed on when and how you use your digital credentials.",
     "GetStarted": "Get Started",
@@ -307,6 +379,10 @@ const translation = {
   },
   "PINEnter": {
     "EnterPIN": "Enter your wallet PIN"
+  },
+  "PINConfirmation": {
+    "Label": "Password",
+    "Invalid": "Invalid password"
   },
   "Proof": {
     "SharedInformation": "Shared Information"

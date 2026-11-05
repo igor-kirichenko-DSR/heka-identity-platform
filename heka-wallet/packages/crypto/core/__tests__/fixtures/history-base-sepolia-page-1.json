@@ -1,0 +1,68 @@
+{
+  "items": [
+    {
+      "chainId": "eip155:84532",
+      "account": "0x1111111111111111111111111111111111111111",
+      "txId": "0xAAA0000000000000000000000000000000000000000000000000000000000001",
+      "explorerHash": "0xAAA0000000000000000000000000000000000000000000000000000000000001",
+      "direction": "out",
+      "asset": {
+        "id": "eip155:84532/erc20:0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "symbol": "USDC",
+        "name": "USD Coin",
+        "decimals": 6,
+        "kind": "erc20",
+        "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "stable": "USD"
+      },
+      "amount": "1500000",
+      "counterparty": "0x2222222222222222222222222222222222222222",
+      "status": "success",
+      "createdAt": 1762689605000,
+      "source": "chain"
+    },
+    {
+      "chainId": "eip155:84532",
+      "account": "0x1111111111111111111111111111111111111111",
+      "txId": "0xbbb0000000000000000000000000000000000000000000000000000000000002",
+      "explorerHash": "0xbbb0000000000000000000000000000000000000000000000000000000000002",
+      "direction": "in",
+      "asset": {
+        "id": "eip155:84532/erc20:0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "symbol": "USDC",
+        "name": "USD Coin",
+        "decimals": 6,
+        "kind": "erc20",
+        "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "stable": "USD"
+      },
+      "amount": "2500000",
+      "counterparty": "0x3333333333333333333333333333333333333333",
+      "status": "success",
+      "createdAt": 1762689500000,
+      "source": "chain"
+    },
+    {
+      "chainId": "eip155:84532",
+      "account": "0x1111111111111111111111111111111111111111",
+      "txId": "0xccc0000000000000000000000000000000000000000000000000000000000003",
+      "explorerHash": "0xccc0000000000000000000000000000000000000000000000000000000000003",
+      "direction": "out",
+      "asset": {
+        "id": "eip155:84532/erc20:0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "symbol": "USDC",
+        "name": "USD Coin",
+        "decimals": 6,
+        "kind": "erc20",
+        "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "stable": "USD"
+      },
+      "amount": "10000",
+      "counterparty": "0x2222222222222222222222222222222222222222",
+      "status": "failed",
+      "createdAt": 1762689400000,
+      "source": "chain"
+    }
+  ],
+  "next": "cursor-2"
+}
