@@ -91,9 +91,7 @@ const translation = {
           "Required": "O nome é obrigatório"
         },
         "Password": {
-          "Label": "Senha",
           "Required": "Senha obrigatória",
-          "Invalid": "Senha inválida",
           "TooShort": "A senha deve ter mais de 8 caracteres"
         },
         "ConfirmPassword": {
@@ -307,6 +305,10 @@ const translation = {
   },
   "PINEnter": {
     "EnterPIN": "Digite o PIN da sua carteira"
+  },
+  "PINConfirmation": {
+    "Label": "Senha",
+    "Invalid": "Senha inválida"
   },
   "Proof": {
     "SharedInformation": "Informações compartilhadas"

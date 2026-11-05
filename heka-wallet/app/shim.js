@@ -1,4 +1,5 @@
 import 'react-native-get-random-values'
+// @hashgraph/sdk still depends on @ethersproject/* (ethers v5)
 import '@ethersproject/shims'
 import EventEmitter from 'eventemitter3'
 import { TextDecoder, TextEncoder } from 'text-encoding-polyfill'
@@ -60,6 +61,7 @@ if (!global.atob || !global.btoa) {
 const isDev = typeof __DEV__ === 'boolean' && __DEV__
 process.env['NODE_ENV'] = isDev ? 'development' : 'production'
 
+// kotlinx-coroutines in @sphereon/kmp-mdoc-core picks its dispatcher by window.addEventListener
 const eventListener = new EventEmitter()
 
 window.addEventListener = (type, fn, options) => {

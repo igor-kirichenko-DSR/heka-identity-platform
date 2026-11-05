@@ -203,8 +203,8 @@ const ConfirmationInput: React.FC<ConfirmationInputProps> = ({
         </>
       ) : (
         <TextInput
-          label={inputLabel ?? t('Crypto.Register.Form.Password.Label')}
-          error={errorState ? t('Crypto.Register.Form.Password.Invalid') : undefined}
+          label={inputLabel ?? t('PINConfirmation.Label')}
+          error={errorState ? t('PINConfirmation.Invalid') : undefined}
           onChangeText={onChange}
           value={value}
           returnKeyType="done"
