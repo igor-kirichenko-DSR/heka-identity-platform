@@ -10,13 +10,13 @@ The design is in [`../Idea and high-level design.md`](../Idea%20and%20high-level
 
 | File | ID | Sub-feature | Phase | Gate | Components |
 | --- | --- | --- | --- | --- | --- |
-| [F00](F00-cleanup-and-spikes.md) | — | Keplr cleanup and spikes A–D | 0 | — | wallet |
-| [F01](F01-chain-agnostic-core.md) | F1 | Chain-agnostic core: types, registry, units, stores, local ledger | 1 | — | wallet |
-| [F02](F02-evm-adapter.md) | F2 | EVM adapter (plain EOA path) | 1 | Spike A | wallet |
-| [F03](F03-key-provider.md) | F3 | Key provider: seed, derivation, backup, reveal, import, remove | 1–2 | Spike C | wallet |
-| [F04](F04-wallet-ui.md) | F4 | UI: register, home, receive, send, history, settings | 2 | — | wallet |
+| [F00](F00-cleanup-and-spikes.md) | — | ✅ Keplr cleanup and spikes A–D | 0 | — | wallet |
+| [F01](F01-chain-agnostic-core.md) | F1 | ✅ Chain-agnostic core: types, registry, units, stores, local ledger | 1 | — | wallet |
+| [F02](F02-evm-adapter.md) | F2 | ✅ EVM adapter (plain EOA path) | 1 | Spike A | wallet |
+| [F03](F03-key-provider.md) | F3 | ✅ Key provider: seed, derivation, backup, reveal, import, remove | 1–2 | Spike C | wallet |
+| [F04](F04-wallet-ui.md) | F4 | ✅ UI: register, home, receive, send, history, settings | 2 | — | wallet |
+| [F06](F06-host-wiring.md) | F6 | ✅ Host wiring: flag, provider, tab, scanner, onboarding, i18n | 2–3 | — | wallet |
 | [F05](F05-hedera-entry.md) | F5 | Hedera testnet through the EVM adapter | 1–2 | Spike B | wallet |
-| [F06](F06-host-wiring.md) | F6 | Host wiring: flag, provider, tab, scanner, onboarding, i18n | 2–3 | — | wallet |
 | [F07](F07-binding-signing.md) | F7 | Binding signatures: EIP-712, SIWE, nonce; signing-request channel | 1–2 | — | wallet, demo |
 | [F08](F08-gas-in-usdc.md) | F8 | Gas paid in USDC (EIP-7702 + Circle Paymaster) | 1–2 | Spike D | wallet |
 | [F09](F09-walletconnect.md) | F9 | WalletConnect v2 dApp pairing | 5 | — | wallet |
@@ -41,16 +41,18 @@ flowchart LR
     F02 --> F08[F08 gas in USDC]
     F02 --> F07[F07 binding signing]
     F02 --> F04[F04 UI]
-    F05 --> F04
-    F08 --> F04
+    F04 --> F05
+    F04 --> F08
     F04 --> F06[F06 host wiring]
-    F07 --> F06
+    F06 --> F07
     F06 --> F12[F12 presentation-bound payment]
     F13[F13 SD-JWT status] --> F14[F14 demos]
     F12 --> F14
     F07 --> F14
     F06 --> F15[F15 hardening + rollout]
 ```
+
+F06 follows F04 directly (re-ordered 2026-11-10), so the wallet can be opened and tested on Base Sepolia before F05, F07 and F08; F07 then adds its signing-request route to F06's scanner. F04 built the Hedera and paymaster UI from adapter capabilities, so it shows once F05 and F08 deliver those.
 
 F13 has no wallet dependency and can start at any time on the Identity Service side.
 

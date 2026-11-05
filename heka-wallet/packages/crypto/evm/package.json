@@ -1,0 +1,12 @@
+{
+  "name": "@heka-wallet/crypto-evm",
+  "description": "Heka Wallet EVM chain adapter on viem: balances, fees, native and ERC-20 transfers, status, logs-based history",
+  "version": "0.0.1",
+  "license": "Apache-2.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@heka-wallet/crypto-core": "*",
+    "viem": "2.57.8"
+  }
+}

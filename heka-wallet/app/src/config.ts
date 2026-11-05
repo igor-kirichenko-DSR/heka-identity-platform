@@ -1,6 +1,7 @@
 import { Config } from 'react-native-config'
 import { Passkey } from 'react-native-passkey'
 
+import { buildCryptoConfig } from './cryptoConfig'
 import { IndyBesuConfig } from './indy-besu'
 import { OAuthStoreConfig } from './stores/OAuthStore'
 
@@ -11,6 +12,11 @@ export const isWalletBackupEnabled = Config.ENABLE_WALLET_BACKUP === 'true' && P
 export const isExampleCredentialEnabled = Config.ENABLE_EXAMPLE_CREDENTIAL === 'true'
 
 export const isPublicInvitationEnabled = Config.ENABLE_PUBLIC_INVITATION === 'true'
+
+export const isCryptoModuleEnabled = Config.ENABLE_CRYPTO_MODULE === 'true'
+
+// Lazy: with the module off, a bad CRYPTO_* value must not stop the app.
+export const getCryptoConfig = (warn: (message: string) => void) => buildCryptoConfig(Config, __DEV__, warn)
 
 // TODO: Consider adding explicit warning for user
 if (!Passkey.isSupported()) {

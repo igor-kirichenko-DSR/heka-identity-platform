@@ -65,4 +65,19 @@ No change.
 
 ## Open questions
 
--   Multicall availability on Base Sepolia and Hedera relay; if absent on Hedera, `getBalances` falls back to one call per asset (F05 reads balances from Mirror Node anyway).
+-   Multicall availability on the Hedera relay (F05): `getBalances` already falls back to one call per asset when the entry has no `multicall3` (F05 reads balances from Mirror Node anyway). Base Sepolia has Multicall3 at `0xcA11bde05977b3631167028862bE2a173976CA11`.
+
+## Decisions
+
+Agreed 2026-11-10 (DSRDSC-293):
+
+-   Acceptance: F02 is accepted on the unit tests and the integration test against Base Sepolia (`CRYPTO_IT=1`, developer-run). The in-app check (balances, sends, status, history from the app's JS runtime) moves to F06, which wires the adapter.
+-   EVM-only parameters (`gasLimitCeiling`, `logsMaxRange`, `multicall3`) live in `EvmChainConfig` in `crypto/evm`, not in core's `ChainDescriptor`. The viem chain is built with `defineChain` from the entry; `viem/chains` is not imported (bundle size, spike A).
+-   Gas ceiling: a gas limit above it is refused, not clamped. Base Sepolia: 150 000.
+-   Fee warning: core `FeeQuote.warnings?: FeeWarning[]`, code `'insufficient-native-balance'`; F04 translates it.
+-   History: `historyWindowBlocks` 10 000 back from the head; `logsMaxRange` 200 per `getLogs` call (public RPC cap); a page stops at the first chunk with transfers or at the window floor; the cursor carries the floor.
+-   `pendingTimeoutMs` 120 000 on Base Sepolia.
+-   Mainnet twins: Base mainnet only (`enabled: false`); no Arbitrum Sepolia entry, since spike D was a go on Base Sepolia. Hedera entries are F05.
+-   Signing: the adapter signs and calls `eth_sendRawTransaction` itself instead of `walletClient.sendTransaction` / `writeContract`, so the chain id in the payload is checked and the key is opened only for the signature. `transfer` also checks the RPC's `eth_chainId` before signing.
+-   L1 data fee (added 2026-11-11, found on a device: Max ETH failed by 170 wei): Base is an OP-Stack chain and the node requires `balance >= value + gas × price + L1 fee`. A chain entry with `l1FeeOracle` (Base, Base Sepolia) adds 1.2 × the oracle's `getL1Fee` of the unsigned transaction to the quote, the fee cap and the funds warning. If the oracle cannot be read, the quote fails. F08 must count the L1 fee too.
+-   Integration test key: `CRYPTO_IT_PRIVATE_KEY` in `packages/crypto/evm/.env.it` (gitignored).

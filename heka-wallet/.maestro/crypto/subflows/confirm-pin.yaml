@@ -1,0 +1,16 @@
+# Types the PIN on the confirmation modal (shared Numpad, which has no testIDs; keys are tapped by their digit).
+# Input: env PIN.
+appId: com.heka.wallet
+---
+- tapOn:
+    text: '${PIN.charAt(0)}'
+- tapOn:
+    text: '${PIN.charAt(1)}'
+- tapOn:
+    text: '${PIN.charAt(2)}'
+- tapOn:
+    text: '${PIN.charAt(3)}'
+- tapOn:
+    text: '${PIN.charAt(4)}'
+- tapOn:
+    text: '${PIN.charAt(5)}'

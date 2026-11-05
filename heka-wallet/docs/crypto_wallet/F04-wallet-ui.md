@@ -25,14 +25,21 @@ Scaffold: `package.json` name `@heka-wallet/crypto-ui`, `private: true`, `main: 
 Screens:
 
 -   **Register:** intro (create or import) → `NewMnemonic` (12 words, `WordsCard`; screenshot blocked) → `VerifyMnemonic` (tap-to-order with `WordChip`) → Done (backup prompt from F03). Import: mnemonic (word count and checksum validation) or raw hex key. Rebuilt from the Keplr screens in git history before PR #229; Cosmos-specific parts (bech32, HD path editor, Ledger) are dropped.
--   **Home:** per-asset balances for the current chain; chain switcher; address with copy; Receive and Send buttons; pull-to-refresh. Hedera: activation-pending banner and "Enable USDC" (F05). Paymaster chains: no extra UI here.
+-   **Home:** a card with the network, the short address (tap to copy), a hero balance (first stablecoin, else the native asset) and blocks for the other assets, Send and Receive buttons; chain switcher above; History and Settings icons in the header; pull-to-refresh. Hedera: activation-pending banner and "Enable USDC" (F05). Paymaster chains: no extra UI here.
 -   **Receive:** EIP-55 address, QR with an EIP-681 URI (chain id; token contract for USDC); asset picker changes the URI; Hedera shows `0.0.x` next to `0x` once active.
--   **Send:** asset picker → recipient (`AddressField`: checksum, QR scan, new-recipient warning when the address is not in the ledger) → amount (`AmountInput`, bigint-safe, "max" leaves room for the fee in native mode) → fee mode (`ETH` / `USDC` where `features.paymaster`, `HBAR` on Hedera) → `FeePreview` ("up to N USDC" in paymaster mode) → confirm with PIN / biometry → pending entry → final with explorer link. Blocked with a clear message when the fee asset balance is short.
--   **History:** ledger + chain entries, newest first, paged; status chips; explorer link per entry; on EVM chains a note that older and inbound native transfers may be missing.
--   **Settings:** default chain; reveal phrase (auth → `RevealPhrase`); remove wallet (F03, shows balances and the warning).
+-   **Send:** asset picker → recipient (`AddressField`: checksum, QR scan, new-recipient warning when the address is not in the ledger) → amount (`AmountInput`, bigint-safe, "max" leaves room for the fee in native mode) → fee mode (`ETH` / `USDC` where `features.paymaster`, `HBAR` on Hedera) → `FeePreview` ("up to N USDC" in paymaster mode) → confirm with PIN / biometry → pending entry → final status. Blocked with a clear message when the fee asset balance is short.
+-   **History:** ledger + chain entries, newest first, paged; status chips; on EVM chains a note that older and inbound native transfers may be missing.
+-   **Settings:** sections Network (default chain, check mark), Security and Wallet; reveal phrase (auth → `RevealPhrase`); remove wallet (F03, shows balances and the warning).
 -   **RevealPhrase:** words shown after fresh auth; screenshot and recording blocked; no copy button; auto-hide on background.
 
-Components (`src/components/`): `AmountInput`, `AddressField`, `AssetPicker`, `FeePreview`, `WordsCard`, `WordChip`, `ChainSwitcher`, `TxListItem`, `ActivationBanner`. One component per file; logic in hooks (`src/hooks/`); every interactive element has a `testID`.
+Keys (moved from F03, agreed 2026-11-10):
+
+-   `CryptoProvider` subscribes to the app's lockout state (Bifold `store.authentication.didAuthenticate`, `AgentLockout` context) and calls `KeyProvider.lock()` / `unlock()`; it builds the `SeedKeyProvider` over `AskarSeedStore(createAgentTransactionRunner(mainAgent))` and keeps the only `AuthProofIssuer`.
+-   `useAuthProof` hook: wraps `ConfirmationInputModal` / `PinConfirmation` and `authenticateByBiometry` from `packages/shared` and returns an `AuthProof` after a successful check. Used by RevealPhrase, remove wallet and Send.
+-   Done screen: if `isWalletBackupEnabled` (`app/src/config.ts`) is true, "back up now" opens the existing backup flow (`BackupStack`, `useWalletBackupHelpers.backupWallet`); if false, the done screen says the verified phrase is the backup.
+-   A raw-key wallet (`seedKind() === 'raw'`) hides reveal and anything that needs the binding branch.
+
+Components (`src/components/`): `AmountInput`, `AddressField`, `AssetPicker`, `FeePreview`, `WordsCard`, `WordChip`, `ChainSwitcher`, `TxListItem`, `ActivationBanner`, and the Keplr-like blocks `BalanceCard`, `SegmentedControl`, `ListItem`, `ListSection`, `BottomActions`, `StepDots`, `RegisterFooter`. One component per file; logic in hooks (`src/hooks/`); every interactive element has a `testID`.
 
 ### Wallet — `packages/crypto/core`
 
@@ -74,4 +81,19 @@ No change.
 
 ## Open questions
 
--   Figma design for the payment screens: not referenced anywhere yet. UI work waits for it or uses existing wallet components as the design.
+-   Figma design for the payment screens: not referenced anywhere yet. F04 uses the existing wallet components and theme as the design; screens are restyled when a design exists.
+
+## Decisions
+
+Agreed 2026-11-10 (DSRDSC-293):
+
+-   One task, seven iterations; one wallet commit. The verify step asks for 4 of the 12 words (`VERIFY_WORD_COUNT`), as the Keplr screen did. `crypto/core` gains `WalletStore` (seed status none / mnemonic / raw; import and remove reload the accounts), `TransactionStore.isKnownRecipient` (the new-recipient warning) and `generatePhrase`.
+-   A new phrase is kept in memory and stored with `importSeed` only after the tap-to-order check. `createSeed` would store it before the check, so a holder who quits on the verify screen would keep a phrase they never confirmed. The phrase never travels in route params; it lives in a register-flow context and is dropped on the Done screen.
+-   `CryptoProvider` takes everything app-specific as props (adapters, seed and ledger session runners, logger, default chain, optional backup, `isAgentReady`); `crypto-ui` imports neither `app` nor `crypto-evm` (ESLint). It locks the keys and polling when Bifold's `didAuthenticate` is false or the agent is not ready, and builds its services once.
+-   Default chain: AsyncStorage key `crypto.defaultChain` (a chain id, not a secret), behind `ChainPreference`.
+-   Extra screens not in the list above: `ScanAddress` (Bifold `ScanCamera`; an EIP-681 request fills recipient, asset and amount; another chain's request is refused) and `RemoveWallet` (balances, warning, PIN or biometry).
+-   Screenshot protection: Bifold `usePreventScreenCapture` (`react-native-screenguard`, already linked), on NewMnemonic, VerifyMnemonic, ImportWallet and RevealPhrase; the words (and the pasted secret) are also blanked while the app is in the background. No new native module.
+-   `useAuthProof`: biometry first when the holder turned it on, PIN (`PinConfirmation`) otherwise or after a biometry failure. Send, reveal, remove and "Enable USDC" ask for it.
+-   Hedera and paymaster parts are built from adapter capabilities only (`activationState`, `isAssetEnabled`, `enableAsset`, `features.paymaster`) and tested on a fake adapter. Hedera `0.0.x` on Receive needs an account-id read in the adapter interface: left to F05.
+-   Strings: the `Crypto.*` block is rewritten in `en`, `fr` and `pt-br` (French and Portuguese by the agent; a native speaker should check them). F06 adds only its own keys.
+-   Maestro: `.maestro/crypto/crypto-{register,import,receive,send}.yaml`, outside the workspace's top-level `*.yaml`, so no suite runs them before F06 adds the Payments tab (`TabPayments`). F06 runs them first and owns the device checks of acceptance criteria 1 and 3. `crypto-send.yaml` (tag `crypto-onchain`) is on demand with a funded key from a local env file.

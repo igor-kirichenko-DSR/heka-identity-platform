@@ -1,0 +1,11 @@
+# Fresh install -> onboarding -> Payments tab, on the register screen.
+# Needs a build with ENABLE_CRYPTO_MODULE=true; input: env PIN, plus the onboard.yaml login env for external-auth builds.
+appId: com.heka.wallet
+---
+- runFlow: ../../subflows/onboard.yaml
+- tapOn:
+    id: 'com.ariesbifold:id/TabPayments'
+- extendedWaitUntil:
+    visible:
+      id: 'com.ariesbifold:id/CryptoCreateWallet'
+    timeout: 30000
