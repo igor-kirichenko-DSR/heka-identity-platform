@@ -27,5 +27,7 @@ jobs:
     with:
       suite: no-backend
       external-auth: false
+      # The crypto flows (tag no-backend) open the Payments tab, which exists only with the module on.
+      crypto-module: true
       backend: false
       maestro-args: --include-tags no-backend

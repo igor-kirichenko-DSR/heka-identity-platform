@@ -21,6 +21,9 @@ env:
     id: 'com.ariesbifold:id/CryptoAsset-USDC'
 - assertVisible:
     id: 'com.ariesbifold:id/CryptoReceiveQr'
+- scrollUntilVisible:
+    element:
+      id: 'com.ariesbifold:id/CryptoCopyAddress'
 - tapOn:
     id: 'com.ariesbifold:id/CryptoCopyAddress'
 - assertVisible: 'Copied'
