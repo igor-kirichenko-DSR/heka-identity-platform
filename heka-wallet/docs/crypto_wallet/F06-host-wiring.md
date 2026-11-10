@@ -69,3 +69,4 @@ No change.
 -   Flag off: no crypto provider mounted, three tabs, scanner behaviour unchanged, bundle may still contain the packages.
 -   Flag on: the Payments tab works end to end on the enabled chains.
 -   No vendor key or private key appears in `.env.example` or in config defaults.
+-   A seed survives backup → restore on a second device and derives the same addresses (moved from F03, agreed 2026-11-10).

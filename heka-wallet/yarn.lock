@@ -5083,6 +5083,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@heka-wallet/crypto-core@workspace:packages/crypto/core"
   dependencies:
+    "@scure/bip39": "npm:1.6.0"
     mobx: "npm:6.12.3"
     viem: "npm:2.57.8"
   languageName: unknown
