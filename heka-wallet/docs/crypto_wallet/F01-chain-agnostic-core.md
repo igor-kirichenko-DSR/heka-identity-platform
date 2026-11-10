@@ -32,12 +32,12 @@ Code:
 -   `src/types/`: `ChainId`, `AssetId`, `AssetDescriptor`, `ChainDescriptor`, `Account`, `TransferRequest`, `FeeMode`, `FeeQuote`, `TxStatus`, `TxRecord` as in §2.3. `TxRecord` carries `chainId`, `txId`, `explorerHash` (differs from `txId` for user operations), `direction`, `asset`, `amount`, `counterparty`, `fee`, `status`, `createdAt`, `source: 'local' | 'chain'`.
 -   `src/adapter/`: `ChainAdapter`, `AdapterRegistry` (`register`, `get(chainId)`, `list()`, rejects a duplicate chain id and any chain whose `enabled` is false).
 -   `src/utils/units.ts`: `parseUnits(decimalString, decimals): bigint` and `formatUnits(bigint, decimals): string`; rejects more fraction digits than `decimals`, negative values and exponents. No `number` anywhere in amount paths.
--   `src/utils/uri.ts`: EIP-681 build and parse (`ethereum:<token>@<chainId>/transfer?address=<to>&uint256=<amount>` and the native form), CAIP-10 build and parse.
+-   `src/utils/eip681.ts`: EIP-681 build and parse (`ethereum:<token>@<chainId>/transfer?address=<to>&uint256=<amount>` and the native form); a parsed amount must fit in a uint256. `src/utils/caip.ts`: CAIP-2 and CAIP-10 build and parse.
 -   `src/stores/`:
     -   `AccountStore`: current chain, account index 0, cached public addresses per chain (read from F03's address record, never derives keys itself).
     -   `BalanceStore`: polls `getBalances` with exponential backoff (start 10 s, cap 2 min, reset on app foreground and on pull-to-refresh); stops polling while the wallet is locked.
-    -   `TransactionStore`: `submit(req)` → `adapter.transfer` → pending entry; polls `getStatus` until final or a per-chain timeout (`unknown`); merges `getHistory` pages with the ledger and de-duplicates by `chainId + txId`; allows one pending send per account and chain.
--   `src/ledger/LocalLedger.ts`: persists the wallet's own sends (pending and final) so they survive a restart. Storage behind a small interface; the default implementation writes Askar generic records through the agent (category or tag chosen with F03's Spike C result). On start, pending entries resume status polling.
+    -   `TransactionStore`: `submit(req)` → `adapter.transfer` → pending entry; polls `getStatus` until final or a per-chain timeout (`unknown`), taking the explorer hash and charged fee a final `StatusResult` reports; a final status in chain history also settles a `pending` or `unknown` send; merges `getHistory` pages with the ledger and de-duplicates by `chainId + txId`; allows one pending send per account and chain.
+-   `src/ledger/LocalLedger.ts`: persists the wallet's own sends (pending and final) so they survive a restart. Storage behind a small `LedgerStorage` interface; `AskarLedgerStorage` writes raw Askar session entries (`category: 'crypto-ledger'`, name `<chainId>|<txId>`, tags `{ chainId, status }`, as Spike C chose for the seed) through a `withSession` function the app passes in (F06). On start, pending entries resume status polling.
 
 ### Wallet — `packages/crypto/evm`
 
@@ -61,7 +61,7 @@ No change.
 
 ## Tests
 
--   Unit tests for `units` (round trips, 6 / 8 / 18 decimals, rejections), `uri` (EIP-681 examples from the EIP, CAIP-10), `AdapterRegistry`.
+-   Unit tests for `units` (round trips, 6 / 8 / 18 decimals, rejections), `eip681` (EIP-681 examples from the EIP, uint256 bound) and `caip` (CAIP-10), `AdapterRegistry`.
 -   Store tests with a fake adapter and fake timers: backoff schedule, stop on lock, pending → success / failed / unknown, de-duplication of ledger and chain entries, one-pending-send rule.
 -   `LocalLedger` with an in-memory storage fake: write, read after "restart", resume polling.
 -   Recorded RPC fixtures (JSON files) for history merge cases.

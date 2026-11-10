@@ -119,5 +119,41 @@ export default tseslint.config(
       'react-native/no-unused-styles': 'off',
     },
   },
+  {
+    // crypto-core stays pure TypeScript (testable in Node) and does amount math in bigint only.
+    files: ['packages/crypto/core/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'react', message: 'crypto-core has no React code; put it in @heka-wallet/crypto-ui.' },
+            { name: 'react-native', message: 'crypto-core has no React Native code; put it in @heka-wallet/crypto-ui.' },
+            { name: '@heka-wallet/crypto-evm', message: 'crypto-core must not depend on a chain adapter.' },
+          ],
+          patterns: [
+            {
+              group: ['react/*', 'react-native/*', '@bifold/*', '@heka-wallet/crypto-evm/*'],
+              message: 'crypto-core has no React, React Native, Bifold or adapter imports.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        { name: 'parseFloat', message: 'Amounts are bigint; use parseUnits.' },
+      ],
+      'no-restricted-properties': [
+        'error',
+        { object: 'Number', property: 'parseFloat', message: 'Amounts are bigint; use parseUnits.' },
+        { property: 'toFixed', message: 'Amounts are bigint; use formatUnits.' },
+        { object: 'Math', property: 'round', message: 'No floating-point amount math in crypto-core.' },
+        { object: 'Math', property: 'floor', message: 'No floating-point amount math in crypto-core.' },
+        { object: 'Math', property: 'ceil', message: 'No floating-point amount math in crypto-core.' },
+        { object: 'Math', property: 'trunc', message: 'No floating-point amount math in crypto-core.' },
+        { object: 'Math', property: 'pow', message: 'No floating-point amount math in crypto-core.' },
+      ],
+    },
+  },
   prettierRecommended,
 );

@@ -63,11 +63,11 @@ heka-wallet/packages/crypto/core        (@heka-wallet/crypto-core — chain-agno
 ├── src/
 │   ├── types/        ChainDescriptor, AssetDescriptor (CAIP-2 / CAIP-19 ids), Account, TransferRequest, FeeQuote, TxRecord
 │   ├── adapter/      ChainAdapter interface, AdapterRegistry
-│   ├── keys/         KeyProvider interface, AskarSeedStore (mnemonic ⇄ Askar generic record), derivation helpers
+│   ├── keys/         KeyProvider interface, AskarSeedStore (mnemonic ⇄ raw Askar entry), derivation helpers
 │   ├── stores/       MobX: AccountStore, BalanceStore (poll + backoff), TransactionStore (pending → final, history pages)
-│   ├── ledger/       LocalLedger: pending and sent TxRecords persisted as Askar generic records, survives restart
-│   ├── requests/     SigningRequest parser (heka-sign URI / QR), PaymentRequest parser (EIP-681), PresentationPayment (F12)
-│   └── utils/        units (bigint ⇄ decimal string), uri (EIP-681 / CAIP-10), formatting
+│   ├── ledger/       LocalLedger: pending and sent TxRecords persisted as raw Askar entries, survives restart
+│   ├── requests/     SigningRequest parser (heka-sign URI / QR), PresentationPayment (F12)
+│   └── utils/        units (bigint ⇄ decimal string), eip681 (payment URI parse / build), caip (CAIP-2 / CAIP-10), formatting
 heka-wallet/packages/crypto/ui          (@heka-wallet/crypto-ui — React Native screens over crypto/core)
 ├── src/
 │   ├── provider/     CryptoProvider (registry + stores in React context)
@@ -115,6 +115,7 @@ type FeeMode = 'native' | 'usdc-paymaster'                 // 'usdc-paymaster' o
 interface TransferRequest { from: Account; to: string; asset: AssetDescriptor; amount: bigint; memo?: string; feeMode: FeeMode; feeCap?: bigint }
 interface FeeQuote { mode: FeeMode; asset: AssetDescriptor; amount: bigint; max?: bigint; display: string }   // max: the permit ceiling in 'usdc-paymaster' mode
 type TxStatus = 'pending' | 'success' | 'failed' | 'unknown'
+interface StatusResult { status: TxStatus; explorerHash?: string; fee?: { asset: AssetDescriptor; amount: bigint } }   // user operations: bundler hash and charged fee, known only once final
 
 interface ChainAdapter {
   readonly chain: ChainDescriptor
@@ -122,8 +123,8 @@ interface ChainAdapter {
   validateAddress(input: string): { ok: boolean; normalized?: string; warning?: string }
   getBalances(account: Account, assets: AssetDescriptor[]): Promise<Record<AssetId, bigint>>
   estimateFee(req: TransferRequest): Promise<FeeQuote>
-  transfer(req: TransferRequest, keys: KeyProvider): Promise<{ txId: string }>     // signs, submits, returns immediately
-  getStatus(txId: string): Promise<TxStatus>
+  transfer(req: TransferRequest, keys: KeyProvider): Promise<{ txId: string; explorerHash?: string }>   // signs, submits, returns immediately
+  getStatus(txId: string): Promise<StatusResult>
   getHistory(account: Account, cursor?: string): Promise<{ items: TxRecord[]; next?: string }>
   activationState?(account: Account): Promise<'active' | 'pending'>                 // Hedera alias accounts
   isAssetEnabled?(account: Account, asset: AssetDescriptor): Promise<boolean>      // Hedera: HTS association (facade isAssociated)
@@ -157,7 +158,7 @@ Identifier choices: CAIP-2/CAIP-19 ids are what WalletConnect v2 and most multi-
 **Gas paid in USDC (Phase 1, chains with `features.paymaster`).**
 
 -   _Account upgrade._ The holder's EOA is upgraded in place with an EIP-7702 authorization to the Simple7702 account implementation (`toSimple7702SmartAccount({ client, owner })`, `owner.signAuthorization` on first use). The address does not change and stays shared with Hedera.
--   _User operation._ `createBundlerClient({ account, client, paymaster, transport: http(bundlerUrl) })` → `sendUserOperation({ calls: [USDC transfer], authorization })`, which returns the user-operation hash as the `txId`; `getStatus` then polls `eth_getUserOperationReceipt`. The adapter's `transfer` never blocks on the receipt.
+-   _User operation._ `createBundlerClient({ account, client, paymaster, transport: http(bundlerUrl) })` → `sendUserOperation({ calls: [USDC transfer], authorization })`, which returns the user-operation hash as the `txId`; `getStatus` then polls `eth_getUserOperationReceipt` and, once final, returns the bundler transaction hash and the charged fee in its `StatusResult`. The adapter's `transfer` never blocks on the receipt.
 -   _Paymaster data._ Built on the fly: an EIP-2612 permit from the holder to Circle Paymaster v0.8 for a bounded USDC amount (`signTypedData`; deadline `maxUint256` because the paymaster cannot read `block.timestamp` under 4337 opcode rules), packed as `encodePacked(['uint8','address','uint256','bytes'], [0, usdc, permitAmount, signature])`, with `paymasterVerificationGasLimit` / `paymasterPostOpGasLimit` set.
 -   _Fee display._ Gas × `pimlico_getUserOperationGasPrice` is a cost in ETH; showing it in USDC needs a native-to-USDC rate, which Circle does not document for the paymaster. The quote is therefore an estimate converted at the rate source Spike D selects (for example the bundler's token quote — no third-party price feed, §2.10), plus the 10 % surcharge Circle applies on Base and Arbitrum, with the permit ceiling as `FeeQuote.max` ("up to N USDC"). The amount actually charged is read from the receipt (the USDC transfer to the paymaster). The `FeeQuote` carries `mode: 'usdc-paymaster'`.
 -   _Bundler._ Per-chain config: Pimlico's public endpoint on testnets; beyond testnets, an operator-run proxy in front of a keyed vendor (no vendor key in the app, §2.7).
