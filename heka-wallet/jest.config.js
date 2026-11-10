@@ -25,5 +25,14 @@ module.exports = {
       cacheDirectory: '.jest/cache',
       clearMocks: true,
     },
+    {
+      displayName: '@heka-wallet/crypto-evm',
+      testEnvironment: 'node',
+      testRegex: getTestRegexForPath('packages/crypto/evm'),
+      moduleFileExtensions: ['ts', 'js', 'json'],
+      transform: { '^.+\\.[jt]s$': 'babel-jest' },
+      cacheDirectory: '.jest/cache',
+      clearMocks: true,
+    },
   ],
 }

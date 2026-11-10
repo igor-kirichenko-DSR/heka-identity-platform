@@ -147,10 +147,10 @@ Identifier choices: CAIP-2/CAIP-19 ids are what WalletConnect v2 and most multi-
 
 **EVM adapter (Phase 1).**
 
--   _Native transfer:_ `walletClient.sendTransaction({ to, value, chain })`.
--   _ERC-20 transfer:_ `writeContract({ address, abi: erc20Abi, functionName: 'transfer' })`.
--   _Fees:_ `estimateFeesPerGas()`, `gas` from `estimateGas` × 1.2, a per-chain ceiling.
--   _Status:_ `waitForTransactionReceipt` / `getTransactionReceipt` polling.
+-   _Native transfer:_ an EIP-1559 transaction `{ to, value }`, signed by the adapter with the chain id it sets itself (checked in the serialized payload), sent with `eth_sendRawTransaction`; the RPC's `eth_chainId` is checked first.
+-   _ERC-20 transfer:_ the same path with `to` = token contract and `data` = `transfer(recipient, amount)` (`erc20Abi`).
+-   _Fees:_ `estimateFeesPerGas()`, `gas` from `estimateGas` × 1.2, refused (not clamped) above a per-chain gas ceiling.
+-   _Status:_ `getTransactionReceipt` polled by the TransactionStore; no receipt = pending.
 -   _History:_ ERC-20 `Transfer` logs (`getLogs` with `from`/`to` topics) over a bounded block window, merged with the local ledger. Public RPCs cap the `getLogs` range, so the window is a per-chain config value and older transfers outside it are only known from the local ledger. Inbound native transfers (ETH) emit no logs and appear only as a balance change; the History screen says that history is partial until an indexer source exists (F11).
 -   _Nonces:_ the adapter takes the nonce from `getTransactionCount(address, 'pending')`; the TransactionStore allows one pending send per account and chain in the MVP, so back-to-back sends cannot collide. Speed-up and cancel (replacement by nonce) are out of scope for v1; a send pending longer than a per-chain timeout is shown as `unknown` with an explorer link.
 -   _Recipient resolution:_ `0x` address (EIP-55), optional ENS on chains that have it, EIP-681 URIs from QR.

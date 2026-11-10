@@ -5079,11 +5079,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@heka-wallet/crypto-core@workspace:packages/crypto/core":
+"@heka-wallet/crypto-core@npm:*, @heka-wallet/crypto-core@workspace:packages/crypto/core":
   version: 0.0.0-use.local
   resolution: "@heka-wallet/crypto-core@workspace:packages/crypto/core"
   dependencies:
     mobx: "npm:6.12.3"
+    viem: "npm:2.57.8"
+  languageName: unknown
+  linkType: soft
+
+"@heka-wallet/crypto-evm@workspace:packages/crypto/evm":
+  version: 0.0.0-use.local
+  resolution: "@heka-wallet/crypto-evm@workspace:packages/crypto/evm"
+  dependencies:
+    "@heka-wallet/crypto-core": "npm:*"
     viem: "npm:2.57.8"
   languageName: unknown
   linkType: soft

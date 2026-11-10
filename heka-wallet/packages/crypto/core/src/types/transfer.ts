@@ -15,6 +15,9 @@ export interface TransferRequest {
   feeCap?: bigint
 }
 
+/** A code, so the UI shows a translated text. */
+export type FeeWarning = 'insufficient-native-balance'
+
 export interface FeeQuote {
   mode: FeeMode
   asset: AssetDescriptor
@@ -22,6 +25,7 @@ export interface FeeQuote {
   /** The permit ceiling in 'usdc-paymaster' mode. */
   max?: bigint
   display: string
+  warnings?: FeeWarning[]
 }
 
 export interface TransferResult {
