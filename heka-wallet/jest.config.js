@@ -16,6 +16,15 @@ module.exports = {
       testRegex: getTestRegexForPath('packages/shared'),
     },
     {
+      ...baseConfig,
+      displayName: '@heka-wallet/crypto-ui',
+      testRegex: getTestRegexForPath('packages/crypto/ui'),
+      moduleNameMapper: {
+        ...baseConfig.moduleNameMapper,
+        '^react-dom$': '<rootDir>/packages/crypto/ui/__tests__/helpers/reactDomShim.js',
+      },
+    },
+    {
       // Pure TypeScript package: Node environment, no React Native preset or setup files
       displayName: '@heka-wallet/crypto-core',
       testEnvironment: 'node',

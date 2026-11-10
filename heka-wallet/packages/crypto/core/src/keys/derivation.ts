@@ -2,7 +2,7 @@ import type { KeyPurpose, SeedKind } from './KeyProvider'
 import type { Hex, LocalAccount } from 'viem'
 
 import { mnemonicToSeed, validateMnemonic } from '@scure/bip39'
-import { english, HDKey, hdKeyToAccount, privateKeyToAccount } from 'viem/accounts'
+import { english, generateMnemonic, HDKey, hdKeyToAccount, privateKeyToAccount } from 'viem/accounts'
 
 import { InvalidSeedError, UnsupportedKeyError } from '../errors'
 
@@ -44,6 +44,17 @@ export const parseMnemonic = (input: string): string => {
     throw new InvalidSeedError('The recovery phrase is not a valid BIP-39 phrase')
   if (PUBLIC_TEST_MNEMONICS.includes(mnemonic))
     throw new InvalidSeedError('The recovery phrase is a public test phrase')
+  return mnemonic
+}
+
+const PHRASE_ENTROPY_BITS: Record<12 | 24, 128 | 256> = { 12: 128, 24: 256 }
+
+/** A new phrase kept in memory until the holder has verified it; never a public test phrase. */
+export const generatePhrase = (words: 12 | 24): string => {
+  const entropy = PHRASE_ENTROPY_BITS[words]
+  if (!entropy) throw new UnsupportedKeyError(`A new phrase has 12 or 24 words, not ${String(words)}`)
+  let mnemonic = generateMnemonic(english, entropy)
+  while (PUBLIC_TEST_MNEMONICS.includes(mnemonic)) mnemonic = generateMnemonic(english, entropy)
   return mnemonic
 }
 

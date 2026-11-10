@@ -1,0 +1,122 @@
+appId: com.heka.wallet
+name: A new payment wallet is created, its phrase verified, and Home opens
+# Not in a CI suite yet: needs the Payments tab from F06. Run: maestro test .maestro/crypto/crypto-register.yaml
+tags:
+  - crypto
+  - no-backend
+env:
+  PIN: '482916'
+---
+- runFlow: subflows/open-payments.yaml
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoCreateWallet'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '1'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '2'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '3'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '4'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '5'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '6'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '7'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '8'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '9'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '10'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '11'
+- runFlow:
+    file: subflows/remember-word.yaml
+    env:
+      I: '12'
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoPhraseWritten'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '1'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '2'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '3'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '4'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '5'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '6'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '7'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '8'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '9'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '10'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '11'
+- runFlow:
+    file: subflows/place-word.yaml
+    env:
+      I: '12'
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoVerifyContinue'
+- extendedWaitUntil:
+    visible:
+      id: 'com.ariesbifold:id/CryptoOpenWallet'
+    timeout: 30000
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoOpenWallet'
+- assertVisible:
+    id: 'com.ariesbifold:id/CryptoReceive'
+- assertVisible:
+    id: 'com.ariesbifold:id/CryptoBalance-USDC'

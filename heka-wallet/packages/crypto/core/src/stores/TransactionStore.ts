@@ -109,6 +109,16 @@ export class TransactionStore {
     )
   }
 
+  /** True when this account has sent to the address before (own sends only), for the new-recipient warning. */
+  isKnownRecipient(account: Account, address: string): boolean {
+    return [...this.localRecords.values()].some(
+      (record) =>
+        record.chainId === account.chainId &&
+        sameAddress(record.account, account.address) &&
+        sameAddress(record.counterparty, address)
+    )
+  }
+
   /** Signs and submits through the chain's adapter; the result is pending until the status poll settles it. */
   async submit(request: TransferRequest, quote?: FeeQuote): Promise<TxRecord> {
     const { from } = request

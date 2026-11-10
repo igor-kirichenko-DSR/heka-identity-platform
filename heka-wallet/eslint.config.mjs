@@ -181,5 +181,25 @@ export default tseslint.config(
       ...cryptoAmountRules,
     },
   },
+  {
+    // crypto-ui reaches chains only through the registry and the app only through CryptoProvider props.
+    files: ['packages/crypto/ui/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [{ name: '@heka-wallet/crypto-evm', message: 'Adapters come from the registry in CryptoProvider.' }],
+          patterns: [
+            { group: ['@heka-wallet/crypto-evm/*'], message: 'Adapters come from the registry in CryptoProvider.' },
+            {
+              group: ['**/app/*', 'heka-ssi-wallet', 'heka-ssi-wallet/*'],
+              message: 'The app passes what crypto-ui needs as CryptoProvider props.',
+            },
+          ],
+        },
+      ],
+      ...cryptoAmountRules,
+    },
+  },
   prettierRecommended,
 );
