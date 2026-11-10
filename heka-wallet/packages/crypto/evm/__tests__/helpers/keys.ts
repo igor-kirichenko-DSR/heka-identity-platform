@@ -12,7 +12,17 @@ export class FakeKeyProvider implements KeyProvider {
     this.account = privateKeyToAccount(privateKey)
   }
 
+  readonly isLocked = false
   hasSeed = jest.fn(async () => true)
+  seedKind = jest.fn(async () => 'raw' as const)
+  importRawKey = jest.fn(async (): Promise<void> => {
+    throw new Error('not used')
+  })
+  removeSeed = jest.fn(async (): Promise<void> => {
+    throw new Error('not used')
+  })
+  lock = jest.fn()
+  unlock = jest.fn()
   createSeed = jest.fn(async (): Promise<string> => {
     throw new Error('not used')
   })

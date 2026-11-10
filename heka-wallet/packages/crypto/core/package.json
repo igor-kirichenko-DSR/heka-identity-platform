@@ -1,11 +1,12 @@
 {
   "name": "@heka-wallet/crypto-core",
-  "description": "Heka Wallet chain-agnostic crypto core: types, adapter registry, units, stores, local ledger",
+  "description": "Heka Wallet chain-agnostic crypto core: types, adapter registry, units, stores, local ledger, key provider",
   "version": "0.0.1",
   "license": "Apache-2.0",
   "private": true,
   "main": "./src/index.ts",
   "dependencies": {
+    "@scure/bip39": "1.6.0",
     "mobx": "6.12.3",
     "viem": "2.57.8"
   }
