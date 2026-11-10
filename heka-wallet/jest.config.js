@@ -14,6 +14,16 @@ module.exports = {
       ...baseConfig,
       displayName: '@heka-wallet/shared',
       testRegex: getTestRegexForPath('packages/shared'),
-    }
+    },
+    {
+      // Pure TypeScript package: Node environment, no React Native preset or setup files
+      displayName: '@heka-wallet/crypto-core',
+      testEnvironment: 'node',
+      testRegex: getTestRegexForPath('packages/crypto/core'),
+      moduleFileExtensions: ['ts', 'js', 'json'],
+      transform: { '^.+\\.[jt]s$': 'babel-jest' },
+      cacheDirectory: '.jest/cache',
+      clearMocks: true,
+    },
   ],
 }
