@@ -14,7 +14,7 @@ The design is in [`../Idea and high-level design.md`](../Idea%20and%20high-level
 | [F01](F01-chain-agnostic-core.md) | F1 | ✅ Chain-agnostic core: types, registry, units, stores, local ledger | 1 | — | wallet |
 | [F02](F02-evm-adapter.md) | F2 | ✅ EVM adapter (plain EOA path) | 1 | Spike A | wallet |
 | [F03](F03-key-provider.md) | F3 | ✅ Key provider: seed, derivation, backup, reveal, import, remove | 1–2 | Spike C | wallet |
-| [F04](F04-wallet-ui.md) | F4 | UI: register, home, receive, send, history, settings | 2 | — | wallet |
+| [F04](F04-wallet-ui.md) | F4 | ✅ UI: register, home, receive, send, history, settings | 2 | — | wallet |
 | [F05](F05-hedera-entry.md) | F5 | Hedera testnet through the EVM adapter | 1–2 | Spike B | wallet |
 | [F06](F06-host-wiring.md) | F6 | Host wiring: flag, provider, tab, scanner, onboarding, i18n | 2–3 | — | wallet |
 | [F07](F07-binding-signing.md) | F7 | Binding signatures: EIP-712, SIWE, nonce; signing-request channel | 1–2 | — | wallet, demo |
