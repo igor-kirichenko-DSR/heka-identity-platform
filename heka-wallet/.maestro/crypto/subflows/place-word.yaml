@@ -1,0 +1,11 @@
+# Puts word ${I} back when its slot is empty (only the taken-out words have empty slots).
+appId: com.heka.wallet
+---
+- runFlow:
+    when:
+      visible:
+        id: 'com.ariesbifold:id/CryptoVerifyWord-${I}'
+        text: '${I}\. ?'
+    commands:
+      - tapOn:
+          id: 'com.ariesbifold:id/CryptoCandidate-${output.words["w" + I]}'

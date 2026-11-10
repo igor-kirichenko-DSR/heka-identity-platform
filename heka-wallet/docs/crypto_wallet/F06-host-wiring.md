@@ -17,7 +17,7 @@ Plug the module into the app behind `ENABLE_CRYPTO_MODULE`, so that with the fla
     -   `isCryptoModuleEnabled = Config.ENABLE_CRYPTO_MODULE === 'true'`;
     -   `cryptoConfig = { defaultChain: Config.CRYPTO_DEFAULT_CHAIN ?? 'eip155:84532', chains }`, where `chains` is the built-in registry with per-chain `CRYPTO_RPC_URL_<CHAIN>` and `CRYPTO_BUNDLER_URL_<CHAIN>` overrides (`<CHAIN>` = `BASE_SEPOLIA`, `HEDERA_TESTNET`, `ARBITRUM_SEPOLIA`); invalid or `http://` overrides refused outside `__DEV__`.
 -   `app/.env.example`: `ENABLE_CRYPTO_MODULE=false`, `CRYPTO_DEFAULT_CHAIN=`, the override names with empty values, one variable per line.
--   `app/App.tsx`: `<CryptoProvider>` mounted only when the flag is on; it creates the registry and registers `EvmAdapter(baseSepolia)` (or `arbitrumSepolia` per Spike D) and `EvmAdapter(hederaTestnet)` (if Spike B passed).
+-   `app/App.tsx`: `<CryptoProvider>` mounted only when the flag is on; it creates the registry and registers `EvmAdapter(baseSepolia)` (or `arbitrumSepolia` per Spike D) and `EvmAdapter(hederaTestnet)` (if Spike B passed). Its props (F04 "Decisions"): the adapters, `createAgentTransactionRunner(mainAgent)` for the seed, the ledger session, the logger, the default chain, `backup` only when `isWalletBackupEnabled`, and `isAgentReady` (false while the main agent's store is not open).
 -   `app/src/navigators/TabStack.tsx`: a fourth tab ("Payments") appended to `tabBarVisualOrder` when the flag is on; `TabStacks` gains `CryptoStack`.
 -   `app/src/navigators/types.ts`: `CryptoStackParams`; the tab id.
 -   Scanner and deep links (`app/src/utils/useInvitationHandlers.ts`, `useDeeplinks.ts`):
@@ -56,7 +56,7 @@ No change.
 -   Unit: `config.ts` parsing (flag on / off, override present / absent / invalid).
 -   Component: `TabStack` renders three tabs with the flag off and four with it on.
 -   Unit: scanner routing — `ethereum:` and signing-request URIs go to the crypto stack only with the flag on; DIDComm and OID4VC URIs unchanged.
--   Maestro: existing flows pass with the flag off; `crypto-register.yaml` runs with the flag on.
+-   Maestro: existing flows pass with the flag off; the F04 flows in `.maestro/crypto/` run with the flag on. Give the tab the testID `TabPayments` (the flows tap it) and add `crypto/*.yaml` to `.maestro/config.yaml`.
 
 ## Specs and docs
 

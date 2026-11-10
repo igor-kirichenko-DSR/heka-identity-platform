@@ -58,100 +58,158 @@ const translation = {
     "UsePasskeyToAuth": "Veuillez utiliser la clé d'accès pour vous authentifier auprès du service de sauvegarde"
   },
   "Crypto": {
-    "Balance": "Solde",
-    "Token": "Jeton",
-    "Staked": "En staking",
-    "ConfirmTransaction": "Confirmer la transaction",
-    "MnemonicSeed": "Phrase mnémonique",
-    "HardwareWallet": "Portefeuille matériel",
-    "PrivateKey": "Clé privée",
+    "Title": "Paiements",
+    "Explorer": "Voir dans l'explorateur",
+    "Wallet": {
+      "LoadFailed": "Le portefeuille de paiement n'a pas pu être ouvert.",
+      "Retry": "Réessayer"
+    },
+    "Address": {
+      "Copy": "Copier l'adresse",
+      "Copied": "Copiée"
+    },
     "Register": {
-      "NewWallet": "Créer un nouveau portefeuille",
-      "ImportExisting": "Importer un portefeuille existant",
-      "ImportLedgerNano": "Importer Ledger Nano X",
-      "CompletedTitle": "Tout est prêt !",
-      "CompletedText": "Votre voyage inter-chaînes cosmique commence maintenant",
-      "MnemonicBackupRecommendation": "Sauvegardez votre phrase mnémonique de manière sécurisée",
+      "Intro": {
+        "Title": "Portefeuille de paiement",
+        "Text": "Envoyez et recevez des stablecoins comme l'USDC. Créez un nouveau portefeuille ou importez celui que vous avez déjà.",
+        "Create": "Créer un nouveau portefeuille",
+        "Import": "Importer un portefeuille existant"
+      },
       "NewMnemonic": {
-        "Title": "Sauvegardez votre portefeuille",
-        "InfoText1": "Votre phrase mnémonique secrète est utilisée pour récupérer vos cryptos si vous perdez votre téléphone ou changez de portefeuille.",
-        "InfoText2": "Conservez ces 12 mots dans un endroit sécurisé, comme un gestionnaire de mots de passe, et ne les partagez jamais avec personne."
+        "Title": "Notez votre phrase de récupération",
+        "Text1": "Ces 12 mots sont le seul moyen de récupérer vos fonds si vous perdez ce téléphone ou changez de portefeuille.",
+        "Text2": "Écrivez-les sur papier et gardez-les en lieu sûr. Ne les partagez jamais et ne les gardez jamais dans une capture d'écran.",
+        "Written": "Je l'ai notée"
       },
       "VerifyMnemonic": {
-        "Title": "Vous l'avez sauvegardée, n'est-ce pas ?",
-        "InfoText": "Vérifiez que vous avez sauvegardé votre phrase mnémonique secrète en tapant les mots dans l'ordre :"
+        "Title": "Vérifiez votre phrase de récupération",
+        "Text": "Touchez les mots manquants dans le bon ordre.",
+        "WrongOrder": "Les mots ne sont pas dans le bon ordre. Touchez un mot pour le retirer, ou recommencez.",
+        "Reset": "Recommencer"
       },
-      "ImportWallet": {
-        "Title": "Importer votre portefeuille",
-        "InfoText": "Importez votre portefeuille avec la phrase mnémonique de 12 mots que vous avez sauvegardée."
+      "Done": {
+        "Title": "Votre portefeuille est prêt",
+        "BackupPrompt": "Sauvegardez le portefeuille maintenant pour que le nouveau portefeuille soit aussi dans votre sauvegarde. Votre phrase de récupération reste la sauvegarde principale.",
+        "PhraseIsBackup": "Votre phrase de récupération est votre sauvegarde. Gardez-la en lieu sûr : sans elle, personne ne peut récupérer vos fonds.",
+        "RawKeyText": "Gardez votre clé privée en lieu sûr : sans elle, personne ne peut récupérer vos fonds.",
+        "BackupNow": "Sauvegarder maintenant",
+        "BackupDone": "Sauvegarde terminée.",
+        "BackupFailed": "La sauvegarde a échoué. Réessayez plus tard depuis les paramètres.",
+        "OpenWallet": "Ouvrir le portefeuille"
       },
-      "Form": {
-        "WalletLabel": {
-          "Label": "Nom du portefeuille",
-          "Required": "Le nom est requis"
-        },
-        "Password": {
-          "Required": "Le mot de passe est requis",
-          "TooShort": "Le mot de passe doit comporter plus de 8 caractères"
-        },
-        "ConfirmPassword": {
-          "Label": "Confirmer le mot de passe",
-          "Required": "La confirmation du mot de passe est requise",
-          "TooShort": "Le mot de passe doit comporter plus de 8 caractères",
-          "DoesntMatch": "Les mots de passe ne correspondent pas"
-        },
-        "Mnemonic": {
-          "Label": "Phrase mnémonique",
-          "Required": "La phrase mnémonique est requise",
-          "TooShort": "La phrase mnémonique doit contenir au moins 8 mots",
-          "Invalid": "Phrase mnémonique invalide",
-          "InvalidPrivateKey": "Clé privée invalide",
-          "InvalidPrivateKeyLength": "Longueur de la clé privée invalide"
-        }
-      },
-      "BIP44": {
-        "HDDerivationPath": "Chemin de dérivation HD",
-        "Description": "Définissez un chemin de dérivation d'adresse personnalisé en modifiant les index ci-dessous :",
-        "InvalidChange": "La valeur de change doit être 0 ou 1"
+      "Errors": {
+        "Exists": "Un portefeuille de paiement existe déjà sur cet appareil.",
+        "SaveFailed": "Le portefeuille n'a pas pu être enregistré. Réessayez."
+      }
+    },
+    "Import": {
+      "Title": "Importer votre portefeuille",
+      "Text": "Saisissez votre phrase de récupération de 12 ou 24 mots, ou une clé privée commençant par 0x.",
+      "Label": "Phrase de récupération ou clé privée",
+      "Submit": "Importer",
+      "Errors": {
+        "WordCount": "Une phrase de récupération compte 12, 15, 18, 21 ou 24 mots.",
+        "InvalidPhrase": "Cette phrase de récupération n'est pas valide.",
+        "InvalidKey": "Une clé privée est 0x suivi de 64 caractères hexadécimaux."
       }
     },
     "Home": {
-      "TotalBalance": "Solde total",
-      "BIP44": {
-        "SelectAccount": "Sélectionner un compte",
-        "PreviousTxs": "Transactions précédentes"
-      },
-      "Tokens": {
-        "ViewAll": "Voir tous les jetons"
-      }
+      "Receive": "Recevoir",
+      "Send": "Envoyer",
+      "History": "Historique",
+      "Settings": "Paramètres",
+      "NoAccount": "Pas encore de compte sur ce réseau.",
+      "BalanceFailed": "Les soldes n'ont pas pu être mis à jour. Tirez vers le bas pour réessayer.",
+      "ActivationPending": "Ce compte devient actif avec son premier dépôt.",
+      "EnableAsset": "Activer {{symbol}}",
+      "EnableAssetConfirm": "Confirmez pour activer le jeton",
+      "EnableAssetFailed": "Le jeton n'a pas pu être activé. Réessayez."
     },
-    "Account": {
-      "NoAccount": "Aucun compte",
-      "SelectAccount": "Sélectionner un compte",
-      "Selected": "{{name}} (Sélectionné)",
-      "RemoveAccount": "Supprimer le compte {{name}}"
+    "Receive": {
+      "Header": "Recevoir",
+      "Title": "Recevoir des {{symbol}} sur {{chain}}",
+      "Hint": "N'envoyez à cette adresse que des actifs sur {{chain}}."
     },
     "Send": {
-      "Recipient": "Destinataire",
-      "Amount": "Montant",
-      "Memo": "Note (Optionnel)",
-      "Fee": "Frais",
-      "Gas": "Gaz"
+      "Header": "Envoyer",
+      "Recipient": "Adresse du destinataire",
+      "Scan": "Scanner un code QR",
+      "Amount": "Montant ({{symbol}})",
+      "Max": "Max",
+      "Confirm": "Confirmez le paiement",
+      "NewRecipient": "Vous n'avez jamais envoyé à cette adresse. Vérifiez-la attentivement.",
+      "AddressWarnings": {
+        "no-checksum": "Cette adresse n'a pas de somme de contrôle. Vérifiez-la attentivement."
+      },
+      "Result": {
+        "pending": "Paiement envoyé",
+        "success": "Paiement terminé",
+        "failed": "Échec du paiement",
+        "unknown": "Statut du paiement inconnu",
+        "Summary": "{{amount}} à {{to}}"
+      },
+      "Errors": {
+        "InvalidAddress": "Cette adresse n'est pas valide sur ce réseau.",
+        "InvalidAmount": "Saisissez un montant valide.",
+        "InsufficientAmount": "Le solde est insuffisant pour ce montant.",
+        "InsufficientFee": "Le solde est insuffisant pour payer les frais de réseau.",
+        "Pending": "Attendez la fin de votre paiement précédent.",
+        "Locked": "Le portefeuille est verrouillé. Déverrouillez-le et réessayez.",
+        "Failed": "Le paiement n'a pas pu être envoyé."
+      }
     },
-    "Unlock": {
-      "SignIn": "Se connecter",
-      "UseBiometry": "Utiliser l'authentification biométrique"
+    "Fee": {
+      "Estimate": "Frais de réseau : {{amount}}",
+      "UpTo": "Frais de réseau : jusqu'à {{amount}}",
+      "Usdc": "Payer les frais en USDC",
+      "Failed": "Les frais de réseau n'ont pas pu être estimés.",
+      "Warnings": {
+        "insufficient-native-balance": "Le solde est insuffisant pour payer les frais de réseau."
+      }
     },
-    "Error": {
-      "Unknown": "Erreur inconnue",
-      "ErrorCode": "Code d'erreur",
-      "InvalidBech32Error": "Adresse invalide",
-      "ICNSFailedToFetchError": "Échec de récupération de l'adresse depuis ICNS",
-      "InvalidNumberAmountError": "Nombre invalide",
-      "ZeroAmountError": "Le montant est zéro",
-      "NegativeAmountError": "Le montant est négatif",
-      "InsufficientAmountError": "Fonds insuffisants",
-      "InsufficientFeeError": "Solde insuffisant pour les frais de transaction"
+    "Status": {
+      "pending": "En attente",
+      "success": "Terminé",
+      "failed": "Échec",
+      "unknown": "Inconnu"
+    },
+    "History": {
+      "Header": "Historique",
+      "Empty": "Aucun paiement pour le moment.",
+      "LoadFailed": "L'historique n'a pas pu être chargé. Tirez vers le bas pour réessayer.",
+      "PartialNote": "Les paiements anciens et les transferts entrants de la monnaie propre au réseau peuvent manquer ici.",
+      "Direction": {
+        "in": "De {{address}}",
+        "out": "À {{address}}",
+        "self": "À vous-même"
+      }
+    },
+    "Scan": {
+      "Header": "Scanner",
+      "NotAnAddress": "Ce code QR ne contient pas d'adresse.",
+      "Unsupported": "Cette demande de paiement concerne un autre réseau ou un autre jeton."
+    },
+    "Settings": {
+      "Header": "Paramètres de paiement",
+      "DefaultChain": "Réseau par défaut",
+      "SaveFailed": "Le réseau par défaut n'a pas pu être enregistré.",
+      "RevealPhrase": "Afficher la phrase de récupération",
+      "RemoveWallet": "Supprimer le portefeuille de paiement"
+    },
+    "Reveal": {
+      "Header": "Phrase de récupération",
+      "Title": "Votre phrase de récupération",
+      "Warning": "Toute personne qui connaît ces mots peut prendre vos fonds. Ne les partagez pas et ne faites pas de capture d'écran.",
+      "Confirm": "Confirmez pour afficher la phrase de récupération",
+      "Failed": "La phrase de récupération n'a pas pu être affichée."
+    },
+    "Remove": {
+      "Header": "Supprimer le portefeuille",
+      "Title": "Supprimer le portefeuille de paiement ?",
+      "Warning": "Le portefeuille de paiement sera supprimé de cet appareil. Sans votre phrase de récupération, ces fonds ne pourront pas être récupérés. Vos attestations ne sont pas concernées.",
+      "Confirm": "Confirmez pour supprimer le portefeuille de paiement",
+      "Submit": "Supprimer",
+      "Failed": "Le portefeuille n'a pas pu être supprimé."
     }
   },
   "Biometry": {

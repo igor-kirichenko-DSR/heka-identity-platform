@@ -5098,6 +5098,25 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@heka-wallet/crypto-ui@workspace:packages/crypto/ui":
+  version: 0.0.0-use.local
+  resolution: "@heka-wallet/crypto-ui@workspace:packages/crypto/ui"
+  dependencies:
+    "@bifold/core": "@bifold/core@github:dsrcorporation/aries-mobile-agent-react-native%23tag=1.0.0-alpha-heka.7&workspace=@bifold/core"
+    "@heka-wallet/crypto-core": "npm:*"
+    "@heka-wallet/shared": "npm:*"
+    "@react-native-async-storage/async-storage": "npm:2.2.0"
+    "@react-native-clipboard/clipboard": "npm:1.16.3"
+    "@react-navigation/native": "npm:6.1.3"
+    "@react-navigation/stack": "npm:6.3.12"
+    mobx: "npm:6.12.3"
+    mobx-react-lite: "npm:4.0.7"
+    react: "npm:19.1.4"
+    react-i18next: "npm:11.18.6"
+    react-native: "npm:0.81.6"
+  languageName: unknown
+  linkType: soft
+
 "@heka-wallet/root@workspace:.":
   version: 0.0.0-use.local
   resolution: "@heka-wallet/root@workspace:."
@@ -6528,7 +6547,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-async-storage/async-storage@npm:^2.2.0":
+"@react-native-async-storage/async-storage@npm:2.2.0, @react-native-async-storage/async-storage@npm:^2.2.0":
   version: 2.2.0
   resolution: "@react-native-async-storage/async-storage@npm:2.2.0"
   dependencies:
@@ -6539,7 +6558,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-clipboard/clipboard@npm:^1.16.3":
+"@react-native-clipboard/clipboard@npm:1.16.3, @react-native-clipboard/clipboard@npm:^1.16.3":
   version: 1.16.3
   resolution: "@react-native-clipboard/clipboard@npm:1.16.3"
   peerDependencies:
@@ -17485,7 +17504,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mobx-react-lite@npm:^4.0.7":
+"mobx-react-lite@npm:4.0.7, mobx-react-lite@npm:^4.0.7":
   version: 4.0.7
   resolution: "mobx-react-lite@npm:4.0.7"
   dependencies:

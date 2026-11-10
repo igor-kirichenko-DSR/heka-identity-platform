@@ -432,4 +432,31 @@ describe('TransactionStore', () => {
       )
     })
   })
+
+  describe('known recipients', () => {
+    it('knows a recipient of an own send, in any letter case', async () => {
+      const storage = new MemoryLedgerStorage()
+      await new LocalLedger(storage, makeLogger()).put(makeRecord({ status: 'success' }))
+      const { store } = await ready(storage)
+
+      expect(store.isKnownRecipient(account, RECIPIENT.toUpperCase().replace('0X', '0x'))).toBe(true)
+    })
+
+    it('does not know an address this account never sent to', async () => {
+      const { store } = await ready()
+
+      expect(store.isKnownRecipient(account, RECIPIENT)).toBe(false)
+    })
+
+    it('does not count a send from another account or chain', async () => {
+      const storage = new MemoryLedgerStorage()
+      const ledger = new LocalLedger(storage, makeLogger())
+      await ledger.put(makeRecord({ status: 'success', account: RECIPIENT, counterparty: HOLDER }))
+      await ledger.put(makeRecord({ status: 'success', chainId: HEDERA_TESTNET_EVM, txId: '0xbbb' }))
+      const { store } = await ready(storage)
+
+      expect(store.isKnownRecipient(account, HOLDER)).toBe(false)
+      expect(store.isKnownRecipient(account, RECIPIENT)).toBe(false)
+    })
+  })
 })

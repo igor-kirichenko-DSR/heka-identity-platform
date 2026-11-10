@@ -81,4 +81,19 @@ No change.
 
 ## Open questions
 
--   Figma design for the payment screens: not referenced anywhere yet. UI work waits for it or uses existing wallet components as the design.
+-   Figma design for the payment screens: not referenced anywhere yet. F04 uses the existing wallet components and theme as the design; screens are restyled when a design exists.
+
+## Decisions
+
+Agreed 2026-11-10 (DSRDSC-293):
+
+-   One task, seven iterations; one wallet commit. The verify step asks for 4 of the 12 words (`VERIFY_WORD_COUNT`), as the Keplr screen did. `crypto/core` gains `WalletStore` (seed status none / mnemonic / raw; import and remove reload the accounts), `TransactionStore.isKnownRecipient` (the new-recipient warning) and `generatePhrase`.
+-   A new phrase is kept in memory and stored with `importSeed` only after the tap-to-order check. `createSeed` would store it before the check, so a holder who quits on the verify screen would keep a phrase they never confirmed. The phrase never travels in route params; it lives in a register-flow context and is dropped on the Done screen.
+-   `CryptoProvider` takes everything app-specific as props (adapters, seed and ledger session runners, logger, default chain, optional backup, `isAgentReady`); `crypto-ui` imports neither `app` nor `crypto-evm` (ESLint). It locks the keys and polling when Bifold's `didAuthenticate` is false or the agent is not ready, and builds its services once.
+-   Default chain: AsyncStorage key `crypto.defaultChain` (a chain id, not a secret), behind `ChainPreference`.
+-   Extra screens not in the list above: `ScanAddress` (Bifold `ScanCamera`; an EIP-681 request fills recipient, asset and amount; another chain's request is refused) and `RemoveWallet` (balances, warning, PIN or biometry).
+-   Screenshot protection: Bifold `usePreventScreenCapture` (`react-native-screenguard`, already linked), on NewMnemonic, VerifyMnemonic, ImportWallet and RevealPhrase; the words (and the pasted secret) are also blanked while the app is in the background. No new native module.
+-   `useAuthProof`: biometry first when the holder turned it on, PIN (`PinConfirmation`) otherwise or after a biometry failure. Send, reveal, remove and "Enable USDC" ask for it.
+-   Hedera and paymaster parts are built from adapter capabilities only (`activationState`, `isAssetEnabled`, `enableAsset`, `features.paymaster`) and tested on a fake adapter. Hedera `0.0.x` on Receive needs an account-id read in the adapter interface: left to F05.
+-   Strings: the `Crypto.*` block is rewritten in `en`, `fr` and `pt-br` (French and Portuguese by the agent; a native speaker should check them). F06 adds only its own keys.
+-   Maestro: `.maestro/crypto/crypto-{register,import,receive,send}.yaml`, outside the workspace's top-level `*.yaml`, so no suite runs them before F06 adds the Payments tab (`TabPayments`). F06 runs them first and owns the device checks of acceptance criteria 1 and 3. `crypto-send.yaml` (tag `crypto-onchain`) is on demand with a funded key from a local env file.
