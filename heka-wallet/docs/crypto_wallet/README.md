@@ -10,8 +10,8 @@ The design is in [`../Idea and high-level design.md`](../Idea%20and%20high-level
 
 | File | ID | Sub-feature | Phase | Gate | Components |
 | --- | --- | --- | --- | --- | --- |
-| [F00](F00-cleanup-and-spikes.md) | — | Keplr cleanup and spikes A–D | 0 | — | wallet |
-| [F01](F01-chain-agnostic-core.md) | F1 | Chain-agnostic core: types, registry, units, stores, local ledger | 1 | — | wallet |
+| [F00](F00-cleanup-and-spikes.md) | — | ✅ Keplr cleanup and spikes A–D | 0 | — | wallet |
+| [F01](F01-chain-agnostic-core.md) | F1 | ✅ Chain-agnostic core: types, registry, units, stores, local ledger | 1 | — | wallet |
 | [F02](F02-evm-adapter.md) | F2 | EVM adapter (plain EOA path) | 1 | Spike A | wallet |
 | [F03](F03-key-provider.md) | F3 | Key provider: seed, derivation, backup, reveal, import, remove | 1–2 | Spike C | wallet |
 | [F04](F04-wallet-ui.md) | F4 | UI: register, home, receive, send, history, settings | 2 | — | wallet |
