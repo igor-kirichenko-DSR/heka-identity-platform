@@ -35,6 +35,7 @@ export const useVerifyMnemonic = (phrase: string) => {
   const slots: WordSlot[] = words.map((word, index) => ({
     value: hidden.includes(index) ? (filled.get(index) ?? '') : word,
     highlighted: index === nextSlot,
+    error: filled.has(index) && filled.get(index) !== word,
   }))
 
   const toggle = useCallback(

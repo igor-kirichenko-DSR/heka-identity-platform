@@ -5089,7 +5089,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@heka-wallet/crypto-evm@workspace:packages/crypto/evm":
+"@heka-wallet/crypto-evm@npm:*, @heka-wallet/crypto-evm@workspace:packages/crypto/evm":
   version: 0.0.0-use.local
   resolution: "@heka-wallet/crypto-evm@workspace:packages/crypto/evm"
   dependencies:
@@ -5098,7 +5098,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@heka-wallet/crypto-ui@workspace:packages/crypto/ui":
+"@heka-wallet/crypto-ui@npm:*, @heka-wallet/crypto-ui@workspace:packages/crypto/ui":
   version: 0.0.0-use.local
   resolution: "@heka-wallet/crypto-ui@workspace:packages/crypto/ui"
   dependencies:
@@ -14118,6 +14118,9 @@ __metadata:
     "@formatjs/intl-numberformat": "npm:^8.15.6"
     "@formatjs/intl-pluralrules": "npm:^5.4.6"
     "@formatjs/intl-relativetimeformat": "npm:^11.4.13"
+    "@heka-wallet/crypto-core": "npm:*"
+    "@heka-wallet/crypto-evm": "npm:*"
+    "@heka-wallet/crypto-ui": "npm:*"
     "@heka-wallet/shared": "npm:*"
     "@hyperledger/anoncreds-react-native": "npm:0.4.0"
     "@hyperledger/indy-vdr-react-native": "npm:0.3.0"

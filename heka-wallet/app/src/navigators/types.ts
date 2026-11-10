@@ -1,3 +1,5 @@
+import type { CryptoStackParams } from '@heka-wallet/crypto-ui'
+
 import { SettingStackParams as BifoldSettingStackParams } from '@bifold/core/src/types/navigators'
 import { NavigatorScreenParams } from '@react-navigation/core'
 
@@ -23,6 +25,7 @@ export enum Stacks {
 
 export enum TabStacks {
   BifoldSettingsStack = 'TabBifoldSettingsStack',
+  CryptoStack = 'TabCryptoStack',
 }
 
 export type AuthStackParams = {
@@ -40,6 +43,7 @@ export type BackupStackParams = {
 
 export type TabStackParams = {
   [TabStacks.BifoldSettingsStack]: NavigatorScreenParams<BifoldSettingStackParams>
+  [TabStacks.CryptoStack]: NavigatorScreenParams<CryptoStackParams>
 }
 
 export type OpenIdStackParams = {

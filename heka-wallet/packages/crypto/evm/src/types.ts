@@ -14,6 +14,11 @@ export interface EvmChainConfig {
   logsMaxRange: number
   /** Batches ERC-20 balance reads when set. */
   multicall3?: Address
+  /**
+   * OP-Stack chains only: the GasPriceOracle that prices the L1 data fee. The node demands
+   * balance >= value + gas × price + L1 fee, so a quote without it is too low. Absent = no L1 fee.
+   */
+  l1FeeOracle?: Address
 }
 
 /** The numeric EIP-155 chain id of an 'eip155:N' entry. */

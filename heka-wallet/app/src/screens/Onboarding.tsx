@@ -14,7 +14,7 @@ import QrCodeImage from '../assets/qr_code.svg'
 import SafeImage from '../assets/safe.svg'
 import WalletImage from '../assets/wallet.svg'
 import { OnBoardingPage } from '../components/views/OnBoardingPage'
-import { isWalletBackupEnabled } from '../config'
+import { isCryptoModuleEnabled, isWalletBackupEnabled } from '../config'
 import { RootStackParams, Screens, Stacks } from '../navigators'
 
 interface OnboardingProps {
@@ -96,6 +96,16 @@ const Onboarding: React.FC<OnboardingProps> = () => {
         body: 'Onboarding.UsingCredentialsBody',
         buttonTitle: 'Global.Next',
       },
+      ...(isCryptoModuleEnabled
+        ? [
+            {
+              image: WalletImage,
+              title: 'Onboarding.PaymentsTitle',
+              body: 'Onboarding.PaymentsBody',
+              buttonTitle: 'Global.Next',
+            },
+          ]
+        : []),
       {
         image: SafeImage,
         title: 'Onboarding.PrivacyConfidentiality',

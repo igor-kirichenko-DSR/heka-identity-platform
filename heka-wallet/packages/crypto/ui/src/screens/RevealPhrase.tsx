@@ -1,5 +1,5 @@
 import { usePreventScreenCapture } from '@bifold/core'
-import { type HekaTheme, ScreenInfoText, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
+import { type HekaTheme, ScreenInfoText, useHekaTheme } from '@heka-wallet/shared'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text } from 'react-native'
@@ -8,6 +8,7 @@ import { AuthGate } from '../components/AuthGate'
 import { WordsCard } from '../components/WordsCard'
 import { useHideOnBackground } from '../hooks/useHideOnBackground'
 import { useRevealPhrase } from '../hooks/useRevealPhrase'
+import { useScrollContent } from '../hooks/useScrollContent'
 
 const useStyles = ({ Spacing, TextTheme, ColorPalette }: HekaTheme) =>
   StyleSheet.create({
@@ -18,13 +19,13 @@ const useStyles = ({ Spacing, TextTheme, ColorPalette }: HekaTheme) =>
 export const RevealPhrase: React.FC = () => {
   usePreventScreenCapture()
   const styles = useStyles(useHekaTheme())
-  const globalStyles = useGlobalStyles()
+  const scrollContent = useScrollContent()
   const { t } = useTranslation()
   const { words, failed, gateProps } = useRevealPhrase()
   const hidden = useHideOnBackground()
 
   return (
-    <ScrollView contentContainerStyle={globalStyles.defaultContainer}>
+    <ScrollView contentContainerStyle={scrollContent}>
       <ScreenInfoText title={t('Crypto.Reveal.Title')} textLines={[t('Crypto.Reveal.Warning')]} />
       {words && <WordsCard words={words.map((value) => ({ value }))} hidden={hidden} testKey="CryptoRevealWord" />}
       {failed && <Text style={styles.error}>{t('Crypto.Reveal.Failed')}</Text>}

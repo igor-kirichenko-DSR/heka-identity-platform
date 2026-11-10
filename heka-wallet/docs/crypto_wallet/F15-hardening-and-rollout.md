@@ -56,5 +56,6 @@ Security review (report in the AI package's runtime artifacts; findings become t
 ## Acceptance criteria
 
 -   The security review has no open high or critical finding.
+-   A seed survives backup → restore on a second device and derives the same addresses (moved from F03 to F06 on 2026-11-10, then to F15 on 2026-11-13).
 -   Specs pass the `update-specs` check for the touched codebases.
 -   Rollout decisions are written in the design doc.

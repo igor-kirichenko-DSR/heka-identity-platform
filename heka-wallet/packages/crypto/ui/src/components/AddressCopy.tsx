@@ -5,34 +5,44 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 
 import { useCopyAddress } from '../hooks/useCopyAddress'
-import { shortAddress } from '../utils/format'
 
-const useStyles = ({ Spacing, TextTheme }: HekaTheme) =>
+const useStyles = ({ Spacing, BorderRadius, TextTheme, ColorPalette }: HekaTheme) =>
   StyleSheet.create({
-    row: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.xs },
-    address: { ...TextTheme.normal, flexShrink: 1 },
+    pill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing.xs,
+      paddingLeft: Spacing.md,
+      borderRadius: BorderRadius.big,
+      backgroundColor: ColorPalette.brand.primary,
+    },
+    address: { ...TextTheme.normal, color: ColorPalette.grayscale.white, flexShrink: 1, textAlign: 'center' },
+    copied: { color: ColorPalette.grayscale.white },
   })
 
 interface Props {
   address: string
-  /** Show the whole address (Receive) instead of the short form (Home). */
-  full?: boolean
 }
 
-export const AddressCopy: React.FC<Props> = ({ address, full }) => {
-  const styles = useStyles(useHekaTheme())
+/** The whole address, wrapped, in a filled pill with a copy button (Receive). Home uses the short AddressPill. */
+export const AddressCopy: React.FC<Props> = ({ address }) => {
+  const theme = useHekaTheme()
+  const styles = useStyles(theme)
   const { t } = useTranslation()
   const { copied, copy } = useCopyAddress(address)
 
   return (
-    <View style={styles.row}>
+    <View style={styles.pill}>
       <Text style={styles.address} selectable testID={testIdWithKey('CryptoAddress')}>
-        {full ? address : shortAddress(address)}
+        {address}
       </Text>
       <IconButton
         iconName={copied ? 'clipboard-check' : 'clipboard'}
         iconSize={IconSizes.small}
+        iconColor={theme.ColorPalette.grayscale.white}
         label={copied ? t('Crypto.Address.Copied') : undefined}
+        textStyle={styles.copied}
         accessibilityLabel={t('Crypto.Address.Copy')}
         onPress={copy}
         testId={testIdWithKey('CryptoCopyAddress')}

@@ -45,6 +45,17 @@ describe('Settings', () => {
     expect(screen.getByTestId('CryptoRemoveWallet')).toBeTruthy()
   })
 
+  it('marks the default network with a check', async () => {
+    await setup('mnemonic')
+
+    expect(screen.getAllByTestId('Icon-check-lg')).toHaveLength(1)
+
+    await act(async () => fireEvent.press(screen.getByTestId('CryptoChain-Hedera')))
+
+    expect(screen.getAllByTestId('Icon-check-lg')).toHaveLength(1)
+    expect(screen.getByText('Crypto.Settings.DefaultChain')).toBeTruthy()
+  })
+
   it('saves the default chain and switches to it', async () => {
     const services = await setup('mnemonic')
 

@@ -12,6 +12,8 @@ import { makeServices, renderWithServices } from '../../helpers/services'
 jest.mock('@bifold/core', () => require('../../helpers/mocks').bifoldMock())
 jest.mock('@heka-wallet/shared', () => require('../../helpers/mocks').sharedMock())
 jest.mock('react-i18next', () => require('../../helpers/mocks').i18nMock())
+jest.mock('@react-navigation/native', () => require('../../helpers/navigation').nativeMock())
+jest.mock('@react-native-clipboard/clipboard', () => require('../../helpers/mocks').clipboardMock())
 
 const WORD_COUNT = 12
 

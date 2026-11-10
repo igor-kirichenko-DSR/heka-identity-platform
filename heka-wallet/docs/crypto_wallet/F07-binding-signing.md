@@ -1,7 +1,7 @@
 # F07 — Binding signatures and the signing-request channel
 
 -   **Phase:** 1 (signer), 2 (request channel and screen)
--   **Depends on:** F02, F03
+-   **Depends on:** F02, F03; F06 for the scanner and deep-link routing it extends (re-ordered 2026-11-10)
 -   **Gate:** none
 -   **Design:** §2.5 step 3, §2.8 F7, §2.9
 
@@ -54,7 +54,8 @@ The wallet POSTs `{ id, address, signature }` to `response_uri`. Only `https` is
 
 ### Wallet — `app`
 
--   Scanner / deep-link routing to SignRequest (F06).
+-   Scanner / deep-link routing: extend F06's routing (`useInvitationHandlers.ts`, `useDeeplinks.ts`) with signing-request URIs → SignRequest, only when `ENABLE_CRYPTO_MODULE` is on; `crypto-ui` exports the open-SignRequest helper and `crypto-core` the signing-request URI parser.
+-   Signing-request strings in `Crypto.*`, all three locales.
 
 ### Identity Service
 
@@ -68,6 +69,7 @@ No change for wallet-attested binding. An issuer-attested address claim is a sep
 
 -   Unit: request schema and origin checks; expired and cross-origin rejection; chain mismatch rejection; permit-shaped typed data rejection; signatures verify with viem verify functions for both branches.
 -   Component: SignRequest renders each kind; Sign disabled until auth.
+-   Unit: scanner routing — signing-request URIs go to SignRequest only with the flag on; `ethereum:`, DIDComm and OID4VC routing unchanged.
 -   Maestro: scan a signing-request QR served by the test requester (local), sign, requester reports a valid signature.
 
 ## Specs and docs

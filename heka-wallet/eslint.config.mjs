@@ -33,6 +33,7 @@ export default tseslint.config(
       '**/ios/**',
       '**/.yarn/**',
       '**/dist/**',
+      'tools/**',
       '**/build/**',
       '**/coverage/**',
       'app/shim.js',

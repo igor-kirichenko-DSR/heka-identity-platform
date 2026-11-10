@@ -109,6 +109,9 @@ export const ConfirmationInputModal: React.FC<ConfirmationInputModalProps> = ({
   }
 
   const onShow = () => {
+    // The PIN is typed on the Numpad with the soft keyboard off. A focused hidden field there makes the first
+    // Numpad tap only move focus, so only the password field is focused.
+    if (inputType === ConfirmationInputType.PIN) return
     // 'Dirty' hack to make input autofocus work inside a modal on Android
     // See https://github.com/react-native-modal/react-native-modal/issues/516
     setTimeout(() => inputRef.current?.focus(), 100)
@@ -128,6 +131,8 @@ export const ConfirmationInputModal: React.FC<ConfirmationInputModalProps> = ({
       </SafeAreaView>
       <ScrollView
         scrollEnabled={false}
+        // The PIN field is focused (its soft keyboard is off); without this the first Numpad tap only blurs it
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ ...styles.container, ...globalStyles.defaultContainer }}
       >
         <Text style={styles.title}>{title}</Text>

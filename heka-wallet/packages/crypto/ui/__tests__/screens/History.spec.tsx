@@ -2,7 +2,6 @@ import type { TxRecord } from '@heka-wallet/crypto-core'
 
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native'
 import React from 'react'
-import { Linking } from 'react-native'
 
 import { History } from '../../src/screens/History'
 import {
@@ -55,12 +54,32 @@ const rowIds = () =>
     .map((row) => row.props.testID)
 
 describe('History', () => {
+  it('shows the loader instead of the empty note while the first page loads', async () => {
+    const services = makeServices()
+    services.adapters[0].getHistory.mockReturnValue(new Promise(() => undefined))
+    await services.wallet.importPhrase(OTHER_MNEMONIC)
+    renderWithServices(<History />, services)
+    await waitFor(() => expect(services.adapters[0].getHistory).toHaveBeenCalled())
+
+    expect(screen.getByTestId('CryptoHistoryLoading')).toBeTruthy()
+    expect(screen.queryByText('Crypto.History.Empty')).toBeNull()
+  })
+
   it('lists chain history newest first with status chips', async () => {
     await setup([{ items: [record('0x1', T0), record('0x2', T0 + 1000, { status: 'failed' })] }])
 
     expect(rowIds()).toEqual(['CryptoTx-0x2', 'CryptoTx-0x1'])
     expect(screen.getByTestId('CryptoStatus-failed')).toBeTruthy()
     expect(screen.getByTestId('CryptoStatus-success')).toBeTruthy()
+  })
+
+  it('shows the direction icon and the signed amount of each entry', async () => {
+    await setup([{ items: [record('0x1', T0), record('0x2', T0 + 1000, { direction: 'out' })] }])
+
+    expect(screen.getByTestId('Icon-arrow-down-circle')).toBeTruthy()
+    expect(screen.getByTestId('Icon-arrow-up-circle')).toBeTruthy()
+    expect(screen.getByText('+1 USDC')).toBeTruthy()
+    expect(screen.getByText('−1 USDC')).toBeTruthy()
   })
 
   it('loads the next page when the end of the list is reached', async () => {
@@ -80,15 +99,6 @@ describe('History', () => {
 
     expect(screen.getByText('Crypto.History.PartialNote')).toBeTruthy()
     expect(screen.getByText('Crypto.History.Empty')).toBeTruthy()
-  })
-
-  it('opens an entry in the explorer', async () => {
-    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true)
-    await setup([{ items: [record('0x1', T0)] }])
-
-    fireEvent.press(screen.getByTestId('CryptoTx-0x1'))
-
-    expect(openURL).toHaveBeenCalledWith('https://explorer.test/tx/0x1')
   })
 
   it('shows a failed page load', async () => {

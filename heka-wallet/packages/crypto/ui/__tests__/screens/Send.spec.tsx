@@ -2,7 +2,6 @@ import type { FeeQuote } from '@heka-wallet/crypto-core'
 
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { Linking } from 'react-native'
 
 import { CryptoScreens } from '../../src/navigators/routes'
 import { Send } from '../../src/screens/Send'
@@ -18,6 +17,7 @@ import {
 
 jest.mock('@bifold/core', () => require('../helpers/mocks').bifoldMock())
 jest.mock('@heka-wallet/shared', () => require('../helpers/mocks').sharedMock())
+jest.mock('@bifold/core/src/components/animated/ButtonLoading', () => require('../helpers/mocks').buttonLoadingMock())
 jest.mock('react-i18next', () => require('../helpers/mocks').i18nMock())
 
 const eth = makeChain(BASE_SEPOLIA).nativeAsset
@@ -111,6 +111,14 @@ describe('Send', () => {
     expect(screen.getByTestId('CryptoFeeMode-ETH')).toBeTruthy()
   })
 
+  it('shows the fee amount under the selected fee mode instead of a separate line', async () => {
+    await tracked(undefined, PAYMASTER_CHAIN)
+    await fill(RECIPIENT, '0.1')
+
+    await waitFor(() => expect(screen.getByText('0.000000000000021 ETH')).toBeTruthy(), QUOTE_WAIT)
+    expect(screen.queryByText(/Crypto.Fee.Estimate/)).toBeNull()
+  })
+
   it('says the fee cannot be paid and keeps Send disabled when amount plus fee exceed the balance', async () => {
     await tracked()
 
@@ -133,9 +141,8 @@ describe('Send', () => {
     expect(services.adapters[0].transfer).not.toHaveBeenCalled()
   })
 
-  it('sends after the PIN, shows pending, then the final status with the explorer link', async () => {
+  it('sends after the PIN, shows pending, then the final status', async () => {
     const services = await tracked()
-    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true)
     await fill(RECIPIENT, '0.1')
     await waitFor(() => expect(screen.getByTestId('CryptoSendSubmit')).not.toBeDisabled(), QUOTE_WAIT)
 
@@ -153,8 +160,7 @@ describe('Send', () => {
     services.adapters[0].getStatus.mockResolvedValue({ status: 'success' })
     await waitFor(() => expect(screen.getByTestId('CryptoStatus-success')).toBeTruthy())
 
-    fireEvent.press(screen.getByTestId('CryptoOpenExplorer'))
-    expect(openURL).toHaveBeenCalledWith(`https://explorer.test/tx/${TX}`)
+    expect(screen.queryByTestId('CryptoOpenExplorer')).toBeNull()
   })
 
   it('shows a submit failure and stays on the form', async () => {

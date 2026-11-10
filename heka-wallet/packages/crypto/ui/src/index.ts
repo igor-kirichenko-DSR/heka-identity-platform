@@ -9,5 +9,6 @@ export type {
 export type { ChainPreference } from './provider/ChainPreference'
 export { AsyncStorageChainPreference } from './provider/AsyncStorageChainPreference'
 export type { CryptoServices, WalletBackup } from './provider/createCryptoServices'
-export { useCrypto } from './provider/CryptoContext'
+export { useCrypto, useOptionalCrypto } from './provider/CryptoContext'
 export { CryptoProvider, type CryptoProviderProps } from './provider/CryptoProvider'
+export { prefillFromEip681 } from './utils/prefillFromEip681'

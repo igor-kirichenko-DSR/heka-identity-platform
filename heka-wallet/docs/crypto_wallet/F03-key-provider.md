@@ -66,7 +66,7 @@ No change.
 -   Unit: derivation vectors (BIP-39 / BIP-32 test vectors; the known address for the "test test … junk" mnemonic at both branches); raw-key import; invalid mnemonic and checksum rejection.
 -   Unit: no key material after `withAccount` returns or throws (spy on the account factory; assert the provider holds no reference); refusal while locked.
 -   Unit: `revealMnemonic` and `removeSeed` reject a stale or missing `AuthProof`.
--   Integration: no Askar runtime for Node, so Jest runs on a fake session; write, lock, unlock and PIN change were checked on a device in Spike C; backup → restore moved to F06 acceptance.
+-   Integration: no Askar runtime for Node, so Jest runs on a fake session; write, lock, unlock and PIN change were checked on a device in Spike C; backup → restore moved to F15 acceptance.
 -   Maestro (moved to F04 with the screens): create wallet → verify phrase → done; import mnemonic.
 
 ## Specs and docs
@@ -78,7 +78,7 @@ No change.
 
 -   One PIN unlocks credentials and payments; no second password anywhere.
 -   After lock, no signature is possible until unlock.
--   A seed survives PIN change and backup → restore on a second device, and derives the same addresses (backup → restore checked in F06 acceptance).
+-   A seed survives PIN change and backup → restore on a second device, and derives the same addresses (backup → restore checked in F15 acceptance).
 -   The phrase is shown only after fresh authentication.
 
 ## Open questions

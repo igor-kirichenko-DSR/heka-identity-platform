@@ -1,8 +1,10 @@
-import { EvmAdapterError } from '../src'
+import { toFunctionSelector } from 'viem'
+
+import { baseSepolia, EvmAdapterError } from '../src'
 import { withGasMargin } from '../src/fees'
 
 import { accountOf, ETH, makeAdapter, RECIPIENT, transferRequest, USDC_ADDRESS } from './helpers/chain'
-import { MAX_FEE, sendHandlers } from './helpers/handlers'
+import { L1_FEE, MAX_FEE, sendHandlers } from './helpers/handlers'
 import { FakeKeyProvider } from './helpers/keys'
 import { createRpcMock } from './helpers/rpc'
 
@@ -83,6 +85,64 @@ describe('EvmAdapter.estimateFee', () => {
     const rpc = createRpcMock(sendHandlers({ balance: amount + fee - BigInt(1) }))
     const quote = await makeAdapter(rpc.transport).estimateFee(transferRequest(from, { asset: ETH, amount }))
     expect(quote.warnings).toEqual(['insufficient-native-balance'])
+  })
+
+  describe('OP-Stack L1 data fee (Base)', () => {
+    const ORACLE = '0x420000000000000000000000000000000000000F'
+    const GET_L1_FEE_SELECTOR = toFunctionSelector('getL1Fee(bytes)')
+
+    const amount = BigInt(10) ** BigInt(15)
+    const l2Fee = BigInt(25_200) * MAX_FEE
+    const l1WithMargin = withGasMargin(L1_FEE)
+
+    it('adds the oracle L1 fee, with the gas margin, to the native quote', async () => {
+      const rpc = createRpcMock(sendHandlers({ l1Fee: L1_FEE }))
+      const quote = await makeAdapter(rpc.transport).estimateFee(transferRequest(from, { asset: ETH, amount }))
+      expect(quote.amount).toBe(l2Fee + l1WithMargin)
+    })
+
+    it('asks the oracle with the serialized unsigned transaction', async () => {
+      const rpc = createRpcMock(sendHandlers({ l1Fee: L1_FEE }))
+      await makeAdapter(rpc.transport).estimateFee(transferRequest(from, { asset: ETH, amount }))
+
+      const [call] = rpc.callsOf('eth_call')
+      const { to, data } = call.params[0] as { to: string; data: string }
+      expect(to.toLowerCase()).toBe(ORACLE.toLowerCase())
+      expect(data.startsWith(GET_L1_FEE_SELECTOR)).toBe(true)
+      expect(rpc.callsOf('eth_call')).toHaveLength(1)
+    })
+
+    it('adds the L1 fee to a USDC quote too', async () => {
+      const rpc = createRpcMock(sendHandlers({ gas: BigInt(62_147), l1Fee: L1_FEE }))
+      const quote = await makeAdapter(rpc.transport).estimateFee(transferRequest(from))
+      expect(quote.amount).toBe(BigInt(74_577) * MAX_FEE + l1WithMargin)
+    })
+
+    it('refuses to quote when the oracle cannot be read', async () => {
+      const rpc = createRpcMock({
+        ...sendHandlers(),
+        eth_call: () => {
+          throw new Error('execution reverted')
+        },
+      })
+      await expect(
+        makeAdapter(rpc.transport).estimateFee(transferRequest(from, { asset: ETH, amount }))
+      ).rejects.toThrow(EvmAdapterError)
+    })
+
+    it('makes no oracle call on a chain without l1FeeOracle', async () => {
+      const rpc = createRpcMock(sendHandlers({ l1Fee: L1_FEE }))
+      const config = { ...baseSepolia, l1FeeOracle: undefined }
+      const quote = await makeAdapter(rpc.transport, config).estimateFee(transferRequest(from, { asset: ETH, amount }))
+      expect(quote.amount).toBe(l2Fee)
+      expect(rpc.callsOf('eth_call')).toEqual([])
+    })
+
+    it('warns when ETH covers amount + L2 fee but not the L1 fee (the Max bug)', async () => {
+      const rpc = createRpcMock(sendHandlers({ l1Fee: L1_FEE, balance: amount + l2Fee }))
+      const quote = await makeAdapter(rpc.transport).estimateFee(transferRequest(from, { asset: ETH, amount }))
+      expect(quote.warnings).toEqual(['insufficient-native-balance'])
+    })
   })
 
   it('refuses the usdc-paymaster fee mode until F08', async () => {

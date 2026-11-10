@@ -1,6 +1,6 @@
 appId: com.heka.wallet
 name: A new payment wallet is created, its phrase verified, and Home opens
-# Not in a CI suite yet: needs the Payments tab from F06. Run: maestro test .maestro/crypto/crypto-register.yaml
+# Needs a build with ENABLE_CRYPTO_MODULE=true (the Payments tab). Run: maestro test .maestro/crypto/crypto-register.yaml
 tags:
   - crypto
   - no-backend
@@ -58,6 +58,9 @@ env:
     file: subflows/remember-word.yaml
     env:
       I: '12'
+- scrollUntilVisible:
+    element:
+      id: 'com.ariesbifold:id/CryptoPhraseWritten'
 - tapOn:
     id: 'com.ariesbifold:id/CryptoPhraseWritten'
 - runFlow:
@@ -108,12 +111,18 @@ env:
     file: subflows/place-word.yaml
     env:
       I: '12'
+- scrollUntilVisible:
+    element:
+      id: 'com.ariesbifold:id/CryptoVerifyContinue'
 - tapOn:
     id: 'com.ariesbifold:id/CryptoVerifyContinue'
 - extendedWaitUntil:
     visible:
       id: 'com.ariesbifold:id/CryptoOpenWallet'
     timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: 'com.ariesbifold:id/CryptoOpenWallet'
 - tapOn:
     id: 'com.ariesbifold:id/CryptoOpenWallet'
 - assertVisible:
