@@ -7,10 +7,14 @@ import { useCallback } from 'react'
 
 import { RootStackParams, Screens, Stacks } from '../navigators/types'
 
+import { isCryptoLink, useCryptoLinkHandler } from './cryptoLinks'
+
 export const useInvitationHandlers = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParams>>()
 
   const { agent } = useOptionalAgent()
+
+  const openCryptoLink = useCryptoLinkHandler()
 
   const [logger, { enableImplicitInvitations, enableReuseConnections }] = useServices([
     TOKENS.UTIL_LOGGER,
@@ -58,6 +62,11 @@ export const useInvitationHandlers = () => {
 
   const handleInvitationUrl = useCallback(
     async (invitationUrl: string) => {
+      if (openCryptoLink && isCryptoLink(invitationUrl)) {
+        openCryptoLink(invitationUrl)
+        return
+      }
+
       const invitationParsingResult = await parseInvitationUrl(invitationUrl)
 
       if (invitationParsingResult.success) {
@@ -66,7 +75,7 @@ export const useInvitationHandlers = () => {
         throw new Error('Invitation message is not recognized')
       }
     },
-    [handleParsedInvitation]
+    [handleParsedInvitation, openCryptoLink]
   )
 
   return { handleInvitationUrl }

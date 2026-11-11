@@ -40,6 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Moedas",
+    "Payments": "Pagamentos",
     "Settings": "Configurações"
   },
   "Passkeys": {
@@ -277,6 +278,8 @@ const translation = {
     "StoredSecurelyBody": "O Heka Wallet armazena credenciais digitais — versões digitais de documentos como licenças, identidades, autorizações, receitas médicas, etc. Elas são armazenadas de forma segura, apenas neste dispositivo.",
     "UsingCredentialsTitle": "Recebendo e utilizando credenciais",
     "UsingCredentialsBody": "Para receber e usar credenciais, utilize o recurso “Escanear” no aplicativo para escanear um código QR especial. As informações são enviadas e recebidas por meio de uma conexão privada e criptografada.",
+    "PaymentsTitle": "Pagamentos, separados",
+    "PaymentsBody": "O aplicativo Heka Wallet também pode ter uma carteira de pagamentos para redes de teste. É opcional, e suas chaves nunca saem deste dispositivo. Credenciais e pagamentos não compartilham informações.",
     "PrivacyConfidentiality": "Privacidade e confidencialidade",
     "PrivacyParagraph": "Você aprova cada uso das informações do seu aplicativo Heka Wallet. Você também compartilha apenas o necessário para cada situação. A administração do aplicativo ou terceiros não são informados sobre quando e como você utiliza suas credenciais digitais.",
     "GetStarted": "Começar",

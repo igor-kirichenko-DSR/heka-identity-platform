@@ -3,4 +3,4 @@ appId: com.heka.wallet
 ---
 - copyTextFrom:
     id: 'com.ariesbifold:id/CryptoPhraseWord-${I}'
-- evalScript: ${output.words = Object.assign(output.words || {}, { ['w' + I]: maestro.copiedText.split('. ')[1] })}
+- evalScript: "${output.words = Object.assign(output.words || {}, { ['w' + I]: maestro.copiedText.split('. ')[1] })}"

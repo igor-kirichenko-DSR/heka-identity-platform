@@ -1,6 +1,7 @@
 import type { ChainPreference } from './ChainPreference'
 
 import {
+  type AddressBook,
   AccountStore,
   AdapterRegistry,
   AskarLedgerStorage,
@@ -24,7 +25,8 @@ export interface WalletBackup {
 }
 
 export interface CryptoServicesConfig {
-  adapters: ChainAdapter[]
+  /** Called once with the key provider's address book; adapters need it to read cached addresses. */
+  createAdapters: (addressBook: AddressBook) => ChainAdapter[]
   withSeedSession: WithAskarSeedSession
   withLedgerSession: WithAskarSession
   logger: CoreLogger
@@ -47,10 +49,10 @@ export interface CryptoServices {
 }
 
 export const createCryptoServices = (config: CryptoServicesConfig): CryptoServices => {
-  const { adapters, withSeedSession, withLedgerSession, logger, chainPreference, backup } = config
+  const { createAdapters, withSeedSession, withLedgerSession, logger, chainPreference, backup } = config
   const registry = new AdapterRegistry()
-  adapters.forEach((adapter) => registry.register(adapter))
   const keys = new SeedKeyProvider({ storage: new AskarSeedStore(withSeedSession) })
+  createAdapters(keys).forEach((adapter) => registry.register(adapter))
   const authIssuer = keys.createAuthProofIssuer()
   const accounts = new AccountStore(registry, keys, logger)
   const balances = new BalanceStore(registry, accounts, logger)

@@ -21,8 +21,10 @@ import { container } from 'tsyringe'
 
 import { AppContainer } from './container-impl'
 import { localization, RootStoreProvider } from './src'
+import { CryptoHost } from './src/components/crypto/CryptoHost'
 import { ToastConfig } from './src/components/misc/Toast'
 import { ErrorModal } from './src/components/modals/ErrorModal'
+import { isCryptoModuleEnabled } from './src/config'
 import {
   AgentLockoutProvider,
   MdocRecordProvider,
@@ -80,7 +82,13 @@ const App = () => {
                               translucent={false}
                             />
                             <AgentLockoutProvider>
-                              <RootStack />
+                              {isCryptoModuleEnabled ? (
+                                <CryptoHost>
+                                  <RootStack />
+                                </CryptoHost>
+                              ) : (
+                                <RootStack />
+                              )}
                             </AgentLockoutProvider>
                             <ErrorModal />
                             <Toast config={ToastConfig} position="bottom" />

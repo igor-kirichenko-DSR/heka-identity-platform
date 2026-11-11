@@ -40,6 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Pièces",
+    "Payments": "Paiements",
     "Settings": "Paramètres"
   },
   "Passkeys": {
@@ -277,6 +278,8 @@ const translation = {
     "StoredSecurelyBody": "Heka Wallet stocke des certificats numériques — les versions numériques de documents tels que permis, identités, autorisations, ordonnances médicales, etc. Ils sont stockés de manière sécurisée, uniquement sur cet appareil.",
     "UsingCredentialsTitle": "Recevoir et utiliser des certificats",
     "UsingCredentialsBody": "Pour recevoir et utiliser des certificats, utilisez la fonction « Scanner » dans l'application pour scanner un QR code spécial. Les informations sont échangées via une connexion privée et cryptée.",
+    "PaymentsTitle": "Paiements, séparés",
+    "PaymentsBody": "L’application Heka Wallet peut aussi contenir un portefeuille de paiement pour les réseaux de test. C’est facultatif, et ses clés ne quittent jamais cet appareil. Les attestations et les paiements ne partagent aucune information.",
     "PrivacyConfidentiality": "Confidentialité et protection de la vie privée",
     "PrivacyParagraph": "Vous autorisez chaque utilisation des informations de votre application Heka Wallet. Vous ne partagez que ce qui est nécessaire pour une situation donnée. L'administration de l'application ou des tiers ne sont pas informés de l'utilisation de vos certificats numériques.",
     "GetStarted": "Commencer",

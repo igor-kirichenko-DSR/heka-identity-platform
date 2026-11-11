@@ -3,6 +3,7 @@ import { Text } from 'react-native'
 import React from 'react'
 
 import { CryptoNavigator } from '../../src/navigators/CryptoNavigator'
+import { CryptoStack } from '../../src/navigators/CryptoStack'
 import { useRegisterFlow } from '../../src/navigators/RegisterFlowContext'
 import { makeServices, OTHER_MNEMONIC, renderWithServices } from '../helpers/services'
 
@@ -93,5 +94,13 @@ describe('CryptoNavigator', () => {
 
     expect(hasSeed).toHaveBeenCalledTimes(2)
     expect(screen.getByTestId('RegisterStack')).toBeTruthy()
+  })
+})
+
+describe('CryptoStack', () => {
+  it('keeps its bottom clear for a host with a floating tab bar', () => {
+    renderWithServices(<CryptoStack bottomInset={81} />, makeServices())
+
+    expect(screen.getByTestId('CryptoStackContainer').props.style).toMatchObject({ paddingBottom: 81 })
   })
 })

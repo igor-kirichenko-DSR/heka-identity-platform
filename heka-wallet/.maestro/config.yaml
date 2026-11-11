@@ -1,5 +1,7 @@
 # Maestro workspace: runs the top-level flows; subflows/ holds reusable steps.
 flows:
   - '*.yaml'
+  # Payments flows need a build with ENABLE_CRYPTO_MODULE=true; with the flag off they fail at the Payments tab.
+  - 'crypto/*.yaml'
 executionOrder:
   continueOnFailure: true

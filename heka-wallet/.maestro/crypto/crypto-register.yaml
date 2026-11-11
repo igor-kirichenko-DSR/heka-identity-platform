@@ -1,6 +1,6 @@
 appId: com.heka.wallet
 name: A new payment wallet is created, its phrase verified, and Home opens
-# Not in a CI suite yet: needs the Payments tab from F06. Run: maestro test .maestro/crypto/crypto-register.yaml
+# Needs a build with ENABLE_CRYPTO_MODULE=true (the Payments tab). Run: maestro test .maestro/crypto/crypto-register.yaml
 tags:
   - crypto
   - no-backend

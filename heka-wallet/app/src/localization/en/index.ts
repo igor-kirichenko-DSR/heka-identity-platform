@@ -40,6 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Coins",
+    "Payments": "Payments",
     "Settings": "Settings"
   },
   "Passkeys": {
@@ -277,6 +278,8 @@ const translation = {
     "StoredSecurelyBody": "Heka Wallet App holds digital credentials — the digital versions of things like licenses, identities, permits, medical prescriptions and etc. They are stored securely, only on this device.",
     "UsingCredentialsTitle": "Receiving and using credentials",
     "UsingCredentialsBody": "To receive and use credentials you use the “Scan” feature in the app to scan a special QR code. Information is sent and received over a private, encrypted connection.",
+    "PaymentsTitle": "Payments, kept separate",
+    "PaymentsBody": "Heka Wallet App can also hold a payment wallet for test networks. It is optional, and its keys never leave this device. Credentials and payments do not share information.",
     "PrivacyConfidentiality": "Privacy and confidentiality",
     "PrivacyParagraph": "You approve every use of information from your Heka Wallet App. You also only share what is needed for a situation. App administration or other third parties are not informed on when and how you use your digital credentials.",
     "GetStarted": "Get Started",

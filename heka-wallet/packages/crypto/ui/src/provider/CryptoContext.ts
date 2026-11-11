@@ -9,3 +9,6 @@ export const useCrypto = (): CryptoServices => {
   if (!services) throw new Error('useCrypto must be used inside CryptoProvider')
   return services
 }
+
+/** For code that runs with the module off as well (link handling): null when no provider is mounted. */
+export const useOptionalCrypto = (): CryptoServices | null => useContext(CryptoContext)

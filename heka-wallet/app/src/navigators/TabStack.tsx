@@ -9,6 +9,7 @@ import {
   useNetwork,
 } from '@bifold/core'
 import { TabStackParams as BifoldTabStackParams } from '@bifold/core/src/types/navigators'
+import { CryptoStack } from '@heka-wallet/crypto-ui'
 import { BootstrapIcon, HekaTheme, useHekaTheme } from '@heka-wallet/shared'
 import { BottomTabBar, BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import React, { ReactNode, useMemo, useState } from 'react'
@@ -19,6 +20,8 @@ import { OrientationType, useOrientationChange } from 'react-native-orientation-
 import { SafeAreaView } from 'react-native-safe-area-context'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
+
+import { isCryptoModuleEnabled } from '../config'
 
 import { TabStackParams, TabStacks } from './types'
 
@@ -32,6 +35,7 @@ const NOTIFICATION_OPTIONS = { openIDUri: '' }
 const tabBarVisualOrder: string[] = [
   BifoldTabStacks.ConnectStack,
   BifoldTabStacks.HomeStack,
+  ...(isCryptoModuleEnabled ? [TabStacks.CryptoStack] : []),
   TabStacks.BifoldSettingsStack,
 ]
 
@@ -61,7 +65,9 @@ export const TabStack: React.FC = () => {
   const theme = useHekaTheme()
   const styles = useStyles(theme)
 
-  const { ColorPalette, TabTheme, IconSizes } = theme
+  const { ColorPalette, TabTheme, IconSizes, Spacing } = theme
+  // The tab bar floats over the screens; crypto screens keep their bottom clear of it, as Home does.
+  const tabBarClearance = TabTheme.tabBarStyle.height + Spacing.md
 
   const container = useContainer()
   const HomeStack = container.resolve(TOKENS.STACK_HOME)
@@ -168,6 +174,25 @@ export const TabStack: React.FC = () => {
             tabBarTestID: testIdWithKey('TabSettings'),
           }}
         />
+        {isCryptoModuleEnabled && (
+          <Tab.Screen
+            name={TabStacks.CryptoStack}
+            options={{
+              tabBarIcon: ({ color, focused }) => (
+                <TabBarIcon
+                  iconComponent={<IonIcon name={'wallet-outline'} color={color} size={IconSizes.medium} />}
+                  label={t('TabStack.Payments')}
+                  focused={focused}
+                />
+              ),
+              tabBarShowLabel: false,
+              tabBarAccessibilityLabel: t('TabStack.Payments'),
+              tabBarTestID: testIdWithKey('TabPayments'),
+            }}
+          >
+            {() => <CryptoStack bottomInset={tabBarClearance} />}
+          </Tab.Screen>
+        )}
       </Tab.Navigator>
     </SafeAreaView>
   )
