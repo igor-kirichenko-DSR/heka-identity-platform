@@ -42,6 +42,7 @@ import {
   TRANSFER_EVENT,
   type TransferLog,
 } from './history'
+import { readL1Fee } from './l1Fee'
 import { type EvmChainConfig, evmChainId } from './types'
 import { toViemChain } from './viemChain'
 
@@ -61,7 +62,7 @@ interface PlannedTransaction {
   gas: bigint
   maxFeePerGas: bigint
   maxPriorityFeePerGas: bigint
-  /** Upper bound: gas × maxFeePerGas. */
+  /** Upper bound: gas × maxFeePerGas, plus the L1 data fee (with margin) on OP-Stack chains. */
   fee: bigint
 }
 
@@ -121,7 +122,10 @@ export class EvmAdapter implements ChainAdapter {
     return balances
   }
 
-  /** Native-mode quote: (estimated gas × 1.2) × maxFeePerGas, with a warning when ETH cannot cover it. */
+  /**
+   * Native-mode quote: (estimated gas × 1.2) × maxFeePerGas, plus 1.2 × the L1 data fee on OP-Stack chains,
+   * with a warning when ETH cannot cover it.
+   */
   async estimateFee(req: TransferRequest): Promise<FeeQuote> {
     this.assertNativeMode(req.feeMode)
     const [plan, nativeBalance] = await Promise.all([
@@ -222,13 +226,19 @@ export class EvmAdapter implements ChainAdapter {
     ])
     const gas = withGasMargin(estimated)
     assertGasCeiling(gas, this.config.gasLimitCeiling)
-    return {
-      ...call,
-      gas,
-      maxFeePerGas: fees.maxFeePerGas,
-      maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
-      fee: gas * fees.maxFeePerGas,
-    }
+    const { maxFeePerGas, maxPriorityFeePerGas } = fees
+    const l1Fee = this.config.l1FeeOracle
+      ? withGasMargin(
+          await readL1Fee(this.client, this.config.l1FeeOracle, {
+            chainId: this.chainIdNumber,
+            ...call,
+            gas,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+          })
+        )
+      : ZERO
+    return { ...call, gas, maxFeePerGas, maxPriorityFeePerGas, fee: gas * maxFeePerGas + l1Fee }
   }
 
   /** balanceOf per token, in the order given. */
