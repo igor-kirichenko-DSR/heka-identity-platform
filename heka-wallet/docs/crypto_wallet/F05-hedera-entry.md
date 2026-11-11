@@ -35,9 +35,14 @@ HBAR and USDC on Hedera testnet with the same `EvmAdapter`, the Hedera-specific 
 -   `AccountStore` keeps the Hedera `0.0.x` id once known.
 -   Optional interface members (`activationState`, `isAssetEnabled`, `enableAsset`) already in F01.
 
+### Wallet — `packages/crypto/ui`
+
+-   Banner and "Enable USDC" exist since F04; they show once the adapter has `activationState` / `isAssetEnabled`.
+-   Receive: `0.0.x` next to `0x` once active. Needs an account-id read in the adapter interface (`crypto-core`); left to F05 by F04 "Decisions".
+
 ### Wallet — `app`
 
-No change beyond F04 (banner, "Enable USDC") and F06 (registration of the entry).
+No change beyond F06 (registration of the entry).
 
 ### Identity Service
 
