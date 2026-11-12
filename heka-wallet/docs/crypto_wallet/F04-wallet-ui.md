@@ -39,7 +39,7 @@ Keys (moved from F03, agreed 2026-11-10):
 -   Done screen: if `isWalletBackupEnabled` (`app/src/config.ts`) is true, "back up now" opens the existing backup flow (`BackupStack`, `useWalletBackupHelpers.backupWallet`); if false, the done screen says the verified phrase is the backup.
 -   A raw-key wallet (`seedKind() === 'raw'`) hides reveal and anything that needs the binding branch.
 
-Components (`src/components/`): `AmountInput`, `AddressField`, `AssetPicker`, `FeePreview`, `WordsCard`, `WordChip`, `ChainSwitcher`, `TxListItem`, `ActivationBanner`, and the Keplr-like blocks `BalanceCard`, `SegmentedControl`, `ListItem`, `ListSection`, `BottomActions`, `RegisterProgress`. One component per file; logic in hooks (`src/hooks/`); every interactive element has a `testID`.
+Components (`src/components/`): `AmountInput`, `AddressField`, `AssetPicker`, `FeePreview`, `WordsCard`, `WordChip`, `ChainSwitcher`, `TxListItem`, `ActivationBanner`, and the Keplr-like blocks `BalanceCard`, `SegmentedControl`, `ListItem`, `ListSection`, `BottomActions`, `StepDots`, `RegisterFooter`. One component per file; logic in hooks (`src/hooks/`); every interactive element has a `testID`.
 
 ### Wallet — `packages/crypto/core`
 

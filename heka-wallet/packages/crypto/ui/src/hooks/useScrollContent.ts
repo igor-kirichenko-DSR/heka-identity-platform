@@ -1,6 +1,7 @@
+import type { ViewStyle } from 'react-native'
+
 import { useGlobalStyles } from '@heka-wallet/shared'
 import { useMemo } from 'react'
-import type { ViewStyle } from 'react-native'
 
 /**
  * The screen padding for a scroll view's contentContainerStyle. `defaultContainer` has `flex: 1`, which pins the content

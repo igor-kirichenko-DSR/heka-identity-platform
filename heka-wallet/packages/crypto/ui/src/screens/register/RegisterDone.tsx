@@ -1,10 +1,10 @@
+import type { BottomAction } from '../../components/BottomActions'
+
 import { ButtonType, testIdWithKey } from '@bifold/core'
 import { type HekaTheme, useHekaTheme } from '@heka-wallet/shared'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
-
-import type { BottomAction } from '../../components/BottomActions'
 
 import { InfoLines } from '../../components/InfoLines'
 import { RegisterFooter } from '../../components/RegisterFooter'

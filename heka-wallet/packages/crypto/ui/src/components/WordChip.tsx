@@ -42,7 +42,12 @@ export const WordChip: React.FC<Props> = ({ word, position, highlighted, error, 
   const width: DimensionValue = `${PERCENT / columns}%`
 
   return (
-    <View style={[styles.cell, { width }]} accessibilityRole="text" testID={testID}>
+    <View
+      style={[styles.cell, { width }]}
+      accessibilityRole="text"
+      accessibilityLabel={`${position}. ${word}`}
+      testID={testID}
+    >
       <View style={[styles.tile, highlighted && styles.next, error && styles.wrong]}>
         <Text style={[styles.position, highlighted && styles.nextText]}>{`${position}.`}</Text>
         <Text style={[styles.word, highlighted && styles.nextText]}>{word}</Text>

@@ -1,7 +1,7 @@
 import type { TxDirection, TxRecord } from '@heka-wallet/crypto-core'
+import type { IconName } from '@heka-wallet/shared'
 
 import { testIdWithKey } from '@bifold/core'
-import type { IconName } from '@heka-wallet/shared'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 

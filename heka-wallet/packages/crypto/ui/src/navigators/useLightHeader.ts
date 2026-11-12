@@ -1,5 +1,6 @@
-import { type HekaTheme, useHekaTheme } from '@heka-wallet/shared'
 import type { StackNavigationOptions } from '@react-navigation/stack'
+
+import { type HekaTheme, useHekaTheme } from '@heka-wallet/shared'
 
 const headerOptions = ({ ColorPalette, TextTheme }: HekaTheme, background?: string): StackNavigationOptions => ({
   headerTintColor: ColorPalette.brand.headerIcon,
