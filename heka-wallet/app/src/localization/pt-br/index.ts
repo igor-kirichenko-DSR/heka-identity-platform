@@ -121,6 +121,7 @@ const translation = {
       "Settings": "Configurações",
       "NoAccount": "Ainda não há conta nesta rede.",
       "Balance": "Saldo",
+      "BalanceOf": "Saldo {{symbol}}",
       "BalanceFailed": "Não foi possível atualizar os saldos. Puxe para baixo para tentar de novo.",
       "ActivationPending": "Esta conta fica ativa com o primeiro depósito.",
       "EnableAsset": "Ativar {{symbol}}",
@@ -163,6 +164,7 @@ const translation = {
     "Fee": {
       "Estimate": "Taxa da rede: {{amount}}",
       "UpTo": "Taxa da rede: até {{amount}}",
+      "UpToShort": "até {{amount}}",
       "Usdc": "Pagar taxa em USDC",
       "Failed": "Não foi possível estimar a taxa da rede.",
       "Warnings": {

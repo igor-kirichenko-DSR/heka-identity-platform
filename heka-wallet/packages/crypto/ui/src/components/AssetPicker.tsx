@@ -2,7 +2,7 @@ import type { AssetDescriptor } from '@heka-wallet/crypto-core'
 
 import React from 'react'
 
-import { OptionChips } from './OptionChips'
+import { SegmentedControl } from './SegmentedControl'
 
 interface Props {
   assets: AssetDescriptor[]
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const AssetPicker: React.FC<Props> = ({ assets, selectedId, onSelect }) => (
-  <OptionChips
+  <SegmentedControl
     options={assets.map((asset) => ({ id: asset.id, label: asset.symbol }))}
     selectedId={selectedId}
     onSelect={onSelect}

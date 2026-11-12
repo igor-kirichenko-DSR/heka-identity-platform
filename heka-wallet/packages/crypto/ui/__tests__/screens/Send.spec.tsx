@@ -18,6 +18,7 @@ import {
 
 jest.mock('@bifold/core', () => require('../helpers/mocks').bifoldMock())
 jest.mock('@heka-wallet/shared', () => require('../helpers/mocks').sharedMock())
+jest.mock('@bifold/core/src/components/animated/ButtonLoading', () => require('../helpers/mocks').buttonLoadingMock())
 jest.mock('react-i18next', () => require('../helpers/mocks').i18nMock())
 
 const eth = makeChain(BASE_SEPOLIA).nativeAsset
@@ -109,6 +110,14 @@ describe('Send', () => {
       QUOTE_WAIT
     )
     expect(screen.getByTestId('CryptoFeeMode-ETH')).toBeTruthy()
+  })
+
+  it('shows the fee amount under the selected fee mode instead of a separate line', async () => {
+    await tracked(undefined, PAYMASTER_CHAIN)
+    await fill(RECIPIENT, '0.1')
+
+    await waitFor(() => expect(screen.getByText('0.000000000000021 ETH')).toBeTruthy(), QUOTE_WAIT)
+    expect(screen.queryByText(/Crypto.Fee.Estimate/)).toBeNull()
   })
 
   it('says the fee cannot be paid and keeps Send disabled when amount plus fee exceed the balance', async () => {

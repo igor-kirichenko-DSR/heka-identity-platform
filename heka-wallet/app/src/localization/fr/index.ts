@@ -121,6 +121,7 @@ const translation = {
       "Settings": "Paramètres",
       "NoAccount": "Pas encore de compte sur ce réseau.",
       "Balance": "Solde",
+      "BalanceOf": "Solde {{symbol}}",
       "BalanceFailed": "Les soldes n'ont pas pu être mis à jour. Tirez vers le bas pour réessayer.",
       "ActivationPending": "Ce compte devient actif avec son premier dépôt.",
       "EnableAsset": "Activer {{symbol}}",
@@ -163,6 +164,7 @@ const translation = {
     "Fee": {
       "Estimate": "Frais de réseau : {{amount}}",
       "UpTo": "Frais de réseau : jusqu'à {{amount}}",
+      "UpToShort": "jusqu'à {{amount}}",
       "Usdc": "Payer les frais en USDC",
       "Failed": "Les frais de réseau n'ont pas pu être estimés.",
       "Warnings": {

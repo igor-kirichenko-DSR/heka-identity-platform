@@ -56,6 +56,7 @@ const MockScanCamera: React.FC<ScanCameraProps> = ({ handleCodeScan }) => (
 export const bifoldMock = () => ({
   __esModule: true,
   Button: MockButton,
+  KeyboardView: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
   ButtonType: { Primary: 1, Secondary: 2, Critical: 0, Tertiary: 3 },
   QRRenderer: MockQRRenderer,
   ScanCamera: MockScanCamera,

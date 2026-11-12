@@ -6,38 +6,21 @@ import { StyleSheet, View } from 'react-native'
 
 const useStyles = ({ Spacing }: HekaTheme) =>
   StyleSheet.create({
-    row: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: Spacing.md },
+    row: { flexDirection: 'row', paddingRight: Spacing.xs },
   })
 
 interface Props {
-  onReceive: () => void
-  onSend: () => void
   onHistory: () => void
   onSettings: () => void
-  /** Send needs an account on the current chain. */
-  canSend: boolean
 }
 
-export const HomeActions: React.FC<Props> = ({ onReceive, onSend, onHistory, onSettings, canSend }) => {
+/** History and Settings icons in the Home header. */
+export const HomeHeaderActions: React.FC<Props> = ({ onHistory, onSettings }) => {
   const styles = useStyles(useHekaTheme())
   const { t } = useTranslation()
 
   return (
     <View style={styles.row}>
-      <IconButton
-        iconName="arrow-down-circle"
-        label={t('Crypto.Home.Receive')}
-        onPress={onReceive}
-        testId={testIdWithKey('CryptoReceive')}
-      />
-      {canSend && (
-        <IconButton
-          iconName="arrow-up-circle"
-          label={t('Crypto.Home.Send')}
-          onPress={onSend}
-          testId={testIdWithKey('CryptoSend')}
-        />
-      )}
       <IconButton
         iconName="clock-history"
         accessibilityLabel={t('Crypto.Home.History')}

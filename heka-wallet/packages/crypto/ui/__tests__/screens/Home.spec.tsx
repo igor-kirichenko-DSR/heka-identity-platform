@@ -58,6 +58,14 @@ describe('Home', () => {
     expect(screen.getByText('2.25 USDC')).toBeTruthy()
   })
 
+  it('shows the stablecoin as the hero balance and the native asset as a block', async () => {
+    await setup([makeChain(BASE_SEPOLIA, { assets: [usdcOn(BASE_SEPOLIA)] })])
+
+    expect(screen.getByText('Crypto.Home.BalanceOf {"symbol":"USDC"}')).toBeTruthy()
+    expect(screen.getByTestId('CryptoBalance-USDC')).toBeTruthy()
+    expect(screen.getByTestId('CryptoBalance-ETH')).toBeTruthy()
+  })
+
   it('switches the chain', async () => {
     const services = await setup([makeChain(BASE_SEPOLIA), makeChain(HEDERA_EVM, { name: 'Hedera' })])
 

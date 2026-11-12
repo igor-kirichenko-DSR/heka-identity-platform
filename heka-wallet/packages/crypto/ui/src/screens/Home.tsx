@@ -9,12 +9,10 @@ import { useTranslation } from 'react-i18next'
 import { RefreshControl, ScrollView, StyleSheet, Text } from 'react-native'
 
 import { ActivationBanner } from '../components/ActivationBanner'
-import { AddressPill } from '../components/AddressPill'
 import { AuthGate } from '../components/AuthGate'
-import { BalanceRow } from '../components/BalanceRow'
+import { BalanceCard } from '../components/BalanceCard'
 import { ChainSwitcher } from '../components/ChainSwitcher'
 import { EnableAssets } from '../components/EnableAssets'
-import { HomeActions } from '../components/HomeActions'
 import { useActivation } from '../hooks/useActivation'
 import { useHome } from '../hooks/useHome'
 import { CryptoScreens } from '../navigators/routes'
@@ -48,28 +46,25 @@ export const Home: React.FC<Props> = observer(({ navigation }) => {
     >
       <ChainSwitcher chains={home.chains} currentId={home.chain?.id} onSelect={home.setChain} />
       {activation.isPending && <ActivationBanner />}
-      {home.account ? (
-        <AddressPill address={home.account.address} />
-      ) : (
-        <Text style={styles.notice}>{t('Crypto.Home.NoAccount')}</Text>
-      )}
-      {home.rows.map(({ asset, balance }) => (
-        <BalanceRow key={asset.id} asset={asset} balance={balance} />
-      ))}
-      {home.hasBalanceError && <Text style={[styles.notice, styles.error]}>{t('Crypto.Home.BalanceFailed')}</Text>}
       <EnableAssets
         assets={activation.disabledAssets}
         enablingId={activation.enabling}
         failed={activation.failed}
         onEnable={activation.enable}
       />
-      <HomeActions
-        canSend={!!home.account}
-        onReceive={() => navigation.navigate(CryptoScreens.Receive)}
-        onSend={() => navigation.navigate(CryptoScreens.Send)}
-        onHistory={() => navigation.navigate(CryptoScreens.History)}
-        onSettings={() => navigation.navigate(CryptoScreens.Settings)}
-      />
+      {home.account ? (
+        <BalanceCard
+          title={home.chain?.name ?? ''}
+          address={home.account.address}
+          hero={home.hero}
+          others={home.others}
+          onSend={() => navigation.navigate(CryptoScreens.Send)}
+          onReceive={() => navigation.navigate(CryptoScreens.Receive)}
+        />
+      ) : (
+        <Text style={styles.notice}>{t('Crypto.Home.NoAccount')}</Text>
+      )}
+      {home.hasBalanceError && <Text style={[styles.notice, styles.error]}>{t('Crypto.Home.BalanceFailed')}</Text>}
       <AuthGate {...activation.gateProps} />
     </ScrollView>
   )

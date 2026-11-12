@@ -121,6 +121,7 @@ const translation = {
       "Settings": "Settings",
       "NoAccount": "No account on this network yet.",
       "Balance": "Balance",
+      "BalanceOf": "{{symbol}} balance",
       "BalanceFailed": "Balances could not be updated. Pull down to try again.",
       "ActivationPending": "This account becomes active with its first deposit.",
       "EnableAsset": "Enable {{symbol}}",
@@ -163,6 +164,7 @@ const translation = {
     "Fee": {
       "Estimate": "Network fee: {{amount}}",
       "UpTo": "Network fee: up to {{amount}}",
+      "UpToShort": "up to {{amount}}",
       "Usdc": "Pay fee in USDC",
       "Failed": "The network fee could not be estimated.",
       "Warnings": {

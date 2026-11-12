@@ -1,14 +1,15 @@
 import type { SendForm as SendFormState } from '../hooks/useSendForm'
 
-import { Button, ButtonType, testIdWithKey } from '@bifold/core'
+import { KeyboardView, testIdWithKey } from '@bifold/core'
 import { type HekaTheme, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
 
 import { AddressField } from './AddressField'
 import { AmountInput } from './AmountInput'
 import { AssetPicker } from './AssetPicker'
+import { BottomActions } from './BottomActions'
 import { FeeModePicker } from './FeeModePicker'
 import { FeePreview } from './FeePreview'
 
@@ -16,7 +17,6 @@ const useStyles = ({ Spacing, TextTheme, ColorPalette }: HekaTheme) =>
   StyleSheet.create({
     content: { paddingTop: Spacing.md },
     error: { ...TextTheme.normal, color: ColorPalette.semantic.error, paddingVertical: Spacing.xs },
-    button: { paddingVertical: Spacing.md },
   })
 
 const FUNDS_ERRORS = {
@@ -40,10 +40,7 @@ export const SendForm: React.FC<Props> = ({ form, onScan, onSend, isSending, sub
   const errors = [fundsError, form.hasPendingSend ? 'Crypto.Send.Errors.Pending' : undefined, submitError]
 
   return (
-    <ScrollView
-      contentContainerStyle={[globalStyles.defaultContainer, styles.content]}
-      keyboardShouldPersistTaps="handled"
-    >
+    <KeyboardView scrollViewProps={{ contentContainerStyle: [globalStyles.defaultContainer, styles.content] }}>
       <AssetPicker assets={form.assets} selectedId={form.asset?.id} onSelect={form.selectAsset} />
       <AddressField
         value={form.to}
@@ -64,9 +61,15 @@ export const SendForm: React.FC<Props> = ({ form, onScan, onSend, isSending, sub
         modes={form.feeModes}
         selected={form.feeMode}
         nativeSymbol={form.chain?.nativeAsset.symbol ?? ''}
+        quote={form.quote}
         onSelect={form.setFeeMode}
       />
-      <FeePreview quote={form.quote} isQuoting={form.isQuoting} failed={form.quoteFailed} />
+      <FeePreview
+        quote={form.quote}
+        isQuoting={form.isQuoting}
+        failed={form.quoteFailed}
+        showAmount={form.feeModes.length < 2}
+      />
       {errors.map(
         (key) =>
           key && (
@@ -75,15 +78,17 @@ export const SendForm: React.FC<Props> = ({ form, onScan, onSend, isSending, sub
             </Text>
           )
       )}
-      <View style={styles.button}>
-        <Button
-          title={t('Global.Send')}
-          buttonType={ButtonType.Primary}
-          disabled={!form.canSend || isSending}
-          onPress={onSend}
-          testID={testIdWithKey('CryptoSendSubmit')}
-        />
-      </View>
-    </ScrollView>
+      <BottomActions
+        actions={[
+          {
+            title: t('Global.Send'),
+            onPress: onSend,
+            disabled: !form.canSend,
+            isLoading: isSending,
+            testID: testIdWithKey('CryptoSendSubmit'),
+          },
+        ]}
+      />
+    </KeyboardView>
   )
 }
