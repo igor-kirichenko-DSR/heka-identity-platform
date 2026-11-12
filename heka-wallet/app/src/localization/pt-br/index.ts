@@ -40,7 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Moedas",
-    "Payments": "Pagamentos",
+    "Payments": "Moedas",
     "Settings": "Configurações"
   },
   "Passkeys": {
@@ -59,7 +59,10 @@ const translation = {
     "UsePasskeyToAuth": "Por favor, use a chave de acesso para autenticar com o serviço de backup"
   },
   "Crypto": {
-    "Title": "Pagamentos",
+    "Title": "Moedas",
+    "Debug": {
+      "PhraseCopied": "Frase copiada (versão de depuração)"
+    },
     "Explorer": "Ver no explorador",
     "Wallet": {
       "LoadFailed": "Não foi possível abrir a carteira de pagamentos.",
@@ -73,18 +76,19 @@ const translation = {
       "Intro": {
         "Title": "Carteira de pagamentos",
         "Text": "Envie e receba stablecoins como USDC. Crie uma nova carteira ou importe uma que você já tem.",
+        "Empty": "Você ainda não tem carteiras",
         "Create": "Criar nova carteira",
         "Import": "Importar carteira existente"
       },
       "NewMnemonic": {
-        "Title": "Anote sua frase de recuperação",
+        "Title": "Faça o backup da sua carteira",
         "Text1": "Estas 12 palavras são a única forma de recuperar seus fundos se você perder este celular ou mudar de carteira.",
         "Text2": "Escreva-as em papel e guarde-as em local seguro. Nunca as compartilhe e nunca as guarde em uma captura de tela.",
         "Written": "Já anotei"
       },
       "VerifyMnemonic": {
-        "Title": "Confira sua frase de recuperação",
-        "Text": "Toque nas palavras que faltam na ordem certa.",
+        "Title": "Você salvou, certo?",
+        "Text": "Confirme que você salvou sua frase de recuperação tocando nas palavras que faltam na ordem.",
         "WrongOrder": "As palavras não estão na ordem certa. Toque em uma palavra para retirá-la ou recomece.",
         "Reset": "Recomeçar"
       },
@@ -139,6 +143,7 @@ const translation = {
       "Scan": "Ler um código QR",
       "Amount": "Valor ({{symbol}})",
       "Max": "Máx.",
+      "SubmitAmount": "Enviar {{amount}} {{symbol}}",
       "Confirm": "Confirme o pagamento",
       "NewRecipient": "Você nunca enviou para este endereço. Confira com atenção.",
       "AddressWarnings": {

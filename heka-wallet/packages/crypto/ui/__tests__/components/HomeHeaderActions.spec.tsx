@@ -8,15 +8,12 @@ jest.mock('@heka-wallet/shared', () => require('../helpers/mocks').sharedMock())
 jest.mock('react-i18next', () => require('../helpers/mocks').i18nMock())
 
 describe('HomeHeaderActions', () => {
-  it('opens History and Settings', () => {
+  it('opens History', () => {
     const onHistory = jest.fn()
-    const onSettings = jest.fn()
-    render(<HomeHeaderActions onHistory={onHistory} onSettings={onSettings} />)
+    render(<HomeHeaderActions onHistory={onHistory} />)
 
     fireEvent.press(screen.getByTestId('CryptoHistory'))
-    fireEvent.press(screen.getByTestId('CryptoSettings'))
 
     expect(onHistory).toHaveBeenCalledTimes(1)
-    expect(onSettings).toHaveBeenCalledTimes(1)
   })
 })

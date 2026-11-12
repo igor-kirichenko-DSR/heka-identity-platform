@@ -40,7 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Coins",
-    "Payments": "Payments",
+    "Payments": "Coins",
     "Settings": "Settings"
   },
   "Passkeys": {
@@ -59,7 +59,10 @@ const translation = {
     "UsePasskeyToAuth": "Please use passkey to authenticate with backup service"
   },
   "Crypto": {
-    "Title": "Payments",
+    "Title": "Coins",
+    "Debug": {
+      "PhraseCopied": "Phrase copied (debug build)"
+    },
     "Explorer": "View in explorer",
     "Wallet": {
       "LoadFailed": "The payment wallet could not be opened.",
@@ -73,18 +76,19 @@ const translation = {
       "Intro": {
         "Title": "Payment wallet",
         "Text": "Send and receive stablecoins such as USDC. Create a new wallet or import one you already have.",
-        "Create": "Create new wallet",
+        "Empty": "You don't have wallets",
+        "Create": "Create wallet",
         "Import": "Import existing wallet"
       },
       "NewMnemonic": {
-        "Title": "Write down your recovery phrase",
+        "Title": "Back up your wallet",
         "Text1": "These 12 words are the only way to recover your funds if you lose this phone or move to another wallet.",
         "Text2": "Write them on paper and keep them safe. Never share them and never store them in a screenshot.",
         "Written": "I have written it down"
       },
       "VerifyMnemonic": {
-        "Title": "Check your recovery phrase",
-        "Text": "Tap the missing words in the right order.",
+        "Title": "You saved it, right?",
+        "Text": "Verify that you saved your recovery phrase by tapping the missing words in order.",
         "WrongOrder": "The words are not in the right order. Tap a word to take it back, or reset.",
         "Reset": "Start over"
       },
@@ -139,6 +143,7 @@ const translation = {
       "Scan": "Scan a QR code",
       "Amount": "Amount ({{symbol}})",
       "Max": "Max",
+      "SubmitAmount": "Send {{amount}} {{symbol}}",
       "Confirm": "Confirm the payment",
       "NewRecipient": "You have not sent to this address before. Check it carefully.",
       "AddressWarnings": {

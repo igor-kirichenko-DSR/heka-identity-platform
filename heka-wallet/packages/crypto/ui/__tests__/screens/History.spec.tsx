@@ -63,6 +63,15 @@ describe('History', () => {
     expect(screen.getByTestId('CryptoStatus-success')).toBeTruthy()
   })
 
+  it('shows the direction icon and the signed amount of each entry', async () => {
+    await setup([{ items: [record('0x1', T0), record('0x2', T0 + 1000, { direction: 'out' })] }])
+
+    expect(screen.getByTestId('Icon-arrow-down-circle')).toBeTruthy()
+    expect(screen.getByTestId('Icon-arrow-up-circle')).toBeTruthy()
+    expect(screen.getByText('+1 USDC')).toBeTruthy()
+    expect(screen.getByText('−1 USDC')).toBeTruthy()
+  })
+
   it('loads the next page when the end of the list is reached', async () => {
     const { adapter } = await setup([
       { items: [record('0x1', T0)], next: 'cursor-2' },

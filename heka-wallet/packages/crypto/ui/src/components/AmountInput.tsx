@@ -4,12 +4,22 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
+import { AMOUNT_ACCESSORY_WIDTH } from '../constants'
+
 const useStyles = ({ Spacing, TextTheme, ColorPalette }: HekaTheme) =>
   StyleSheet.create({
-    row: { flexDirection: 'row', alignItems: 'flex-start' },
-    input: { flex: 1 },
-    max: { padding: Spacing.md },
-    maxText: { ...TextTheme.bold, color: ColorPalette.brand.highlight },
+    field: { justifyContent: 'center' },
+    accessory: {
+      position: 'absolute',
+      right: Spacing.md,
+      top: Spacing.md,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    inputText: { paddingRight: AMOUNT_ACCESSORY_WIDTH },
+    max: { ...TextTheme.bold, color: ColorPalette.brand.highlight },
+    symbol: { ...TextTheme.normal },
   })
 
 interface Props {
@@ -26,25 +36,22 @@ export const AmountInput: React.FC<Props> = ({ value, symbol, onChange, onMax, i
   const { t } = useTranslation()
 
   return (
-    <View style={styles.row}>
-      <View style={styles.input}>
-        <TextInput
-          label={t('Crypto.Send.Amount', { symbol })}
-          value={value}
-          onChangeText={onChange}
-          keyboardType="decimal-pad"
-          error={invalid ? t('Crypto.Send.Errors.InvalidAmount') : undefined}
-          testID={testIdWithKey('CryptoAmount')}
-        />
+    <View style={styles.field}>
+      <TextInput
+        label={t('Crypto.Send.Amount', { symbol })}
+        value={value}
+        onChangeText={onChange}
+        keyboardType="decimal-pad"
+        error={invalid ? t('Crypto.Send.Errors.InvalidAmount') : undefined}
+        contentStyle={styles.inputText}
+        testID={testIdWithKey('CryptoAmount')}
+      />
+      <View style={styles.accessory}>
+        <TouchableOpacity onPress={onMax} accessibilityRole="button" testID={testIdWithKey('CryptoAmountMax')}>
+          <Text style={styles.max}>{t('Crypto.Send.Max')}</Text>
+        </TouchableOpacity>
+        <Text style={styles.symbol}>{symbol}</Text>
       </View>
-      <TouchableOpacity
-        style={styles.max}
-        onPress={onMax}
-        accessibilityRole="button"
-        testID={testIdWithKey('CryptoAmountMax')}
-      >
-        <Text style={styles.maxText}>{t('Crypto.Send.Max')}</Text>
-      </TouchableOpacity>
     </View>
   )
 }

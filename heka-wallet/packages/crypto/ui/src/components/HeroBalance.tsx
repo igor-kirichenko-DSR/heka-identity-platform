@@ -4,10 +4,10 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 
 const useStyles = ({ Spacing, TextTheme }: HekaTheme) =>
   StyleSheet.create({
-    container: { alignItems: 'center', paddingVertical: Spacing.md, gap: Spacing.xxxs },
-    label: { ...TextTheme.labelSubtitle },
-    amount: { ...TextTheme.headingThree },
-    spinner: { position: 'absolute' },
+    container: { paddingVertical: Spacing.md, gap: Spacing.xs },
+    label: { ...TextTheme.normal },
+    amount: { ...TextTheme.headingOne },
+    spinner: { position: 'absolute', alignSelf: 'flex-start' },
   })
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
   testID?: string
 }
 
-/** The big balance at the top of the Home card, with a spinner over its place while it loads. */
+/** The big balance in the Home card, with a spinner over its place while it loads. */
 export const HeroBalance: React.FC<Props> = ({ label, amount, testID }) => {
   const styles = useStyles(useHekaTheme())
   const loading = amount === undefined

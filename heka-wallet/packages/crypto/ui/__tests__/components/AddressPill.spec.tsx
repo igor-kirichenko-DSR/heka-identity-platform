@@ -4,7 +4,6 @@ import React from 'react'
 
 import { AddressCopy } from '../../src/components/AddressCopy'
 import { AddressPill } from '../../src/components/AddressPill'
-import { shortAddress } from '../../src/utils/format'
 
 jest.mock('@bifold/core', () => require('../helpers/mocks').bifoldMock())
 jest.mock('@heka-wallet/shared', () => require('../helpers/mocks').sharedMock())
@@ -14,10 +13,10 @@ jest.mock('@react-native-clipboard/clipboard', () => require('../helpers/mocks')
 const ADDRESS = '0x1234567890abcdef1234567890abcdef12345678'
 
 describe('AddressPill', () => {
-  it('shows the short address and copies the whole one', () => {
+  it('shows the whole address and copies it', () => {
     render(<AddressPill address={ADDRESS} />)
 
-    expect(screen.getByText(shortAddress(ADDRESS))).toBeTruthy()
+    expect(screen.getByText(ADDRESS)).toBeTruthy()
     fireEvent.press(screen.getByTestId('CryptoCopyAddress'))
 
     expect(Clipboard.setString).toHaveBeenCalledWith(ADDRESS)

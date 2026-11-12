@@ -1,28 +1,22 @@
 import { testIdWithKey } from '@bifold/core'
-import { IconSizes, type HekaTheme, IconButton, useHekaTheme } from '@heka-wallet/shared'
+import { BootstrapIcon, IconSizes, type HekaTheme, useHekaTheme } from '@heka-wallet/shared'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity } from 'react-native'
 
 import { useCopyAddress } from '../hooks/useCopyAddress'
-import { shortAddress } from '../utils/format'
 
-const useStyles = ({ Spacing, BorderRadius, ColorPalette }: HekaTheme) =>
+const useStyles = ({ Spacing, TextTheme }: HekaTheme) =>
   StyleSheet.create({
-    pill: {
-      alignSelf: 'center',
-      paddingVertical: Spacing.xs,
-      borderRadius: BorderRadius.big,
-      backgroundColor: ColorPalette.brand.primary,
-    },
-    text: { color: ColorPalette.grayscale.white },
+    row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+    text: { ...TextTheme.normal, flexShrink: 1 },
   })
 
 interface Props {
   address: string
 }
 
-/** The short address as a filled pill; tapping it copies the address and the icon turns into a check for a moment. */
+/** The whole address as plain wrapped text; tapping copies it and the icon turns into a check for a moment. */
 export const AddressPill: React.FC<Props> = ({ address }) => {
   const theme = useHekaTheme()
   const styles = useStyles(theme)
@@ -30,16 +24,19 @@ export const AddressPill: React.FC<Props> = ({ address }) => {
   const { copied, copy } = useCopyAddress(address)
 
   return (
-    <IconButton
-      iconName={copied ? 'clipboard-check' : 'clipboard'}
-      iconSize={IconSizes.small}
-      iconColor={theme.ColorPalette.grayscale.white}
-      label={copied ? t('Crypto.Address.Copied') : shortAddress(address)}
-      textStyle={styles.text}
-      containerStyle={styles.pill}
-      accessibilityLabel={t('Crypto.Address.Copy')}
+    <TouchableOpacity
+      style={styles.row}
       onPress={copy}
-      testId={testIdWithKey('CryptoCopyAddress')}
-    />
+      accessibilityRole="button"
+      accessibilityLabel={t('Crypto.Address.Copy')}
+      testID={testIdWithKey('CryptoCopyAddress')}
+    >
+      <Text style={styles.text}>{copied ? t('Crypto.Address.Copied') : address}</Text>
+      <BootstrapIcon
+        name={copied ? 'clipboard-check' : 'clipboard'}
+        size={IconSizes.small}
+        color={theme.ColorPalette.brand.icon}
+      />
+    </TouchableOpacity>
   )
 }

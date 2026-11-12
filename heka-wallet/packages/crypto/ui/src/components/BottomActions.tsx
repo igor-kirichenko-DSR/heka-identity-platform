@@ -22,14 +22,17 @@ export interface BottomAction {
 
 interface Props {
   actions: BottomAction[]
+  /** Shown right above the buttons, e.g. step dots. */
+  above?: React.ReactNode
 }
 
 /** The button or buttons pinned to the bottom of a screen. */
-export const BottomActions: React.FC<Props> = ({ actions }) => {
+export const BottomActions: React.FC<Props> = ({ actions, above }) => {
   const styles = useStyles(useHekaTheme())
 
   return (
     <View style={styles.container}>
+      {above}
       {actions.map((action) => (
         <Button
           key={action.title}

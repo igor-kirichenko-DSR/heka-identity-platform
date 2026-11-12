@@ -8,24 +8,15 @@ jest.mock('@bifold/core', () => require('../helpers/mocks').bifoldMock())
 jest.mock('@heka-wallet/shared', () => require('../helpers/mocks').sharedMock())
 
 describe('WordChip', () => {
-  it('shows the position before the word', () => {
-    render(<WordChip word="wave" position={3} />)
+  it('shows the position above the word', () => {
+    render(<WordChip word="wave" position={3} columns={3} />)
 
-    expect(screen.getByText('3. wave')).toBeTruthy()
+    expect(screen.getByText('3.')).toBeTruthy()
+    expect(screen.getByText('wave')).toBeTruthy()
   })
 
-  it('calls onPress and reports the selected state', () => {
-    const onPress = jest.fn()
-    render(<WordChip word="wave" selected onPress={onPress} testID="chip" />)
-
-    fireEvent.press(screen.getByTestId('chip'))
-
-    expect(onPress).toHaveBeenCalledTimes(1)
-    expect(screen.getByTestId('chip').props.accessibilityState.selected).toBe(true)
-  })
-
-  it('is plain text without onPress', () => {
-    render(<WordChip word="wave" testID="chip" />)
+  it('is plain text, not a button', () => {
+    render(<WordChip word="wave" position={1} columns={3} testID="chip" />)
 
     expect(screen.getByTestId('chip').props.accessibilityRole).toBe('text')
   })

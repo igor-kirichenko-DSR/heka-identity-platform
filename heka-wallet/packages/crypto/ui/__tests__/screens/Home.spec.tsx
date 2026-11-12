@@ -91,6 +91,14 @@ describe('Home', () => {
     expect(services.adapters[0].getBalances.mock.calls.length).toBeGreaterThan(calls)
   })
 
+  it('opens Settings from the card', async () => {
+    await setup()
+
+    fireEvent.press(screen.getByTestId('CryptoSettings'))
+
+    expect(navigation.navigate).toHaveBeenCalledWith(CryptoScreens.Settings)
+  })
+
   it('opens Receive and Send', async () => {
     await setup()
 

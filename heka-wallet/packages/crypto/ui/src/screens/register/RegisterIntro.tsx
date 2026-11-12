@@ -2,40 +2,64 @@ import type { CryptoRegisterStackParams } from '../../navigators/types'
 import type { StackScreenProps } from '@react-navigation/stack'
 
 import { Button, ButtonType, testIdWithKey } from '@bifold/core'
-import { type HekaTheme, ScreenInfoText, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
+import { type HekaTheme, IconButton, useHekaTheme } from '@heka-wallet/shared'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 
+import { RegisterIllustration } from '../../components/RegisterIllustration'
+import { useRegisterFlow } from '../../navigators/RegisterFlowContext'
 import { CryptoScreens } from '../../navigators/routes'
 
-const useStyles = ({ Spacing }: HekaTheme) =>
+const useStyles = ({ Spacing, BorderRadius, TextTheme, ColorPalette }: HekaTheme) =>
   StyleSheet.create({
-    buttons: { flex: 1, justifyContent: 'flex-end', gap: Spacing.md, paddingBottom: Spacing.md },
+    screen: { flex: 1, padding: Spacing.md },
+    card: {
+      flex: 1,
+      padding: Spacing.md,
+      gap: Spacing.sm,
+      borderRadius: BorderRadius.bigger,
+      backgroundColor: ColorPalette.grayscale.white,
+    },
+    empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.md },
+    emptyText: { ...TextTheme.normal, color: ColorPalette.grayscale.mediumGrey },
+    importLabel: { color: ColorPalette.grayscale.black },
   })
 
 type Props = StackScreenProps<CryptoRegisterStackParams, CryptoScreens.RegisterIntro>
 
+/** No wallet yet: the empty Coins card with the two ways in. */
 export const RegisterIntro: React.FC<Props> = ({ navigation }) => {
   const styles = useStyles(useHekaTheme())
-  const globalStyles = useGlobalStyles()
   const { t } = useTranslation()
+  const { setKind } = useRegisterFlow()
 
   return (
-    <View style={globalStyles.defaultContainer}>
-      <ScreenInfoText title={t('Crypto.Register.Intro.Title')} textLines={[t('Crypto.Register.Intro.Text')]} />
-      <View style={styles.buttons}>
-        <Button
-          title={t('Crypto.Register.Intro.Create')}
-          buttonType={ButtonType.Primary}
-          onPress={() => navigation.navigate(CryptoScreens.NewMnemonic)}
-          testID={testIdWithKey('CryptoCreateWallet')}
+    <View style={styles.screen}>
+      <View style={styles.card}>
+        <View style={styles.empty}>
+          <RegisterIllustration />
+          <Text style={styles.emptyText}>{t('Crypto.Register.Intro.Empty')}</Text>
+        </View>
+        <IconButton
+          iconName="upload"
+          label={t('Crypto.Register.Intro.Import')}
+          textStyle={styles.importLabel}
+          onPress={() => {
+            setKind('import')
+            navigation.navigate(CryptoScreens.ImportWallet)
+          }}
+          testId={testIdWithKey('CryptoImportWallet')}
         />
         <Button
-          title={t('Crypto.Register.Intro.Import')}
+          title={t('Crypto.Register.Intro.Create')}
+          accessibilityLabel={t('Crypto.Register.Intro.Create')}
           buttonType={ButtonType.Secondary}
-          onPress={() => navigation.navigate(CryptoScreens.ImportWallet)}
-          testID={testIdWithKey('CryptoImportWallet')}
+          onPress={() => {
+            setKind('create')
+            navigation.navigate(CryptoScreens.NewMnemonic)
+          }}
+          testID={testIdWithKey('CryptoCreateWallet')}
         />
       </View>
     </View>

@@ -1,67 +1,52 @@
 import { type HekaTheme, useHekaTheme } from '@heka-wallet/shared'
 import React from 'react'
-import { type DimensionValue, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { type DimensionValue, StyleSheet, Text, View } from 'react-native'
+
+import { WORD_TILE_MIN_HEIGHT } from '../constants'
 
 const PERCENT = 100
 
-const useStyles = ({ Spacing, BorderRadius, BorderWidth, ColorPalette, TextTheme }: HekaTheme) =>
+const useStyles = ({ Spacing, BorderRadius, ColorPalette, TextTheme }: HekaTheme) =>
   StyleSheet.create({
-    cell: { padding: Spacing.xxxs },
-    chip: {
-      padding: Spacing.xs,
-      alignItems: 'center',
-      borderRadius: BorderRadius.small,
-      borderWidth: BorderWidth.small,
-      borderColor: ColorPalette.grayscale.mediumGrey,
-      backgroundColor: ColorPalette.grayscale.darkGrey,
+    cell: { padding: Spacing.xs },
+    tile: {
+      minHeight: WORD_TILE_MIN_HEIGHT,
+      justifyContent: 'space-between',
+      padding: Spacing.md,
+      borderRadius: BorderRadius.big,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
-    highlighted: { borderColor: ColorPalette.grayscale.lightGrey, borderWidth: BorderWidth.medium },
-    filled: { backgroundColor: ColorPalette.grayscale.white },
-    text: { ...TextTheme.normal, color: ColorPalette.grayscale.white },
-    filledText: { color: ColorPalette.grayscale.black },
+    next: { backgroundColor: ColorPalette.brand.primary },
+    wrong: { backgroundColor: ColorPalette.semantic.errorTransparent },
+    position: { ...TextTheme.labelSubtitle },
+    word: { ...TextTheme.normal },
+    nextText: { color: ColorPalette.grayscale.white },
   })
 
 interface Props {
   word: string
-  /** 1-based position shown before the word. */
-  position?: number
-  /** The next empty slot: a light border. */
+  /** 1-based position shown above the word. */
+  position: number
+  /** The next empty slot: a dark tile. */
   highlighted?: boolean
-  /** A candidate already placed: white with black text. */
-  selected?: boolean
-  /** Lay the chips out in this many equal columns. Without it the chip is as wide as its text. */
-  columns?: number
-  minWidth?: number
-  onPress?: () => void
+  /** A word put in the wrong place: a pink tile. */
+  error?: boolean
+  /** Lay the tiles out in this many equal columns. */
+  columns: number
   testID?: string
 }
 
-export const WordChip: React.FC<Props> = ({
-  word,
-  position,
-  highlighted,
-  selected,
-  columns,
-  minWidth,
-  onPress,
-  testID,
-}) => {
+/** One numbered tile of the recovery phrase grid. */
+export const WordChip: React.FC<Props> = ({ word, position, highlighted, error, columns, testID }) => {
   const styles = useStyles(useHekaTheme())
-  const label = position === undefined ? word : `${position}. ${word}`
-  const width: DimensionValue | undefined = columns ? `${PERCENT / columns}%` : undefined
+  const width: DimensionValue = `${PERCENT / columns}%`
 
   return (
-    <TouchableOpacity
-      style={[styles.cell, { width, minWidth }]}
-      disabled={!onPress}
-      onPress={onPress}
-      accessibilityRole={onPress ? 'button' : 'text'}
-      accessibilityState={{ selected: !!selected }}
-      testID={testID}
-    >
-      <View style={[styles.chip, highlighted && styles.highlighted, selected && styles.filled]}>
-        <Text style={[styles.text, selected && styles.filledText]}>{label}</Text>
+    <View style={[styles.cell, { width }]} accessibilityRole="text" testID={testID}>
+      <View style={[styles.tile, highlighted && styles.next, error && styles.wrong]}>
+        <Text style={[styles.position, highlighted && styles.nextText]}>{`${position}.`}</Text>
+        <Text style={[styles.word, highlighted && styles.nextText]}>{word}</Text>
       </View>
-    </TouchableOpacity>
+    </View>
   )
 }

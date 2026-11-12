@@ -1,7 +1,7 @@
 import type { TxRecord } from '@heka-wallet/crypto-core'
 
 import { testIdWithKey } from '@bifold/core'
-import { type HekaTheme, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
+import { type HekaTheme, useHekaTheme } from '@heka-wallet/shared'
 import { observer } from 'mobx-react-lite'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +10,7 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text } from 'r
 import { TxListItem } from '../components/TxListItem'
 import { useExplorerLink } from '../hooks/useExplorerLink'
 import { useHistory } from '../hooks/useHistory'
+import { useScrollContent } from '../hooks/useScrollContent'
 
 const useStyles = ({ Spacing, TextTheme, ColorPalette }: HekaTheme) =>
   StyleSheet.create({
@@ -22,14 +23,14 @@ const keyOf = (record: TxRecord): string => `${record.chainId}|${record.txId}`
 
 export const History: React.FC = observer(() => {
   const styles = useStyles(useHekaTheme())
-  const globalStyles = useGlobalStyles()
+  const scrollContent = useScrollContent()
   const { t } = useTranslation()
   const history = useHistory()
   const openExplorer = useExplorerLink()
 
   return (
     <FlatList
-      contentContainerStyle={globalStyles.defaultContainer}
+      contentContainerStyle={scrollContent}
       data={history.records}
       keyExtractor={keyOf}
       renderItem={({ item }) => <TxListItem record={item} onPress={openExplorer} />}

@@ -1,15 +1,20 @@
-import { Button, ButtonType, testIdWithKey, usePreventScreenCapture } from '@bifold/core'
-import { type HekaTheme, ScreenInfoText, TextInput, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
+import { KeyboardView, testIdWithKey, usePreventScreenCapture } from '@bifold/core'
+import { type HekaTheme, TextInput, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 
+import { InfoLines } from '../../components/InfoLines'
+import { RegisterFooter } from '../../components/RegisterFooter'
+import { IMPORT_INPUT_MIN_HEIGHT } from '../../constants'
 import { useHideOnBackground } from '../../hooks/useHideOnBackground'
 import { useImportWallet } from '../../hooks/useImportWallet'
+import { useScrollContent } from '../../hooks/useScrollContent'
+import { CryptoScreens } from '../../navigators/routes'
 
 const useStyles = ({ Spacing }: HekaTheme) =>
   StyleSheet.create({
-    button: { paddingVertical: Spacing.md },
+    input: { minHeight: IMPORT_INPUT_MIN_HEIGHT, marginBottom: Spacing.sm },
   })
 
 /**
@@ -20,15 +25,17 @@ export const ImportWallet: React.FC = () => {
   usePreventScreenCapture()
   const styles = useStyles(useHekaTheme())
   const globalStyles = useGlobalStyles()
+  const scrollContent = useScrollContent()
   const { t } = useTranslation()
   const { input, setInput, error, canSubmit, isSaving, submit } = useImportWallet()
   const hidden = useHideOnBackground()
 
   return (
-    <ScrollView contentContainerStyle={globalStyles.defaultContainer} keyboardShouldPersistTaps="handled">
-      <ScreenInfoText title={t('Crypto.Import.Title')} textLines={[t('Crypto.Import.Text')]} />
+    <KeyboardView scrollViewProps={{ contentContainerStyle: scrollContent }}>
+      <InfoLines lines={[t('Crypto.Import.Text')]} />
       <TextInput
         label={t('Crypto.Import.Label')}
+        style={[globalStyles.multilineTextCard, styles.input]}
         value={hidden ? '' : input}
         editable={!hidden}
         onChangeText={setInput}
@@ -40,15 +47,18 @@ export const ImportWallet: React.FC = () => {
         importantForAutofill="no"
         testID={testIdWithKey('CryptoImportInput')}
       />
-      <View style={styles.button}>
-        <Button
-          title={t('Crypto.Import.Submit')}
-          buttonType={ButtonType.Primary}
-          disabled={!canSubmit || isSaving}
-          onPress={submit}
-          testID={testIdWithKey('CryptoImportSubmit')}
-        />
-      </View>
-    </ScrollView>
+      <RegisterFooter
+        screen={CryptoScreens.ImportWallet}
+        actions={[
+          {
+            title: t('Crypto.Import.Submit'),
+            onPress: submit,
+            disabled: !canSubmit,
+            isLoading: isSaving,
+            testID: testIdWithKey('CryptoImportSubmit'),
+          },
+        ]}
+      />
+    </KeyboardView>
   )
 }

@@ -65,12 +65,10 @@ export const bifoldMock = () => ({
   useStore: () => [bifoldState, jest.fn()],
 })
 
-const themeProxy: unknown = new Proxy(
-  {},
-  {
-    get: (_target, property) => (property === 'then' ? undefined : themeProxy),
-  }
-)
+// Callable, so a theme asset such as Assets.svg.logo can be rendered as a component.
+const themeProxy: unknown = new Proxy(() => null, {
+  get: (_target, property) => (property === 'then' ? undefined : themeProxy),
+})
 
 interface PinProps {
   title?: string

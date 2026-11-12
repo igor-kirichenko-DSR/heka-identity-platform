@@ -1,16 +1,23 @@
-import { Button, ButtonType, testIdWithKey } from '@bifold/core'
-import { type HekaTheme, ScreenInfoText, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
+import { ButtonType, testIdWithKey } from '@bifold/core'
+import { type HekaTheme, useHekaTheme } from '@heka-wallet/shared'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 
+import type { BottomAction } from '../../components/BottomActions'
+
+import { InfoLines } from '../../components/InfoLines'
+import { RegisterFooter } from '../../components/RegisterFooter'
+import { RegisterIllustration } from '../../components/RegisterIllustration'
 import { type BackupState, useBackupPrompt } from '../../hooks/useBackupPrompt'
+import { useScrollContent } from '../../hooks/useScrollContent'
+import { CryptoScreens } from '../../navigators/routes'
 
 const useStyles = ({ Spacing, TextTheme, ColorPalette }: HekaTheme) =>
   StyleSheet.create({
-    status: { ...TextTheme.normal, marginTop: Spacing.md },
+    illustration: { alignItems: 'center', paddingVertical: Spacing.xl },
+    status: { ...TextTheme.labelTitle, textAlign: 'center', marginTop: Spacing.md },
     error: { color: ColorPalette.semantic.error },
-    buttons: { flex: 1, justifyContent: 'flex-end', gap: Spacing.md, paddingBottom: Spacing.md },
   })
 
 const BACKUP_STATUS_KEYS: Partial<Record<BackupState, string>> = {
@@ -21,42 +28,42 @@ const BACKUP_STATUS_KEYS: Partial<Record<BackupState, string>> = {
 /** The passkey backup is offered where the app has it; otherwise the written-down phrase is the only backup. */
 export const RegisterDone: React.FC = () => {
   const styles = useStyles(useHekaTheme())
-  const globalStyles = useGlobalStyles()
+  const scrollContent = useScrollContent()
   const { t } = useTranslation()
   const { isAvailable, isRawKey, state, backupNow, finish } = useBackupPrompt()
   const noBackupKey = isRawKey ? 'Crypto.Register.Done.RawKeyText' : 'Crypto.Register.Done.PhraseIsBackup'
   const statusKey = BACKUP_STATUS_KEYS[state]
   const offerBackup = isAvailable && state !== 'done'
+  const actions: BottomAction[] = [
+    {
+      title: t('Crypto.Register.Done.OpenWallet'),
+      type: offerBackup ? ButtonType.Secondary : ButtonType.Primary,
+      disabled: state === 'running',
+      onPress: finish,
+      testID: testIdWithKey('CryptoOpenWallet'),
+    },
+  ]
+  if (offerBackup) {
+    actions.unshift({
+      title: t('Crypto.Register.Done.BackupNow'),
+      disabled: state === 'running',
+      onPress: backupNow,
+      testID: testIdWithKey('CryptoBackupNow'),
+    })
+  }
 
   return (
-    <View style={globalStyles.defaultContainer}>
-      <ScreenInfoText
-        title={t('Crypto.Register.Done.Title')}
-        textLines={[t(isAvailable ? 'Crypto.Register.Done.BackupPrompt' : noBackupKey)]}
-      />
+    <ScrollView contentContainerStyle={scrollContent}>
+      <View style={styles.illustration}>
+        <RegisterIllustration />
+      </View>
+      <InfoLines lines={[t(isAvailable ? 'Crypto.Register.Done.BackupPrompt' : noBackupKey)]} />
       {statusKey && (
         <Text style={[styles.status, state === 'failed' && styles.error]} testID={testIdWithKey('CryptoBackupStatus')}>
           {t(statusKey)}
         </Text>
       )}
-      <View style={styles.buttons}>
-        {offerBackup && (
-          <Button
-            title={t('Crypto.Register.Done.BackupNow')}
-            buttonType={ButtonType.Primary}
-            disabled={state === 'running'}
-            onPress={backupNow}
-            testID={testIdWithKey('CryptoBackupNow')}
-          />
-        )}
-        <Button
-          title={t('Crypto.Register.Done.OpenWallet')}
-          buttonType={offerBackup ? ButtonType.Secondary : ButtonType.Primary}
-          disabled={state === 'running'}
-          onPress={finish}
-          testID={testIdWithKey('CryptoOpenWallet')}
-        />
-      </View>
-    </View>
+      <RegisterFooter screen={CryptoScreens.RegisterDone} actions={actions} />
+    </ScrollView>
   )
 }

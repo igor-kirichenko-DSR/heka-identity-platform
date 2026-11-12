@@ -15,25 +15,22 @@ import { Send } from '../screens/Send'
 import { Settings } from '../screens/Settings'
 
 import { CryptoScreens } from './routes'
+import { useLightHeader } from './useLightHeader'
 
 const Stack = createStackNavigator<CryptoMainStackParams>()
 
 export const MainStack: React.FC = () => {
   const { t } = useTranslation()
+  const header = useLightHeader()
 
   return (
-    <Stack.Navigator initialRouteName={CryptoScreens.Home}>
+    <Stack.Navigator initialRouteName={CryptoScreens.Home} screenOptions={header}>
       <Stack.Screen
         name={CryptoScreens.Home}
         component={Home}
         options={({ navigation }) => ({
           title: t('Crypto.Title'),
-          headerRight: () => (
-            <HomeHeaderActions
-              onHistory={() => navigation.navigate(CryptoScreens.History)}
-              onSettings={() => navigation.navigate(CryptoScreens.Settings)}
-            />
-          ),
+          headerRight: () => <HomeHeaderActions onHistory={() => navigation.navigate(CryptoScreens.History)} />,
         })}
       />
       <Stack.Screen name={CryptoScreens.Receive} component={Receive} options={{ title: t('Crypto.Receive.Header') }} />

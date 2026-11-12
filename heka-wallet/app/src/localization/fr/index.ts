@@ -40,7 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Pièces",
-    "Payments": "Paiements",
+    "Payments": "Pièces",
     "Settings": "Paramètres"
   },
   "Passkeys": {
@@ -59,7 +59,10 @@ const translation = {
     "UsePasskeyToAuth": "Veuillez utiliser la clé d'accès pour vous authentifier auprès du service de sauvegarde"
   },
   "Crypto": {
-    "Title": "Paiements",
+    "Title": "Pièces",
+    "Debug": {
+      "PhraseCopied": "Phrase copiée (version de débogage)"
+    },
     "Explorer": "Voir dans l'explorateur",
     "Wallet": {
       "LoadFailed": "Le portefeuille de paiement n'a pas pu être ouvert.",
@@ -73,18 +76,19 @@ const translation = {
       "Intro": {
         "Title": "Portefeuille de paiement",
         "Text": "Envoyez et recevez des stablecoins comme l'USDC. Créez un nouveau portefeuille ou importez celui que vous avez déjà.",
+        "Empty": "Vous n'avez pas encore de portefeuille",
         "Create": "Créer un nouveau portefeuille",
         "Import": "Importer un portefeuille existant"
       },
       "NewMnemonic": {
-        "Title": "Notez votre phrase de récupération",
+        "Title": "Sauvegardez votre portefeuille",
         "Text1": "Ces 12 mots sont le seul moyen de récupérer vos fonds si vous perdez ce téléphone ou changez de portefeuille.",
         "Text2": "Écrivez-les sur papier et gardez-les en lieu sûr. Ne les partagez jamais et ne les gardez jamais dans une capture d'écran.",
         "Written": "Je l'ai notée"
       },
       "VerifyMnemonic": {
-        "Title": "Vérifiez votre phrase de récupération",
-        "Text": "Touchez les mots manquants dans le bon ordre.",
+        "Title": "Vous l’avez bien noté ?",
+        "Text": "Vérifiez que vous avez noté votre phrase de récupération en touchant les mots manquants dans l’ordre.",
         "WrongOrder": "Les mots ne sont pas dans le bon ordre. Touchez un mot pour le retirer, ou recommencez.",
         "Reset": "Recommencer"
       },
@@ -139,6 +143,7 @@ const translation = {
       "Scan": "Scanner un code QR",
       "Amount": "Montant ({{symbol}})",
       "Max": "Max",
+      "SubmitAmount": "Envoyer {{amount}} {{symbol}}",
       "Confirm": "Confirmez le paiement",
       "NewRecipient": "Vous n'avez jamais envoyé à cette adresse. Vérifiez-la attentivement.",
       "AddressWarnings": {

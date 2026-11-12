@@ -2,7 +2,7 @@ import type { CryptoMainStackParams } from '../navigators/types'
 import type { StackScreenProps } from '@react-navigation/stack'
 
 import { testIdWithKey } from '@bifold/core'
-import { type HekaTheme, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
+import { type HekaTheme, useHekaTheme } from '@heka-wallet/shared'
 import { observer } from 'mobx-react-lite'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,6 +15,7 @@ import { ChainSwitcher } from '../components/ChainSwitcher'
 import { EnableAssets } from '../components/EnableAssets'
 import { useActivation } from '../hooks/useActivation'
 import { useHome } from '../hooks/useHome'
+import { useScrollContent } from '../hooks/useScrollContent'
 import { CryptoScreens } from '../navigators/routes'
 
 const useStyles = ({ Spacing, TextTheme, ColorPalette }: HekaTheme) =>
@@ -28,7 +29,7 @@ type Props = StackScreenProps<CryptoMainStackParams, CryptoScreens.Home>
 
 export const Home: React.FC<Props> = observer(({ navigation }) => {
   const styles = useStyles(useHekaTheme())
-  const globalStyles = useGlobalStyles()
+  const scrollContent = useScrollContent()
   const { t } = useTranslation()
   const home = useHome()
   const activation = useActivation(home.account)
@@ -40,7 +41,7 @@ export const Home: React.FC<Props> = observer(({ navigation }) => {
 
   return (
     <ScrollView
-      contentContainerStyle={[globalStyles.defaultContainer, styles.content]}
+      contentContainerStyle={[scrollContent, styles.content]}
       refreshControl={<RefreshControl refreshing={home.isRefreshing} onRefresh={onRefresh} />}
       testID={testIdWithKey('CryptoHome')}
     >
@@ -60,6 +61,7 @@ export const Home: React.FC<Props> = observer(({ navigation }) => {
           others={home.others}
           onSend={() => navigation.navigate(CryptoScreens.Send)}
           onReceive={() => navigation.navigate(CryptoScreens.Receive)}
+          onSettings={() => navigation.navigate(CryptoScreens.Settings)}
         />
       ) : (
         <Text style={styles.notice}>{t('Crypto.Home.NoAccount')}</Text>
