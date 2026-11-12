@@ -37,7 +37,7 @@ export const Receive: React.FC = observer(() => {
           <QRRenderer value={uri} size={RECEIVE_QR_SIZE} />
         </View>
       )}
-      <AddressCopy address={account.address} full />
+      <AddressCopy address={account.address} />
       <Text style={styles.hint}>{t('Crypto.Receive.Hint', { chain: chain.name })}</Text>
     </ScrollView>
   )

@@ -4,10 +4,12 @@ import { testIdWithKey } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
+import { CANDIDATE_CHIP_MIN_WIDTH } from '../constants'
+
 import { WordChip } from './WordChip'
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap' },
+  row: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-evenly' },
 })
 
 interface Props {
@@ -22,6 +24,7 @@ export const CandidateWords: React.FC<Props> = ({ candidates, onPress }) => (
         key={index}
         word={candidate.word}
         selected={candidate.slot !== undefined}
+        minWidth={CANDIDATE_CHIP_MIN_WIDTH}
         onPress={() => onPress(index)}
         testID={testIdWithKey(`CryptoCandidate-${candidate.word}`)}
       />

@@ -120,6 +120,7 @@ const translation = {
       "History": "History",
       "Settings": "Settings",
       "NoAccount": "No account on this network yet.",
+      "Balance": "Balance",
       "BalanceFailed": "Balances could not be updated. Pull down to try again.",
       "ActivationPending": "This account becomes active with its first deposit.",
       "EnableAsset": "Enable {{symbol}}",
@@ -192,6 +193,11 @@ const translation = {
     },
     "Settings": {
       "Header": "Payment settings",
+      "Sections": {
+        "Network": "Network",
+        "Security": "Security",
+        "Wallet": "Wallet"
+      },
       "DefaultChain": "Default network",
       "SaveFailed": "The default network could not be saved.",
       "RevealPhrase": "Show recovery phrase",

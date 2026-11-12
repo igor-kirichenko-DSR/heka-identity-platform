@@ -18,3 +18,18 @@ export const DEFAULT_CHAIN_STORAGE_KEY = 'crypto.defaultChain'
 
 /** Characters kept at each end of a shortened address. */
 export const SHORT_ADDRESS_CHARS = 6
+
+/** Columns of the recovery phrase grid on the new-phrase and reveal screens. */
+export const NEW_PHRASE_COLUMNS = 3
+
+/** Columns of the answer slots on the verify screen. */
+export const VERIFY_GRID_COLUMNS = 2
+
+/** Minimum width of a candidate word chip, so short words stay easy to hit. */
+export const CANDIDATE_CHIP_MIN_WIDTH = 72
+
+/** Side of the illustration on the register end screen. */
+export const REGISTER_ILLUSTRATION_SIZE = 160
+
+/** Minimum height of the import input. */
+export const IMPORT_INPUT_MIN_HEIGHT = 120

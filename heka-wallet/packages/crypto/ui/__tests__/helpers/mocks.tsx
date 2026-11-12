@@ -17,9 +17,10 @@ interface ButtonProps {
   onPress?: () => void
   disabled?: boolean
   testID?: string
+  children?: React.ReactNode
 }
 
-const MockButton: React.FC<ButtonProps> = ({ title, onPress, disabled, testID }) => (
+const MockButton: React.FC<ButtonProps> = ({ title, onPress, disabled, testID, children }) => (
   <TouchableOpacity
     onPress={onPress}
     disabled={disabled}
@@ -28,8 +29,15 @@ const MockButton: React.FC<ButtonProps> = ({ title, onPress, disabled, testID })
     accessibilityState={{ disabled: !!disabled }}
   >
     <Text>{title}</Text>
+    {children}
   </TouchableOpacity>
 )
+
+/** Stands in for the deep import of Bifold's ButtonLoading: jest.mock('@bifold/core/src/components/animated/ButtonLoading', ...). */
+export const buttonLoadingMock = () => ({
+  __esModule: true,
+  default: () => <Text testID="ButtonLoading">loading</Text>,
+})
 
 const MockQRRenderer: React.FC<{ value: string }> = ({ value }) => <Text testID="QRRenderer">{value}</Text>
 
@@ -114,6 +122,8 @@ const MockIconButton: React.FC<{ onPress: () => void; label?: string; testId?: s
   </TouchableOpacity>
 )
 
+const MockBootstrapIcon: React.FC<{ name: string }> = ({ name }) => <Text testID={`Icon-${name}`}>{name}</Text>
+
 export const authenticateByBiometry = jest.fn<Promise<void>, [string]>()
 
 export const sharedMock = () => ({
@@ -125,6 +135,7 @@ export const sharedMock = () => ({
   ScreenInfoText: MockScreenInfoText,
   TextInput: MockTextInput,
   IconButton: MockIconButton,
+  BootstrapIcon: MockBootstrapIcon,
   authenticateByBiometry,
   isBiometryCancelledError: (name: string) => name === 'UserCancel',
   // Deterministic order, so tests know which words are taken out.

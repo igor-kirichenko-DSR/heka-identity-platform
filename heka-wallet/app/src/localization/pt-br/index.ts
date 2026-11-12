@@ -120,6 +120,7 @@ const translation = {
       "History": "Histórico",
       "Settings": "Configurações",
       "NoAccount": "Ainda não há conta nesta rede.",
+      "Balance": "Saldo",
       "BalanceFailed": "Não foi possível atualizar os saldos. Puxe para baixo para tentar de novo.",
       "ActivationPending": "Esta conta fica ativa com o primeiro depósito.",
       "EnableAsset": "Ativar {{symbol}}",
@@ -192,6 +193,11 @@ const translation = {
     },
     "Settings": {
       "Header": "Configurações de pagamento",
+      "Sections": {
+        "Network": "Rede",
+        "Security": "Segurança",
+        "Wallet": "Carteira"
+      },
       "DefaultChain": "Rede padrão",
       "SaveFailed": "Não foi possível salvar a rede padrão.",
       "RevealPhrase": "Mostrar frase de recuperação",

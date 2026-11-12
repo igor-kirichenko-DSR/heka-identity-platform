@@ -120,6 +120,7 @@ const translation = {
       "History": "Historique",
       "Settings": "Paramètres",
       "NoAccount": "Pas encore de compte sur ce réseau.",
+      "Balance": "Solde",
       "BalanceFailed": "Les soldes n'ont pas pu être mis à jour. Tirez vers le bas pour réessayer.",
       "ActivationPending": "Ce compte devient actif avec son premier dépôt.",
       "EnableAsset": "Activer {{symbol}}",
@@ -192,6 +193,11 @@ const translation = {
     },
     "Settings": {
       "Header": "Paramètres de paiement",
+      "Sections": {
+        "Network": "Réseau",
+        "Security": "Sécurité",
+        "Wallet": "Portefeuille"
+      },
       "DefaultChain": "Réseau par défaut",
       "SaveFailed": "Le réseau par défaut n'a pas pu être enregistré.",
       "RevealPhrase": "Afficher la phrase de récupération",

@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { RefreshControl, ScrollView, StyleSheet, Text } from 'react-native'
 
 import { ActivationBanner } from '../components/ActivationBanner'
-import { AddressCopy } from '../components/AddressCopy'
+import { AddressPill } from '../components/AddressPill'
 import { AuthGate } from '../components/AuthGate'
 import { BalanceRow } from '../components/BalanceRow'
 import { ChainSwitcher } from '../components/ChainSwitcher'
@@ -49,7 +49,7 @@ export const Home: React.FC<Props> = observer(({ navigation }) => {
       <ChainSwitcher chains={home.chains} currentId={home.chain?.id} onSelect={home.setChain} />
       {activation.isPending && <ActivationBanner />}
       {home.account ? (
-        <AddressCopy address={home.account.address} />
+        <AddressPill address={home.account.address} />
       ) : (
         <Text style={styles.notice}>{t('Crypto.Home.NoAccount')}</Text>
       )}
