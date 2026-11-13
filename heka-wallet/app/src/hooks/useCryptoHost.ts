@@ -1,6 +1,6 @@
 import type { CryptoProviderProps } from '@heka-wallet/crypto-ui'
 
-import { baseSepolia, EvmAdapter, type EvmChainConfig } from '@heka-wallet/crypto-evm'
+import { baseSepolia, EvmAdapter, type EvmChainConfig, HederaEvmAdapter, hederaTestnet } from '@heka-wallet/crypto-evm'
 import { GlobalLogger } from '@heka-wallet/shared'
 import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 
@@ -50,6 +50,10 @@ export const useCryptoHost = (): Omit<CryptoProviderProps, 'children'> => {
     (addressBook) => [
       new EvmAdapter({
         config: withRpcOverride(baseSepolia, config.overrides[baseSepolia.descriptor.id]),
+        addressBook,
+      }),
+      new HederaEvmAdapter({
+        config: withRpcOverride(hederaTestnet, config.overrides[hederaTestnet.descriptor.id]),
         addressBook,
       }),
     ],

@@ -17,6 +17,8 @@ export class AccountStore {
   readonly accountIndex = DEFAULT_ACCOUNT_INDEX
   currentChainId: ChainId | undefined = undefined
   readonly addresses = new Map<ChainId, string>()
+  /** Ledger account ids (Hedera `0.0.x`), known once the account exists on the ledger. */
+  readonly accountIds = new Map<ChainId, string>()
   isLoading = false
   error: unknown = undefined
 
@@ -28,10 +30,12 @@ export class AccountStore {
     makeObservable(this, {
       currentChainId: observable,
       addresses: observable.shallow,
+      accountIds: observable.shallow,
       isLoading: observable,
       error: observable.ref,
       currentAccount: computed,
       setChain: action,
+      setAccountId: action,
     })
   }
 
@@ -49,6 +53,11 @@ export class AccountStore {
     this.currentChainId = chainId
   }
 
+  setAccountId(chainId: ChainId, accountId: string | undefined): void {
+    if (accountId) this.accountIds.set(chainId, accountId)
+    else this.accountIds.delete(chainId)
+  }
+
   /** Reads the address record for every registered chain; a chain without one has no account yet. */
   async load(): Promise<void> {
     runInAction(() => {
@@ -64,6 +73,7 @@ export class AccountStore {
       }
       runInAction(() => {
         this.addresses.clear()
+        this.accountIds.clear()
         found.forEach((address, chainId) => this.addresses.set(chainId, address))
         if (!this.currentChainId || !this.registry.has(this.currentChainId)) this.currentChainId = chains[0]?.id
       })

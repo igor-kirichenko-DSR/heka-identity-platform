@@ -65,4 +65,21 @@ describe('buildCryptoConfig', () => {
     const config = buildCryptoConfig({ [RPC]: 'ftp://rpc.example' }, true, jest.fn())
     expect(config.overrides).toEqual({})
   })
+
+  it('registers Hedera testnet: default chain and an https relay override', () => {
+    const HEDERA_TESTNET = 'eip155:296'
+    const config = buildCryptoConfig(
+      { CRYPTO_DEFAULT_CHAIN: HEDERA_TESTNET, CRYPTO_RPC_URL_HEDERA_TESTNET: 'https://relay.example/api' },
+      false,
+      jest.fn()
+    )
+    expect(config.defaultChain).toBe(HEDERA_TESTNET)
+    expect(config.overrides[HEDERA_TESTNET]).toEqual({ rpcUrl: 'https://relay.example/api', bundlerUrl: undefined })
+  })
+
+  it('refuses a plain-http Hedera relay outside development', () => {
+    expect(() =>
+      buildCryptoConfig({ CRYPTO_RPC_URL_HEDERA_TESTNET: 'http://relay.example' }, false, jest.fn())
+    ).toThrow(CryptoConfigError)
+  })
 })

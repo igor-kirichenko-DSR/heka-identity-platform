@@ -80,4 +80,4 @@ Agreed 2026-11-10 (DSRDSC-293):
 -   Mainnet twins: Base mainnet only (`enabled: false`); no Arbitrum Sepolia entry, since spike D was a go on Base Sepolia. Hedera entries are F05.
 -   Signing: the adapter signs and calls `eth_sendRawTransaction` itself instead of `walletClient.sendTransaction` / `writeContract`, so the chain id in the payload is checked and the key is opened only for the signature. `transfer` also checks the RPC's `eth_chainId` before signing.
 -   L1 data fee (added 2026-11-11, found on a device: Max ETH failed by 170 wei): Base is an OP-Stack chain and the node requires `balance >= value + gas × price + L1 fee`. A chain entry with `l1FeeOracle` (Base, Base Sepolia) adds 1.2 × the oracle's `getL1Fee` of the unsigned transaction to the quote, the fee cap and the funds warning. If the oracle cannot be read, the quote fails. F08 must count the L1 fee too.
--   Integration test key: `CRYPTO_IT_PRIVATE_KEY` in `packages/crypto/evm/.env.it` (gitignored).
+-   Integration test key: `CRYPTO_IT_PRIVATE_KEY` in `.env.crypto-test-keys` in `heka-wallet/` (gitignored, shared by all integration tests; template `.env.crypto-test-keys.example`).

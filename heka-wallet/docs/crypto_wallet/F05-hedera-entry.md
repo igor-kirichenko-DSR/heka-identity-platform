@@ -38,11 +38,11 @@ HBAR and USDC on Hedera testnet with the same `EvmAdapter`, the Hedera-specific 
 ### Wallet — `packages/crypto/ui`
 
 -   Banner and "Enable USDC" exist since F04; they show once the adapter has `activationState` / `isAssetEnabled`.
--   Receive: `0.0.x` next to `0x` once active. Needs an account-id read in the adapter interface (`crypto-core`); left to F05 by F04 "Decisions".
+-   Receive: `0.0.x` next to `0x` once active, through the new optional `ChainAdapter.getAccountId()` (`crypto-core`; cached in `AccountStore.accountIds`, read by the `useAccountId` hook). The Receive QR carries the HTS token's EVM address like an ERC-20 contract.
 
 ### Wallet — `app`
 
-No change beyond F06 (registration of the entry).
+Registration of the entry (F06 registered Base Sepolia only): `HederaEvmAdapter` in `useCryptoHost.ts`, `HEDERA_TESTNET` in `cryptoConfig.ts`, `CRYPTO_RPC_URL_HEDERA_TESTNET` in `.env.example`.
 
 ### Identity Service
 
@@ -56,7 +56,7 @@ No change.
 
 -   Unit: unit conversion edge cases (1 tinybar, max values, rounding down); Mirror Node response mapping (recorded fixtures for HBAR transfer, HTS transfer, failed transaction, account not found); status reconciliation matrix (relay ok / Mirror Node missing / Mirror Node failed).
 -   Integration behind `CRYPTO_IT=1`: send 1 HBAR between two funded testnet accounts; USDC transfer; `associate()` on a non-associated account.
--   Maestro: Receive screen shows the activation banner for a fresh account (no network funding needed).
+-   Maestro (`.maestro/crypto/crypto-hedera-activation.yaml`): a fresh account on Hedera Testnet shows the activation banner (on Home, where F04 put it) and the Receive QR; no funding needed, network access is.
 
 ## Specs and docs
 

@@ -5,6 +5,8 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native'
 
 const useStyles = ({ Spacing, BorderRadius, BorderWidth, ColorPalette, TextTheme }: HekaTheme) =>
   StyleSheet.create({
+    // A horizontal ScrollView grows by default; the row must keep the height of its chips.
+    scroll: { flexGrow: 0, flexShrink: 0 },
     row: { gap: Spacing.xs, paddingVertical: Spacing.xs },
     chip: {
       paddingVertical: Spacing.xs,
@@ -35,7 +37,12 @@ export const OptionChips: React.FC<Props> = ({ options, selectedId, onSelect, te
   const styles = useStyles(useHekaTheme())
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.scroll}
+      contentContainerStyle={styles.row}
+    >
       {options.map((option) => {
         const selected = option.id === selectedId
         return (

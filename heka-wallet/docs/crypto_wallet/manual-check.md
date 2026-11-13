@@ -60,7 +60,7 @@ Fund the address from Receive with Base Sepolia ETH, and USDC if you want to tes
 | Valid address and amount | a fee line, "Network fee: up to …" |
 | Confirm the payment | PIN or biometry prompt; cancelling sends nothing |
 | After auth | "Payment sent", then "Payment complete" within seconds, with "View in explorer" opening the transaction on the block explorer |
-| Send twice quickly | the second is blocked: "Wait until your previous payment is complete." |
+| Send twice quickly | the second is blocked: "Wait until your payment is complete." |
 
 ## 6. History
 

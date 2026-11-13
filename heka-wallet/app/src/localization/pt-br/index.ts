@@ -134,6 +134,7 @@ const translation = {
     "Receive": {
       "Header": "Receber",
       "Title": "Receber {{symbol}} na {{chain}}",
+      "AccountId": "ID da conta: {{id}}",
       "Hint": "Envie para este endereço somente ativos da {{chain}}."
     },
     "Send": {

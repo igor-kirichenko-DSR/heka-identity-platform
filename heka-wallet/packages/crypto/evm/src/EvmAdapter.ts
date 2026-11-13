@@ -55,7 +55,7 @@ export interface EvmAdapterOptions {
 }
 
 /** A transaction ready to sign: everything except nonce and signature. */
-interface PlannedTransaction {
+export interface PlannedTransaction {
   to: Address
   value: bigint
   data?: Hex
@@ -75,10 +75,10 @@ const tokenAddress = (asset: AssetDescriptor): Address => {
 
 export class EvmAdapter implements ChainAdapter {
   readonly chain: ChainDescriptor
-  private readonly config: EvmChainConfig
-  private readonly chainIdNumber: number
-  private readonly addressBook: AddressBook
-  private readonly client: PublicClient<Transport, Chain>
+  protected readonly config: EvmChainConfig
+  protected readonly chainIdNumber: number
+  protected readonly addressBook: AddressBook
+  protected readonly client: PublicClient<Transport, Chain>
 
   /** Builds the viem client for this entry; throws on an entry without an RPC URL or a non-EVM id. */
   constructor({ config, addressBook, transport }: EvmAdapterOptions) {
@@ -109,7 +109,7 @@ export class EvmAdapter implements ChainAdapter {
     const holder = getAddress(account.address)
     const tokens = assets.filter((asset) => asset.kind === 'erc20')
     const [nativeBalance, tokenBalances] = await Promise.all([
-      assets.some((asset) => asset.kind === 'native') ? this.client.getBalance({ address: holder }) : undefined,
+      assets.some((asset) => asset.kind === 'native') ? this.readNativeBalance(holder) : undefined,
       this.readTokenBalances(holder, tokens),
     ])
     const balances: Record<AssetId, bigint> = {}
@@ -130,16 +130,17 @@ export class EvmAdapter implements ChainAdapter {
     this.assertNativeMode(req.feeMode)
     const [plan, nativeBalance] = await Promise.all([
       this.planTransaction(req),
-      this.client.getBalance({ address: getAddress(req.from.address) }),
+      this.readNativeBalance(getAddress(req.from.address)),
     ])
     const { nativeAsset } = this.chain
-    const needed = plan.fee + (req.asset.kind === 'native' ? req.amount : ZERO)
+    const fee = this.toNativeFee(plan.fee)
+    const needed = fee + (req.asset.kind === 'native' ? req.amount : ZERO)
     const warnings: FeeWarning[] = nativeBalance < needed ? ['insufficient-native-balance'] : []
     return {
       mode: 'native',
       asset: nativeAsset,
-      amount: plan.fee,
-      display: `${formatUnits(plan.fee, nativeAsset.decimals)} ${nativeAsset.symbol}`,
+      amount: fee,
+      display: `${formatUnits(fee, nativeAsset.decimals)} ${nativeAsset.symbol}`,
       ...(warnings.length > 0 ? { warnings } : {}),
     }
   }
@@ -147,24 +148,7 @@ export class EvmAdapter implements ChainAdapter {
   /** Checks the RPC chain, signs with the payment key and submits; returns before the receipt. */
   async transfer(req: TransferRequest, keys: KeyProvider): Promise<TransferResult> {
     this.assertNativeMode(req.feeMode)
-    const rpcChainId = await this.client.getChainId()
-    if (rpcChainId !== this.chainIdNumber) {
-      throw new EvmAdapterError(`RPC serves chain ${rpcChainId}, expected ${this.chainIdNumber}`)
-    }
-    const sender = getAddress(req.from.address)
-    const [plan, nonce] = await Promise.all([
-      this.planTransaction(req),
-      this.client.getTransactionCount({ address: sender, blockTag: 'pending' }),
-    ])
-    if (req.feeCap !== undefined && plan.fee > req.feeCap) {
-      throw new EvmAdapterError(`Fee ${plan.fee} is above the cap ${req.feeCap}`)
-    }
-    const { to, value, data, gas, maxFeePerGas, maxPriorityFeePerGas } = plan
-    const serializedTransaction = await withEvmAccount(keys, req.from.index, sender, this.chainIdNumber, (signer) =>
-      signer.signTransaction({ to, value, data, nonce, gas, maxFeePerGas, maxPriorityFeePerGas })
-    )
-    const hash = await this.client.sendRawTransaction({ serializedTransaction })
-    return { txId: hash }
+    return { txId: await this.sendPlanned(req.from, () => this.planTransaction(req), keys, req.feeCap) }
   }
 
   /** Receipt → success / failed with the fee paid; no receipt yet → pending. */
@@ -203,7 +187,7 @@ export class EvmAdapter implements ChainAdapter {
   }
 
   /** Validates the request and prices it; the nonce and signature are added by transfer. */
-  private async planTransaction(req: TransferRequest): Promise<PlannedTransaction> {
+  protected async planTransaction(req: TransferRequest): Promise<PlannedTransaction> {
     this.assertOwnAccount(req.from)
     this.assertOwnAsset(req.asset)
     if (req.amount <= ZERO) throw new EvmAdapterError('Amount must be positive')
@@ -214,15 +198,23 @@ export class EvmAdapter implements ChainAdapter {
     const to = getAddress(recipient.normalized)
     const call =
       req.asset.kind === 'native'
-        ? { to, value: req.amount }
+        ? { to, value: this.toCallValue(req.amount) }
         : {
             to: tokenAddress(req.asset),
             value: ZERO,
             data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [to, req.amount] }),
           }
+    return this.priceCall(req.from, call)
+  }
+
+  /** Prices a call: gas × 1.2 (refused above the chain's ceiling), fees per gas, and the L1 data fee where it applies. */
+  protected async priceCall(
+    from: Account,
+    call: { to: Address; value: bigint; data?: Hex }
+  ): Promise<PlannedTransaction> {
     const [fees, estimated] = await Promise.all([
-      this.client.estimateFeesPerGas(),
-      this.client.estimateGas({ account: getAddress(req.from.address), ...call }),
+      this.readFeesPerGas(),
+      this.client.estimateGas({ account: getAddress(from.address), ...call }),
     ])
     const gas = withGasMargin(estimated)
     assertGasCeiling(gas, this.config.gasLimitCeiling)
@@ -239,6 +231,56 @@ export class EvmAdapter implements ChainAdapter {
         )
       : ZERO
     return { ...call, gas, maxFeePerGas, maxPriorityFeePerGas, fee: gas * maxFeePerGas + l1Fee }
+  }
+
+  /**
+   * Checks the RPC chain, prices, signs with the payment key and submits; returns the hash before the receipt.
+   * Refuses a fee above feeCap.
+   */
+  protected async sendPlanned(
+    from: Account,
+    makePlan: () => Promise<PlannedTransaction>,
+    keys: KeyProvider,
+    feeCap?: bigint
+  ): Promise<Hex> {
+    const rpcChainId = await this.client.getChainId()
+    if (rpcChainId !== this.chainIdNumber) {
+      throw new EvmAdapterError(`RPC serves chain ${rpcChainId}, expected ${this.chainIdNumber}`)
+    }
+    const sender = getAddress(from.address)
+    const [plan, nonce] = await Promise.all([
+      makePlan(),
+      this.client.getTransactionCount({ address: sender, blockTag: 'pending' }),
+    ])
+    const fee = this.toNativeFee(plan.fee)
+    if (feeCap !== undefined && fee > feeCap) {
+      throw new EvmAdapterError(`Fee ${fee} is above the cap ${feeCap}`)
+    }
+    const { to, value, data, gas, maxFeePerGas, maxPriorityFeePerGas } = plan
+    const serializedTransaction = await withEvmAccount(keys, from.index, sender, this.chainIdNumber, (signer) =>
+      signer.signTransaction({ to, value, data, nonce, gas, maxFeePerGas, maxPriorityFeePerGas })
+    )
+    return this.client.sendRawTransaction({ serializedTransaction })
+  }
+
+  /** The native balance in the asset's own unit; Hedera reads it from the Mirror Node. */
+  protected readNativeBalance(address: Address): Promise<bigint> {
+    return this.client.getBalance({ address })
+  }
+
+  /** maxFeePerGas and maxPriorityFeePerGas for a new transaction. */
+  protected readFeesPerGas(): Promise<{ maxFeePerGas: bigint; maxPriorityFeePerGas: bigint }> {
+    return this.client.estimateFeesPerGas()
+  }
+
+  /** The transaction `value` for a native amount; Hedera scales tinybar to the relay's weibar. */
+  protected toCallValue(amount: bigint): bigint {
+    return amount
+  }
+
+  /** A planned fee (gas × maxFeePerGas, in the RPC's unit) in the native asset's own unit. */
+  protected toNativeFee(fee: bigint): bigint {
+    return fee
   }
 
   /** balanceOf per token, in the order given. */
@@ -303,19 +345,19 @@ export class EvmAdapter implements ChainAdapter {
   }
 
   /** Only 'native' until F08 adds 'usdc-paymaster'. */
-  private assertNativeMode(feeMode: FeeMode): void {
+  protected assertNativeMode(feeMode: FeeMode): void {
     if (feeMode !== 'native') throw new EvmAdapterError(`Fee mode ${feeMode} is not supported on ${this.chain.id}`)
   }
 
   /** Refuses an account of another chain. */
-  private assertOwnAccount(account: Account): void {
+  protected assertOwnAccount(account: Account): void {
     if (account.chainId !== this.chain.id) {
       throw new EvmAdapterError(`Account of ${account.chainId} passed to the ${this.chain.id} adapter`)
     }
   }
 
   /** Refuses an asset not listed in this chain entry. */
-  private assertOwnAsset(asset: AssetDescriptor): void {
+  protected assertOwnAsset(asset: AssetDescriptor): void {
     const known = [this.chain.nativeAsset, ...this.chain.assets].some((candidate) => candidate.id === asset.id)
     if (!known || asset.kind === 'hts') throw new EvmAdapterError(`Asset ${asset.id} is not on ${this.chain.id}`)
   }

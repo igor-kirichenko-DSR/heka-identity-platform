@@ -86,6 +86,8 @@ aries-framework-javascript/
 .env.test
 .env.e2e
 .env
+# Funded testnet keys for the CRYPTO_IT=1 integration tests (heka-wallet/.env.crypto-test-keys.example)
+.env.crypto-test-keys
 
 # Firebase config files hold API keys; each developer and CI supplies their own
 app/android/app/google-services.json

@@ -1,14 +1,11 @@
 /**
  * Integration test against the real Base Sepolia. Off by default (DSRDSC-293, F02): it needs a funded account
- * and the network. Run: put CRYPTO_IT_PRIVATE_KEY=0x… in packages/crypto/evm/.env.it (gitignored), fund the
+ * and the network. Run: put CRYPTO_IT_PRIVATE_KEY=0x… in heka-wallet/.env.crypto-test-keys (gitignored; template: .env.crypto-test-keys.example), fund the
  * address with Base Sepolia ETH and at least 0.01 USDC, then
  *   CRYPTO_IT=1 yarn jest --selectProjects @heka-wallet/crypto-evm packages/crypto/evm/__tests__/integration
  */
 import type { TxRecord } from '@heka-wallet/crypto-core'
 import type { Hex } from 'viem'
-
-import { existsSync } from 'fs'
-import { join } from 'path'
 
 import { createPublicClient, http } from 'viem'
 
@@ -18,9 +15,9 @@ import { readL1Fee } from '../../src/l1Fee'
 import { toViemChain } from '../../src/viemChain'
 import { ETH, USDC } from '../helpers/chain'
 import { FakeKeyProvider, makeAddressBook } from '../helpers/keys'
+import { ENV_FILE, loadTestKeysEnv } from '../helpers/testKeys'
 import { waitFor } from '../helpers/waitFor'
 
-const ENV_FILE = join(__dirname, '..', '..', '.env.it')
 const SEND_AMOUNT = BigInt(10_000) // 0.01 USDC
 const RECEIPT_TIMEOUT_MS = 60_000
 const HISTORY_TIMEOUT_MS = 60_000
@@ -31,7 +28,7 @@ const enabled = process.env.CRYPTO_IT === '1'
 const describeIntegration = enabled ? describe : describe.skip
 
 const loadPrivateKey = (): Hex => {
-  if (existsSync(ENV_FILE)) process.loadEnvFile(ENV_FILE)
+  loadTestKeysEnv()
   const key = process.env.CRYPTO_IT_PRIVATE_KEY
   if (!key || !/^0x[0-9a-fA-F]{64}$/.test(key)) {
     throw new Error(`CRYPTO_IT_PRIVATE_KEY missing or malformed (env or ${ENV_FILE})`)

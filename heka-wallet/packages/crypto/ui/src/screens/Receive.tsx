@@ -8,6 +8,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { AddressCopy } from '../components/AddressCopy'
 import { AssetPicker } from '../components/AssetPicker'
 import { RECEIVE_QR_SIZE } from '../constants'
+import { useAccountId } from '../hooks/useAccountId'
 import { useReceiveUri } from '../hooks/useReceiveUri'
 import { useScrollContent } from '../hooks/useScrollContent'
 
@@ -22,6 +23,7 @@ const useStyles = ({ Spacing, BorderRadius, TextTheme, ColorPalette }: HekaTheme
       backgroundColor: ColorPalette.grayscale.white,
     },
     hint: { ...TextTheme.caption, paddingTop: Spacing.md },
+    accountId: { ...TextTheme.normal, paddingTop: Spacing.md },
   })
 
 /** The address and an EIP-681 QR a payer's wallet reads: chain id, and the token contract for USDC. */
@@ -30,6 +32,7 @@ export const Receive: React.FC = observer(() => {
   const scrollContent = useScrollContent()
   const { t } = useTranslation()
   const { account, chain, assets, asset, selectAsset, uri } = useReceiveUri()
+  const accountId = useAccountId(account)
 
   if (!account || !chain || !asset) {
     return <Text style={styles.hint}>{t('Crypto.Home.NoAccount')}</Text>
@@ -45,6 +48,11 @@ export const Receive: React.FC = observer(() => {
         </View>
       )}
       <AddressCopy address={account.address} />
+      {accountId && (
+        <Text style={styles.accountId} testID={testIdWithKey('CryptoAccountId')}>
+          {t('Crypto.Receive.AccountId', { id: accountId })}
+        </Text>
+      )}
       <Text style={styles.hint}>{t('Crypto.Receive.Hint', { chain: chain.name })}</Text>
     </ScrollView>
   )

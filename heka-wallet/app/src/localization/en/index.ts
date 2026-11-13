@@ -134,6 +134,7 @@ const translation = {
     "Receive": {
       "Header": "Receive",
       "Title": "Receive {{symbol}} on {{chain}}",
+      "AccountId": "Account ID: {{id}}",
       "Hint": "Only send assets on {{chain}} to this address."
     },
     "Send": {
@@ -160,7 +161,7 @@ const translation = {
         "InvalidAmount": "Enter a valid amount.",
         "InsufficientAmount": "The balance is too low for this amount.",
         "InsufficientFee": "The balance is too low to pay the network fee.",
-        "Pending": "Wait until your previous payment is complete.",
+        "Pending": "Wait until your payment is complete.",
         "Locked": "The wallet is locked. Unlock it and try again.",
         "Failed": "The payment could not be sent."
       }
