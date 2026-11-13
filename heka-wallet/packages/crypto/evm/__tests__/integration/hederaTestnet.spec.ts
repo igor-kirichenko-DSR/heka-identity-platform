@@ -1,6 +1,6 @@
 /**
  * Integration test against the real Hedera testnet (DSRDSC-293, F05). Off by default: it needs funded accounts, the
- * Hashio relay and the testnet Mirror Node. Put the keys in packages/crypto/evm/.env.it (gitignored):
+ * Hashio relay and the testnet Mirror Node. Put the keys in heka-wallet/.env.crypto-test-keys (gitignored; template: .env.crypto-test-keys.example):
  *   CRYPTO_IT_HEDERA_KEY=0x...            funded with at least 5 HBAR (the account is created by a transfer to its
  *                                         EVM address, e.g. from the portal faucet; the first send completes it)
  *   CRYPTO_IT_HEDERA_USDC=1               optional: the same account also holds 0.01+ USDC (0.0.429274)
@@ -12,16 +12,13 @@
 import type { StatusResult } from '@heka-wallet/crypto-core'
 import type { Hex } from 'viem'
 
-import { existsSync } from 'fs'
-import { join } from 'path'
-
 import { generatePrivateKey } from 'viem/accounts'
 
 import { HederaEvmAdapter, hederaTestnet } from '../../src'
 import { FakeKeyProvider, makeAddressBook } from '../helpers/keys'
+import { loadTestKeysEnv } from '../helpers/testKeys'
 import { waitFor } from '../helpers/waitFor'
 
-const ENV_FILE = join(__dirname, '..', '..', '.env.it')
 const HBAR = hederaTestnet.descriptor.nativeAsset
 const USDC = hederaTestnet.descriptor.assets[0]
 const ONE_HBAR = BigInt(100_000_000)
@@ -33,10 +30,6 @@ const TEST_TIMEOUT_MS = 480_000
 
 const enabled = process.env.CRYPTO_IT === '1'
 const describeIntegration = enabled ? describe : describe.skip
-
-const loadEnv = () => {
-  if (existsSync(ENV_FILE)) process.loadEnvFile(ENV_FILE)
-}
 
 const keyFrom = (name: string): Hex | undefined => {
   const value = process.env[name]
@@ -54,7 +47,7 @@ const untilFinal = (adapter: HederaEvmAdapter, txId: string) =>
   }, FINAL_TIMEOUT_MS)
 
 describeIntegration('HederaEvmAdapter on Hedera testnet', () => {
-  beforeAll(loadEnv)
+  beforeAll(loadTestKeysEnv)
 
   it(
     'sends 1 HBAR to a fresh address: the receiver activates with a 0.0.x id and the send is final only on the Mirror Node',
