@@ -1,6 +1,6 @@
 appId: com.heka.wallet
 name: Receive shows the QR code and copies the address
-# Not in a CI suite yet: needs the Payments tab from F06.
+# Needs a build with ENABLE_CRYPTO_MODULE=true (the Payments tab).
 tags:
   - crypto
   - no-backend
@@ -8,7 +8,7 @@ env:
   PIN: '482916'
 ---
 - runFlow: subflows/open-payments.yaml
-- evalScript: ${output.key = '0x' + Array.from({ length: 64 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('')}
+- evalScript: "${output.key = '0x' + Array.from({ length: 64 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('')}"
 - runFlow:
     file: subflows/import-key.yaml
     env:

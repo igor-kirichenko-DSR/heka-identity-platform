@@ -40,6 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Moedas",
+    "Payments": "Moedas",
     "Settings": "Configurações"
   },
   "Passkeys": {
@@ -58,8 +59,10 @@ const translation = {
     "UsePasskeyToAuth": "Por favor, use a chave de acesso para autenticar com o serviço de backup"
   },
   "Crypto": {
-    "Title": "Pagamentos",
-    "Explorer": "Ver no explorador",
+    "Title": "Moedas",
+    "Debug": {
+      "PhraseCopied": "Frase copiada (versão de depuração)"
+    },
     "Wallet": {
       "LoadFailed": "Não foi possível abrir a carteira de pagamentos.",
       "Retry": "Tentar de novo"
@@ -72,18 +75,19 @@ const translation = {
       "Intro": {
         "Title": "Carteira de pagamentos",
         "Text": "Envie e receba stablecoins como USDC. Crie uma nova carteira ou importe uma que você já tem.",
+        "Empty": "Você ainda não tem carteiras",
         "Create": "Criar nova carteira",
         "Import": "Importar carteira existente"
       },
       "NewMnemonic": {
-        "Title": "Anote sua frase de recuperação",
+        "Title": "Faça o backup da sua carteira",
         "Text1": "Estas 12 palavras são a única forma de recuperar seus fundos se você perder este celular ou mudar de carteira.",
         "Text2": "Escreva-as em papel e guarde-as em local seguro. Nunca as compartilhe e nunca as guarde em uma captura de tela.",
         "Written": "Já anotei"
       },
       "VerifyMnemonic": {
-        "Title": "Confira sua frase de recuperação",
-        "Text": "Toque nas palavras que faltam na ordem certa.",
+        "Title": "Você salvou, certo?",
+        "Text": "Confirme que você salvou sua frase de recuperação tocando nas palavras que faltam na ordem.",
         "WrongOrder": "As palavras não estão na ordem certa. Toque em uma palavra para retirá-la ou recomece.",
         "Reset": "Recomeçar"
       },
@@ -119,6 +123,8 @@ const translation = {
       "History": "Histórico",
       "Settings": "Configurações",
       "NoAccount": "Ainda não há conta nesta rede.",
+      "Balance": "Saldo",
+      "BalanceOf": "Saldo {{symbol}}",
       "BalanceFailed": "Não foi possível atualizar os saldos. Puxe para baixo para tentar de novo.",
       "ActivationPending": "Esta conta fica ativa com o primeiro depósito.",
       "EnableAsset": "Ativar {{symbol}}",
@@ -136,6 +142,7 @@ const translation = {
       "Scan": "Ler um código QR",
       "Amount": "Valor ({{symbol}})",
       "Max": "Máx.",
+      "SubmitAmount": "Enviar {{amount}} {{symbol}}",
       "Confirm": "Confirme o pagamento",
       "NewRecipient": "Você nunca enviou para este endereço. Confira com atenção.",
       "AddressWarnings": {
@@ -161,6 +168,7 @@ const translation = {
     "Fee": {
       "Estimate": "Taxa da rede: {{amount}}",
       "UpTo": "Taxa da rede: até {{amount}}",
+      "UpToShort": "até {{amount}}",
       "Usdc": "Pagar taxa em USDC",
       "Failed": "Não foi possível estimar a taxa da rede.",
       "Warnings": {
@@ -191,6 +199,11 @@ const translation = {
     },
     "Settings": {
       "Header": "Configurações de pagamento",
+      "Sections": {
+        "Network": "Rede",
+        "Security": "Segurança",
+        "Wallet": "Carteira"
+      },
       "DefaultChain": "Rede padrão",
       "SaveFailed": "Não foi possível salvar a rede padrão.",
       "RevealPhrase": "Mostrar frase de recuperação",
@@ -277,6 +290,8 @@ const translation = {
     "StoredSecurelyBody": "O Heka Wallet armazena credenciais digitais — versões digitais de documentos como licenças, identidades, autorizações, receitas médicas, etc. Elas são armazenadas de forma segura, apenas neste dispositivo.",
     "UsingCredentialsTitle": "Recebendo e utilizando credenciais",
     "UsingCredentialsBody": "Para receber e usar credenciais, utilize o recurso “Escanear” no aplicativo para escanear um código QR especial. As informações são enviadas e recebidas por meio de uma conexão privada e criptografada.",
+    "PaymentsTitle": "Pagamentos, separados",
+    "PaymentsBody": "O aplicativo Heka Wallet também pode ter uma carteira de pagamentos para redes de teste. É opcional, e suas chaves nunca saem deste dispositivo. Credenciais e pagamentos não compartilham informações.",
     "PrivacyConfidentiality": "Privacidade e confidencialidade",
     "PrivacyParagraph": "Você aprova cada uso das informações do seu aplicativo Heka Wallet. Você também compartilha apenas o necessário para cada situação. A administração do aplicativo ou terceiros não são informados sobre quando e como você utiliza suas credenciais digitais.",
     "GetStarted": "Começar",

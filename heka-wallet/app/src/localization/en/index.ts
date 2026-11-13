@@ -40,6 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Coins",
+    "Payments": "Coins",
     "Settings": "Settings"
   },
   "Passkeys": {
@@ -58,8 +59,10 @@ const translation = {
     "UsePasskeyToAuth": "Please use passkey to authenticate with backup service"
   },
   "Crypto": {
-    "Title": "Payments",
-    "Explorer": "View in explorer",
+    "Title": "Coins",
+    "Debug": {
+      "PhraseCopied": "Phrase copied (debug build)"
+    },
     "Wallet": {
       "LoadFailed": "The payment wallet could not be opened.",
       "Retry": "Try again"
@@ -72,18 +75,19 @@ const translation = {
       "Intro": {
         "Title": "Payment wallet",
         "Text": "Send and receive stablecoins such as USDC. Create a new wallet or import one you already have.",
-        "Create": "Create new wallet",
+        "Empty": "You don't have wallets",
+        "Create": "Create wallet",
         "Import": "Import existing wallet"
       },
       "NewMnemonic": {
-        "Title": "Write down your recovery phrase",
+        "Title": "Back up your wallet",
         "Text1": "These 12 words are the only way to recover your funds if you lose this phone or move to another wallet.",
         "Text2": "Write them on paper and keep them safe. Never share them and never store them in a screenshot.",
         "Written": "I have written it down"
       },
       "VerifyMnemonic": {
-        "Title": "Check your recovery phrase",
-        "Text": "Tap the missing words in the right order.",
+        "Title": "You saved it, right?",
+        "Text": "Verify that you saved your recovery phrase by tapping the missing words in order.",
         "WrongOrder": "The words are not in the right order. Tap a word to take it back, or reset.",
         "Reset": "Start over"
       },
@@ -119,6 +123,8 @@ const translation = {
       "History": "History",
       "Settings": "Settings",
       "NoAccount": "No account on this network yet.",
+      "Balance": "Balance",
+      "BalanceOf": "{{symbol}} balance",
       "BalanceFailed": "Balances could not be updated. Pull down to try again.",
       "ActivationPending": "This account becomes active with its first deposit.",
       "EnableAsset": "Enable {{symbol}}",
@@ -136,6 +142,7 @@ const translation = {
       "Scan": "Scan a QR code",
       "Amount": "Amount ({{symbol}})",
       "Max": "Max",
+      "SubmitAmount": "Send {{amount}} {{symbol}}",
       "Confirm": "Confirm the payment",
       "NewRecipient": "You have not sent to this address before. Check it carefully.",
       "AddressWarnings": {
@@ -161,6 +168,7 @@ const translation = {
     "Fee": {
       "Estimate": "Network fee: {{amount}}",
       "UpTo": "Network fee: up to {{amount}}",
+      "UpToShort": "up to {{amount}}",
       "Usdc": "Pay fee in USDC",
       "Failed": "The network fee could not be estimated.",
       "Warnings": {
@@ -191,6 +199,11 @@ const translation = {
     },
     "Settings": {
       "Header": "Payment settings",
+      "Sections": {
+        "Network": "Network",
+        "Security": "Security",
+        "Wallet": "Wallet"
+      },
       "DefaultChain": "Default network",
       "SaveFailed": "The default network could not be saved.",
       "RevealPhrase": "Show recovery phrase",
@@ -277,6 +290,8 @@ const translation = {
     "StoredSecurelyBody": "Heka Wallet App holds digital credentials — the digital versions of things like licenses, identities, permits, medical prescriptions and etc. They are stored securely, only on this device.",
     "UsingCredentialsTitle": "Receiving and using credentials",
     "UsingCredentialsBody": "To receive and use credentials you use the “Scan” feature in the app to scan a special QR code. Information is sent and received over a private, encrypted connection.",
+    "PaymentsTitle": "Payments, kept separate",
+    "PaymentsBody": "Heka Wallet App can also hold a payment wallet for test networks. It is optional, and its keys never leave this device. Credentials and payments do not share information.",
     "PrivacyConfidentiality": "Privacy and confidentiality",
     "PrivacyParagraph": "You approve every use of information from your Heka Wallet App. You also only share what is needed for a situation. App administration or other third parties are not informed on when and how you use your digital credentials.",
     "GetStarted": "Get Started",

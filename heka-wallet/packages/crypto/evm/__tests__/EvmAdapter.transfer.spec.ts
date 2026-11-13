@@ -13,7 +13,7 @@ import {
   transferRequest,
   USDC_ADDRESS,
 } from './helpers/chain'
-import { MAX_FEE, PENDING_NONCE, PRIORITY_FEE, sendHandlers } from './helpers/handlers'
+import { L1_FEE, MAX_FEE, PENDING_NONCE, PRIORITY_FEE, sendHandlers } from './helpers/handlers'
 import { FakeKeyProvider } from './helpers/keys'
 import { createRpcMock } from './helpers/rpc'
 
@@ -123,6 +123,17 @@ describe('EvmAdapter.transfer', () => {
       adapter.transfer(transferRequest(from, { asset: ETH, feeCap: fee - BigInt(1) }), keys)
     ).rejects.toThrow(/above the cap/)
     expect(keys.opened).toEqual([])
+    expect(sent).toEqual([])
+  })
+
+  it('counts the L1 data fee against the fee cap', async () => {
+    const { keys, sent, from, adapter } = setup({ l1Fee: L1_FEE })
+    const l2Fee = BigInt(25_200) * MAX_FEE
+
+    // The L2 fee alone fits the cap; with the L1 fee the total does not
+    await expect(adapter.transfer(transferRequest(from, { asset: ETH, feeCap: l2Fee }), keys)).rejects.toThrow(
+      /above the cap/
+    )
     expect(sent).toEqual([])
   })
 

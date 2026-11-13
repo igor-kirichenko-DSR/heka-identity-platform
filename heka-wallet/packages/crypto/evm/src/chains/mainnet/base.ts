@@ -1,7 +1,7 @@
 import type { EvmChainConfig } from '../../types'
 import type { AssetDescriptor, ChainId } from '@heka-wallet/crypto-core'
 
-import { MULTICALL3_ADDRESS } from '../constants'
+import { MULTICALL3_ADDRESS, OP_GAS_PRICE_ORACLE } from '../constants'
 
 const CHAIN_ID: ChainId = 'eip155:8453'
 // Circle "USDC contract addresses"
@@ -50,4 +50,5 @@ export const baseMainnet: EvmChainConfig = {
   gasLimitCeiling: BigInt(150_000),
   logsMaxRange: 200,
   multicall3: MULTICALL3_ADDRESS,
+  l1FeeOracle: OP_GAS_PRICE_ORACLE,
 }

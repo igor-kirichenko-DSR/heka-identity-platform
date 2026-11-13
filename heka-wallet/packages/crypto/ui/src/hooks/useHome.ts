@@ -10,6 +10,9 @@ export interface AssetBalance {
   balance?: bigint
 }
 
+/** The hero balance is the chain's first stablecoin, else the native asset: amounts of different assets are never summed. */
+const pickHero = (rows: AssetBalance[]): AssetBalance | undefined => rows.find((row) => row.asset.stable) ?? rows[0]
+
 /** Home state over the stores; read inside an observer screen so it follows them. */
 export const useHome = () => {
   const { accounts, balances, registry, logger } = useCrypto()
@@ -22,6 +25,9 @@ export const useHome = () => {
   const rows: AssetBalance[] = chain
     ? [chain.nativeAsset, ...chain.assets].map((asset) => ({ asset, balance: amounts?.[asset.id] }))
     : []
+
+  const hero = pickHero(rows)
+  const others = rows.filter((row) => row !== hero)
 
   const refresh = useCallback(async () => {
     setRefreshing(true)
@@ -48,6 +54,8 @@ export const useHome = () => {
     chain,
     chains: registry.list().map((adapter) => adapter.chain),
     rows,
+    hero,
+    others,
     hasBalanceError: !!balances.error,
     isRefreshing,
     refresh,

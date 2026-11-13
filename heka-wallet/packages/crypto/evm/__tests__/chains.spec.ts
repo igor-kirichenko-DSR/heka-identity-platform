@@ -34,6 +34,11 @@ describe('chain entries', () => {
     expect(baseSepolia.gasLimitCeiling).toBe(BigInt(150_000))
   })
 
+  it('both Base entries price the L1 data fee through the OP-Stack GasPriceOracle', () => {
+    expect(baseSepolia.l1FeeOracle).toBe('0x420000000000000000000000000000000000000F')
+    expect(baseMainnet.l1FeeOracle).toBe('0x420000000000000000000000000000000000000F')
+  })
+
   it('the Base mainnet twin ships disabled and the registry refuses it', () => {
     consistent(baseMainnet)
     expect(eip155Reference(baseMainnet.descriptor.id)).toBe(8453)

@@ -1,12 +1,12 @@
 import type { CryptoMainStackParams, SendPrefill } from '../navigators/types'
 import type { StackNavigationProp } from '@react-navigation/stack'
 
-import { parseEip681, sameAddress } from '@heka-wallet/crypto-core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useState } from 'react'
 
 import { CryptoScreens } from '../navigators/routes'
 import { useCrypto } from '../provider/CryptoContext'
+import { prefillFromEip681 } from '../utils/prefillFromEip681'
 
 const EIP681_PREFIX = 'ethereum:'
 
@@ -20,17 +20,12 @@ export const useScanAddress = () => {
     (value: string): SendPrefill | undefined => {
       const chainId = accounts.currentChainId
       if (!chainId) return undefined
-      const { chain } = registry.get(chainId)
       if (!value.startsWith(EIP681_PREFIX)) {
         return registry.get(chainId).validateAddress(value).ok ? { to: value } : undefined
       }
-      const request = parseEip681(value)
-      if (request.chainId && request.chainId !== chainId) throw new Error('Payment request for another chain')
-      const asset = request.token
-        ? chain.assets.find((item) => item.address && sameAddress(item.address, request.token ?? ''))
-        : chain.nativeAsset
-      if (!asset) throw new Error('Payment request for an unknown token')
-      return { to: request.to, assetId: asset.id, amount: request.amount?.toString() }
+      const request = prefillFromEip681(value, registry, chainId)
+      if (request.chainId !== chainId) throw new Error('Payment request for another chain')
+      return request.prefill
     },
     [accounts, registry]
   )

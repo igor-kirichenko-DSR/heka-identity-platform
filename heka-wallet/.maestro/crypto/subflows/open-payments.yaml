@@ -1,5 +1,5 @@
 # Fresh install -> onboarding -> Payments tab, on the register screen.
-# The tab id comes with F06 (host wiring); input: env PIN, plus the onboard.yaml login env for external-auth builds.
+# Needs a build with ENABLE_CRYPTO_MODULE=true; input: env PIN, plus the onboard.yaml login env for external-auth builds.
 appId: com.heka.wallet
 ---
 - runFlow: ../../subflows/onboard.yaml

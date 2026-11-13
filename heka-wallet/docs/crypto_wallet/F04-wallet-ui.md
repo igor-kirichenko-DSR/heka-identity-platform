@@ -25,11 +25,11 @@ Scaffold: `package.json` name `@heka-wallet/crypto-ui`, `private: true`, `main: 
 Screens:
 
 -   **Register:** intro (create or import) → `NewMnemonic` (12 words, `WordsCard`; screenshot blocked) → `VerifyMnemonic` (tap-to-order with `WordChip`) → Done (backup prompt from F03). Import: mnemonic (word count and checksum validation) or raw hex key. Rebuilt from the Keplr screens in git history before PR #229; Cosmos-specific parts (bech32, HD path editor, Ledger) are dropped.
--   **Home:** per-asset balances for the current chain; chain switcher; address with copy; Receive and Send buttons; pull-to-refresh. Hedera: activation-pending banner and "Enable USDC" (F05). Paymaster chains: no extra UI here.
+-   **Home:** a card with the network, the short address (tap to copy), a hero balance (first stablecoin, else the native asset) and blocks for the other assets, Send and Receive buttons; chain switcher above; History and Settings icons in the header; pull-to-refresh. Hedera: activation-pending banner and "Enable USDC" (F05). Paymaster chains: no extra UI here.
 -   **Receive:** EIP-55 address, QR with an EIP-681 URI (chain id; token contract for USDC); asset picker changes the URI; Hedera shows `0.0.x` next to `0x` once active.
--   **Send:** asset picker → recipient (`AddressField`: checksum, QR scan, new-recipient warning when the address is not in the ledger) → amount (`AmountInput`, bigint-safe, "max" leaves room for the fee in native mode) → fee mode (`ETH` / `USDC` where `features.paymaster`, `HBAR` on Hedera) → `FeePreview` ("up to N USDC" in paymaster mode) → confirm with PIN / biometry → pending entry → final with explorer link. Blocked with a clear message when the fee asset balance is short.
--   **History:** ledger + chain entries, newest first, paged; status chips; explorer link per entry; on EVM chains a note that older and inbound native transfers may be missing.
--   **Settings:** default chain; reveal phrase (auth → `RevealPhrase`); remove wallet (F03, shows balances and the warning).
+-   **Send:** asset picker → recipient (`AddressField`: checksum, QR scan, new-recipient warning when the address is not in the ledger) → amount (`AmountInput`, bigint-safe, "max" leaves room for the fee in native mode) → fee mode (`ETH` / `USDC` where `features.paymaster`, `HBAR` on Hedera) → `FeePreview` ("up to N USDC" in paymaster mode) → confirm with PIN / biometry → pending entry → final status. Blocked with a clear message when the fee asset balance is short.
+-   **History:** ledger + chain entries, newest first, paged; status chips; on EVM chains a note that older and inbound native transfers may be missing.
+-   **Settings:** sections Network (default chain, check mark), Security and Wallet; reveal phrase (auth → `RevealPhrase`); remove wallet (F03, shows balances and the warning).
 -   **RevealPhrase:** words shown after fresh auth; screenshot and recording blocked; no copy button; auto-hide on background.
 
 Keys (moved from F03, agreed 2026-11-10):
@@ -39,7 +39,7 @@ Keys (moved from F03, agreed 2026-11-10):
 -   Done screen: if `isWalletBackupEnabled` (`app/src/config.ts`) is true, "back up now" opens the existing backup flow (`BackupStack`, `useWalletBackupHelpers.backupWallet`); if false, the done screen says the verified phrase is the backup.
 -   A raw-key wallet (`seedKind() === 'raw'`) hides reveal and anything that needs the binding branch.
 
-Components (`src/components/`): `AmountInput`, `AddressField`, `AssetPicker`, `FeePreview`, `WordsCard`, `WordChip`, `ChainSwitcher`, `TxListItem`, `ActivationBanner`. One component per file; logic in hooks (`src/hooks/`); every interactive element has a `testID`.
+Components (`src/components/`): `AmountInput`, `AddressField`, `AssetPicker`, `FeePreview`, `WordsCard`, `WordChip`, `ChainSwitcher`, `TxListItem`, `ActivationBanner`, and the Keplr-like blocks `BalanceCard`, `SegmentedControl`, `ListItem`, `ListSection`, `BottomActions`, `StepDots`, `RegisterFooter`. One component per file; logic in hooks (`src/hooks/`); every interactive element has a `testID`.
 
 ### Wallet — `packages/crypto/core`
 

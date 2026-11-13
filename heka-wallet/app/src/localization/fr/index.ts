@@ -40,6 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Pièces",
+    "Payments": "Pièces",
     "Settings": "Paramètres"
   },
   "Passkeys": {
@@ -58,8 +59,10 @@ const translation = {
     "UsePasskeyToAuth": "Veuillez utiliser la clé d'accès pour vous authentifier auprès du service de sauvegarde"
   },
   "Crypto": {
-    "Title": "Paiements",
-    "Explorer": "Voir dans l'explorateur",
+    "Title": "Pièces",
+    "Debug": {
+      "PhraseCopied": "Phrase copiée (version de débogage)"
+    },
     "Wallet": {
       "LoadFailed": "Le portefeuille de paiement n'a pas pu être ouvert.",
       "Retry": "Réessayer"
@@ -72,18 +75,19 @@ const translation = {
       "Intro": {
         "Title": "Portefeuille de paiement",
         "Text": "Envoyez et recevez des stablecoins comme l'USDC. Créez un nouveau portefeuille ou importez celui que vous avez déjà.",
+        "Empty": "Vous n'avez pas encore de portefeuille",
         "Create": "Créer un nouveau portefeuille",
         "Import": "Importer un portefeuille existant"
       },
       "NewMnemonic": {
-        "Title": "Notez votre phrase de récupération",
+        "Title": "Sauvegardez votre portefeuille",
         "Text1": "Ces 12 mots sont le seul moyen de récupérer vos fonds si vous perdez ce téléphone ou changez de portefeuille.",
         "Text2": "Écrivez-les sur papier et gardez-les en lieu sûr. Ne les partagez jamais et ne les gardez jamais dans une capture d'écran.",
         "Written": "Je l'ai notée"
       },
       "VerifyMnemonic": {
-        "Title": "Vérifiez votre phrase de récupération",
-        "Text": "Touchez les mots manquants dans le bon ordre.",
+        "Title": "Vous l’avez bien noté ?",
+        "Text": "Vérifiez que vous avez noté votre phrase de récupération en touchant les mots manquants dans l’ordre.",
         "WrongOrder": "Les mots ne sont pas dans le bon ordre. Touchez un mot pour le retirer, ou recommencez.",
         "Reset": "Recommencer"
       },
@@ -119,6 +123,8 @@ const translation = {
       "History": "Historique",
       "Settings": "Paramètres",
       "NoAccount": "Pas encore de compte sur ce réseau.",
+      "Balance": "Solde",
+      "BalanceOf": "Solde {{symbol}}",
       "BalanceFailed": "Les soldes n'ont pas pu être mis à jour. Tirez vers le bas pour réessayer.",
       "ActivationPending": "Ce compte devient actif avec son premier dépôt.",
       "EnableAsset": "Activer {{symbol}}",
@@ -136,6 +142,7 @@ const translation = {
       "Scan": "Scanner un code QR",
       "Amount": "Montant ({{symbol}})",
       "Max": "Max",
+      "SubmitAmount": "Envoyer {{amount}} {{symbol}}",
       "Confirm": "Confirmez le paiement",
       "NewRecipient": "Vous n'avez jamais envoyé à cette adresse. Vérifiez-la attentivement.",
       "AddressWarnings": {
@@ -161,6 +168,7 @@ const translation = {
     "Fee": {
       "Estimate": "Frais de réseau : {{amount}}",
       "UpTo": "Frais de réseau : jusqu'à {{amount}}",
+      "UpToShort": "jusqu'à {{amount}}",
       "Usdc": "Payer les frais en USDC",
       "Failed": "Les frais de réseau n'ont pas pu être estimés.",
       "Warnings": {
@@ -191,6 +199,11 @@ const translation = {
     },
     "Settings": {
       "Header": "Paramètres de paiement",
+      "Sections": {
+        "Network": "Réseau",
+        "Security": "Sécurité",
+        "Wallet": "Portefeuille"
+      },
       "DefaultChain": "Réseau par défaut",
       "SaveFailed": "Le réseau par défaut n'a pas pu être enregistré.",
       "RevealPhrase": "Afficher la phrase de récupération",
@@ -277,6 +290,8 @@ const translation = {
     "StoredSecurelyBody": "Heka Wallet stocke des certificats numériques — les versions numériques de documents tels que permis, identités, autorisations, ordonnances médicales, etc. Ils sont stockés de manière sécurisée, uniquement sur cet appareil.",
     "UsingCredentialsTitle": "Recevoir et utiliser des certificats",
     "UsingCredentialsBody": "Pour recevoir et utiliser des certificats, utilisez la fonction « Scanner » dans l'application pour scanner un QR code spécial. Les informations sont échangées via une connexion privée et cryptée.",
+    "PaymentsTitle": "Paiements, séparés",
+    "PaymentsBody": "L’application Heka Wallet peut aussi contenir un portefeuille de paiement pour les réseaux de test. C’est facultatif, et ses clés ne quittent jamais cet appareil. Les attestations et les paiements ne partagent aucune information.",
     "PrivacyConfidentiality": "Confidentialité et protection de la vie privée",
     "PrivacyParagraph": "Vous autorisez chaque utilisation des informations de votre application Heka Wallet. Vous ne partagez que ce qui est nécessaire pour une situation donnée. L'administration de l'application ou des tiers ne sont pas informés de l'utilisation de vos certificats numériques.",
     "GetStarted": "Commencer",

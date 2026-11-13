@@ -33,7 +33,7 @@ const setup = (options: { saved?: string; isAgentReady?: boolean } = {}) => {
   }
   const element = (isAgentReady = options.isAgentReady ?? true) => (
     <CryptoProvider
-      adapters={adapters}
+      createAdapters={() => adapters}
       withSeedSession={withSession}
       withLedgerSession={withSession}
       logger={logger}

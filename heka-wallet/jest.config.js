@@ -22,6 +22,7 @@ module.exports = {
       moduleNameMapper: {
         ...baseConfig.moduleNameMapper,
         '^react-dom$': '<rootDir>/packages/crypto/ui/__tests__/helpers/reactDomShim.js',
+        '\\.svg$': '<rootDir>/packages/crypto/ui/__tests__/helpers/svgStub.js',
       },
     },
     {

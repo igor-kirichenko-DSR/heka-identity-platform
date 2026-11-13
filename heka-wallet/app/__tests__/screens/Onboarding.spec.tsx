@@ -48,8 +48,18 @@ jest.mock('../../src/assets/credentials.svg', () => 'CredentialsImage')
 jest.mock('../../src/assets/qr_code.svg', () => 'QrCodeImage')
 jest.mock('../../src/assets/safe.svg', () => 'SafeImage')
 jest.mock('../../src/assets/wallet.svg', () => 'WalletImage')
-jest.mock('../../src/components/views/OnBoardingPage', () => ({ OnBoardingPage: () => null }))
-jest.mock('../../src/config', () => ({ isWalletBackupEnabled: false }))
+let mockCryptoEnabled = false
+const mockRenderPage = jest.fn((_step: { title: string }) => null)
+
+jest.mock('../../src/components/views/OnBoardingPage', () => ({
+  OnBoardingPage: (step: { title: string }) => mockRenderPage(step),
+}))
+jest.mock('../../src/config', () => ({
+  isWalletBackupEnabled: false,
+  get isCryptoModuleEnabled() {
+    return mockCryptoEnabled
+  },
+}))
 jest.mock('../../src/navigators', () => ({ Screens: {}, Stacks: {} }))
 
 describe('Onboarding', () => {
@@ -65,5 +75,28 @@ describe('Onboarding', () => {
     unmount()
 
     expect(remove).toHaveBeenCalledTimes(addEventListener.mock.calls.length)
+  })
+
+  describe('payments step', () => {
+    const renderedTitles = () => mockRenderPage.mock.calls.map(([step]) => step.title)
+
+    beforeEach(() => {
+      mockRenderPage.mockClear()
+    })
+
+    it('is not shown with the crypto module off', () => {
+      mockCryptoEnabled = false
+      render(<Onboarding pages={[]} nextButtonText="" previousButtonText="" />)
+
+      expect(renderedTitles()).not.toContain('Onboarding.PaymentsTitle')
+    })
+
+    it('is shown before the last step with the crypto module on', () => {
+      mockCryptoEnabled = true
+      render(<Onboarding pages={[]} nextButtonText="" previousButtonText="" />)
+
+      const titles = renderedTitles()
+      expect(titles.indexOf('Onboarding.PaymentsTitle')).toBe(titles.length - 2)
+    })
   })
 })

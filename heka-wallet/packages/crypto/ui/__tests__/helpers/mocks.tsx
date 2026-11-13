@@ -17,9 +17,10 @@ interface ButtonProps {
   onPress?: () => void
   disabled?: boolean
   testID?: string
+  children?: React.ReactNode
 }
 
-const MockButton: React.FC<ButtonProps> = ({ title, onPress, disabled, testID }) => (
+const MockButton: React.FC<ButtonProps> = ({ title, onPress, disabled, testID, children }) => (
   <TouchableOpacity
     onPress={onPress}
     disabled={disabled}
@@ -28,8 +29,15 @@ const MockButton: React.FC<ButtonProps> = ({ title, onPress, disabled, testID })
     accessibilityState={{ disabled: !!disabled }}
   >
     <Text>{title}</Text>
+    {children}
   </TouchableOpacity>
 )
+
+/** Stands in for the deep import of Bifold's ButtonLoading: jest.mock('@bifold/core/src/components/animated/ButtonLoading', ...). */
+export const buttonLoadingMock = () => ({
+  __esModule: true,
+  default: () => <Text testID="ButtonLoading">loading</Text>,
+})
 
 const MockQRRenderer: React.FC<{ value: string }> = ({ value }) => <Text testID="QRRenderer">{value}</Text>
 
@@ -48,6 +56,7 @@ const MockScanCamera: React.FC<ScanCameraProps> = ({ handleCodeScan }) => (
 export const bifoldMock = () => ({
   __esModule: true,
   Button: MockButton,
+  KeyboardView: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
   ButtonType: { Primary: 1, Secondary: 2, Critical: 0, Tertiary: 3 },
   QRRenderer: MockQRRenderer,
   ScanCamera: MockScanCamera,
@@ -56,12 +65,10 @@ export const bifoldMock = () => ({
   useStore: () => [bifoldState, jest.fn()],
 })
 
-const themeProxy: unknown = new Proxy(
-  {},
-  {
-    get: (_target, property) => (property === 'then' ? undefined : themeProxy),
-  }
-)
+// Callable, so a theme asset such as Assets.svg.logo can be rendered as a component.
+const themeProxy: unknown = new Proxy(() => null, {
+  get: (_target, property) => (property === 'then' ? undefined : themeProxy),
+})
 
 interface PinProps {
   title?: string
@@ -114,10 +121,15 @@ const MockIconButton: React.FC<{ onPress: () => void; label?: string; testId?: s
   </TouchableOpacity>
 )
 
+const MockBootstrapIcon: React.FC<{ name: string }> = ({ name }) => <Text testID={`Icon-${name}`}>{name}</Text>
+
 export const authenticateByBiometry = jest.fn<Promise<void>, [string]>()
+
+const MockLoader: React.FC<{ testID?: string }> = ({ testID }) => <View testID={testID} />
 
 export const sharedMock = () => ({
   __esModule: true,
+  Loader: MockLoader,
   useHekaTheme: () => themeProxy,
   useGlobalStyles: () => themeProxy,
   IconSizes: themeProxy,
@@ -125,6 +137,7 @@ export const sharedMock = () => ({
   ScreenInfoText: MockScreenInfoText,
   TextInput: MockTextInput,
   IconButton: MockIconButton,
+  BootstrapIcon: MockBootstrapIcon,
   authenticateByBiometry,
   isBiometryCancelledError: (name: string) => name === 'UserCancel',
   // Deterministic order, so tests know which words are taken out.

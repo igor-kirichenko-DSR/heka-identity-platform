@@ -10,7 +10,12 @@ import type { Hex } from 'viem'
 import { existsSync } from 'fs'
 import { join } from 'path'
 
+import { createPublicClient, http } from 'viem'
+
 import { baseSepolia, EvmAdapter } from '../../src'
+import { OP_GAS_PRICE_ORACLE } from '../../src/chains/constants'
+import { readL1Fee } from '../../src/l1Fee'
+import { toViemChain } from '../../src/viemChain'
 import { ETH, USDC } from '../helpers/chain'
 import { FakeKeyProvider, makeAddressBook } from '../helpers/keys'
 import { waitFor } from '../helpers/waitFor'
@@ -70,6 +75,26 @@ describeIntegration('EvmAdapter on Base Sepolia', () => {
         return page.items.find((item) => item.txId.toLowerCase() === txId.toLowerCase())
       }, HISTORY_TIMEOUT_MS)
       expect(record).toMatchObject({ direction: 'self', asset: USDC, amount: SEND_AMOUNT, status: 'success' })
+    },
+    TEST_TIMEOUT_MS
+  )
+  it(
+    'reads a positive L1 data fee from the real GasPriceOracle',
+    async () => {
+      const client = createPublicClient({
+        chain: toViemChain(baseSepolia),
+        transport: http(baseSepolia.descriptor.rpcUrl),
+      })
+      const l1Fee = await readL1Fee(client, OP_GAS_PRICE_ORACLE, {
+        chainId: 84532,
+        to: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        value: BigInt(1),
+        gas: BigInt(25_200),
+        maxFeePerGas: BigInt(2_000_000),
+        maxPriorityFeePerGas: BigInt(1_000_000),
+      })
+
+      expect(l1Fee).toBeGreaterThan(BigInt(0))
     },
     TEST_TIMEOUT_MS
   )

@@ -19,10 +19,12 @@ interface Props {
   quote?: FeeQuote
   isQuoting: boolean
   failed: boolean
+  /** False when the fee mode bar already shows the amount; loading, failure and warnings still show. */
+  showAmount: boolean
 }
 
 /** "Fee: 0.00002 ETH", or "up to N USDC" in paymaster mode, where the permit ceiling is what can be charged. */
-export const FeePreview: React.FC<Props> = ({ quote, isQuoting, failed }) => {
+export const FeePreview: React.FC<Props> = ({ quote, isQuoting, failed, showAmount }) => {
   const styles = useStyles(useHekaTheme())
   const { t } = useTranslation()
 
@@ -36,7 +38,7 @@ export const FeePreview: React.FC<Props> = ({ quote, isQuoting, failed }) => {
 
   return (
     <View style={styles.container} testID={testIdWithKey('CryptoFeePreview')}>
-      <Text style={styles.text}>{fee}</Text>
+      {showAmount && <Text style={styles.text}>{fee}</Text>}
       {quote.warnings?.map((warning) => (
         <Text key={warning} style={styles.warning}>
           {t(`Crypto.Fee.Warnings.${warning}`)}

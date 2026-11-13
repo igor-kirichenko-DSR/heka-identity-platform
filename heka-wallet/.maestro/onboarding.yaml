@@ -8,6 +8,6 @@ env:
 ---
 - runFlow: subflows/onboard.yaml
 - assertVisible:
-    id: 'com.ariesbifold:id/TabScan'
+    id: 'com.ariesbifold:id/TabCredentials'
 - assertVisible:
     id: 'com.ariesbifold:id/TabSettings'
