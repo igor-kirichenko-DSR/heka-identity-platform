@@ -1,0 +1,30 @@
+appId: com.heka.wallet
+name: A fresh account on Hedera Testnet shows the activation banner and the receive QR
+# Needs a build with ENABLE_CRYPTO_MODULE=true (the Payments tab) and network access: the banner appears because the
+# Mirror Node answers "no such account" for the new address. No funds needed; the key is random per run.
+tags:
+  - crypto
+env:
+  PIN: '482916'
+---
+- runFlow: subflows/open-payments.yaml
+- evalScript: "${output.key = '0x' + Array.from({ length: 64 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('')}"
+- runFlow:
+    file: subflows/import-key.yaml
+    env:
+      KEY: ${output.key}
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoChain-Hedera Testnet'
+- extendedWaitUntil:
+    visible:
+      id: 'com.ariesbifold:id/CryptoActivationBanner'
+    timeout: 30000
+- assertVisible:
+    id: 'com.ariesbifold:id/CryptoBalance-HBAR'
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoReceive'
+- assertVisible:
+    id: 'com.ariesbifold:id/CryptoReceiveQr'
+# The account is not on the ledger yet, so there is no 0.0.x id to show.
+- assertNotVisible:
+    id: 'com.ariesbifold:id/CryptoAccountId'

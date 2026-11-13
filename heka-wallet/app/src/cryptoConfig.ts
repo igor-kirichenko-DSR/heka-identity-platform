@@ -3,9 +3,10 @@ import type { ChainId } from '@heka-wallet/crypto-core'
 /** Used when `CRYPTO_DEFAULT_CHAIN` is empty or names a chain this build does not register. */
 export const FALLBACK_CRYPTO_CHAIN: ChainId = 'eip155:84532'
 
-/** Env name suffix → chain. A chain gets its `CRYPTO_RPC_URL_<suffix>` / `CRYPTO_BUNDLER_URL_<suffix>` here (F05, F08 add theirs). */
+/** Env name suffix → chain. A chain gets its `CRYPTO_RPC_URL_<suffix>` / `CRYPTO_BUNDLER_URL_<suffix>` here (F08 adds its bundler URLs). */
 const REGISTERED_CHAINS: Record<string, ChainId> = {
   BASE_SEPOLIA: 'eip155:84532',
+  HEDERA_TESTNET: 'eip155:296',
 }
 
 export interface CryptoChainOverrides {

@@ -47,6 +47,26 @@ describe('AccountStore', () => {
     expect(store.currentAccount?.chainId).toBe(HEDERA_TESTNET_EVM)
   })
 
+  it('keeps a ledger account id per chain and drops it when set to undefined', async () => {
+    const { store } = setup({ [HEDERA_TESTNET_EVM]: HOLDER })
+    await store.load()
+
+    store.setAccountId(HEDERA_TESTNET_EVM, '0.0.11338782')
+    expect(store.accountIds.get(HEDERA_TESTNET_EVM)).toBe('0.0.11338782')
+
+    store.setAccountId(HEDERA_TESTNET_EVM, undefined)
+    expect(store.accountIds.has(HEDERA_TESTNET_EVM)).toBe(false)
+  })
+
+  it('forgets account ids on reload (the wallet may have been removed or replaced)', async () => {
+    const { store } = setup({ [HEDERA_TESTNET_EVM]: HOLDER })
+    store.setAccountId(HEDERA_TESTNET_EVM, '0.0.1')
+
+    await store.load()
+
+    expect(store.accountIds.size).toBe(0)
+  })
+
   it('refuses an unregistered chain', () => {
     const { store } = setup({})
 

@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 import { useCrypto } from '../provider/CryptoContext'
 
-/** The Receive QR payload: EIP-681 with the chain id, and the token contract for an ERC-20 asset. */
+/** The Receive QR payload: EIP-681 with the chain id, and the token contract for a token (ERC-20, or the HTS token's EVM address). */
 export const useReceiveUri = () => {
   const { accounts, registry } = useCrypto()
   const account = accounts.currentAccount
@@ -20,7 +20,7 @@ export const useReceiveUri = () => {
       ? buildEip681({
           chainId: account.chainId,
           to: account.address,
-          token: asset.kind === 'erc20' ? asset.address : undefined,
+          token: asset.kind === 'native' ? undefined : asset.address,
         })
       : undefined
 
