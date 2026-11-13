@@ -1,6 +1,6 @@
 import type { TxRecord } from '@heka-wallet/crypto-core'
 
-import { ButtonType, testIdWithKey } from '@bifold/core'
+import { testIdWithKey } from '@bifold/core'
 import { txKey } from '@heka-wallet/crypto-core'
 import { type HekaTheme, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
 import { observer } from 'mobx-react-lite'
@@ -8,7 +8,6 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 
-import { useExplorerLink } from '../hooks/useExplorerLink'
 import { useCrypto } from '../provider/CryptoContext'
 import { formatAmount, shortAddress } from '../utils/format'
 
@@ -28,13 +27,12 @@ interface Props {
   onDone: () => void
 }
 
-/** The send after submission: pending until the store's status poll settles it, then final with the explorer link. */
+/** The send after submission: pending until the store's status poll settles it, then final. */
 export const SendStatus: React.FC<Props> = observer(({ sent, onDone }) => {
   const styles = useStyles(useHekaTheme())
   const globalStyles = useGlobalStyles()
   const { t } = useTranslation()
   const { transactions } = useCrypto()
-  const openExplorer = useExplorerLink()
   const record = transactions.localRecords.get(txKey(sent.chainId, sent.txId)) ?? sent
 
   return (
@@ -50,15 +48,7 @@ export const SendStatus: React.FC<Props> = observer(({ sent, onDone }) => {
         </Text>
       </View>
       <BottomActions
-        actions={[
-          {
-            title: t('Crypto.Explorer'),
-            type: ButtonType.Secondary,
-            onPress: () => openExplorer(record),
-            testID: testIdWithKey('CryptoOpenExplorer'),
-          },
-          { title: t('Global.Done'), onPress: onDone, testID: testIdWithKey('CryptoSendDone') },
-        ]}
+        actions={[{ title: t('Global.Done'), onPress: onDone, testID: testIdWithKey('CryptoSendDone') }]}
       />
     </View>
   )

@@ -63,7 +63,6 @@ const translation = {
     "Debug": {
       "PhraseCopied": "Frase copiada (versão de depuração)"
     },
-    "Explorer": "Ver no explorador",
     "Wallet": {
       "LoadFailed": "Não foi possível abrir a carteira de pagamentos.",
       "Retry": "Tentar de novo"

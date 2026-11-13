@@ -125,8 +125,11 @@ const MockBootstrapIcon: React.FC<{ name: string }> = ({ name }) => <Text testID
 
 export const authenticateByBiometry = jest.fn<Promise<void>, [string]>()
 
+const MockLoader: React.FC<{ testID?: string }> = ({ testID }) => <View testID={testID} />
+
 export const sharedMock = () => ({
   __esModule: true,
+  Loader: MockLoader,
   useHekaTheme: () => themeProxy,
   useGlobalStyles: () => themeProxy,
   IconSizes: themeProxy,

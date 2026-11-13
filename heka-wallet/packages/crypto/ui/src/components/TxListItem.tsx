@@ -19,11 +19,10 @@ const ICON: Record<TxDirection, IconName> = {
 
 interface Props {
   record: TxRecord
-  onPress: (record: TxRecord) => void
 }
 
-/** One history entry; tapping opens it in the explorer. */
-export const TxListItem: React.FC<Props> = ({ record, onPress }) => {
+/** One history entry. */
+export const TxListItem: React.FC<Props> = ({ record }) => {
   const { t } = useTranslation()
   const counterparty = t(`Crypto.History.Direction.${record.direction}`, { address: shortAddress(record.counterparty) })
 
@@ -34,7 +33,6 @@ export const TxListItem: React.FC<Props> = ({ record, onPress }) => {
       paragraph={`${counterparty}
 ${new Date(record.createdAt).toLocaleString()}`}
       right={<StatusChip status={record.status} />}
-      onPress={() => onPress(record)}
       testID={testIdWithKey(`CryptoTx-${record.txId}`)}
     />
   )

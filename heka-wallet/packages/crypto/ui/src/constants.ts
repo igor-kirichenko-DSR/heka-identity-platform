@@ -28,9 +28,12 @@ export const VERIFY_GRID_COLUMNS = 3
 /** Minimum width of a candidate word chip, so short words stay easy to hit. */
 export const CANDIDATE_CHIP_MIN_WIDTH = 72
 
-/** Width and height of the logo shown on the register intro and end screens. */
+/** Width and height of the picture on the register intro and end screens (the 284 x 233 wallet image, scaled). */
 export const REGISTER_ILLUSTRATION_WIDTH = 160
-export const REGISTER_ILLUSTRATION_HEIGHT = 80
+export const REGISTER_ILLUSTRATION_HEIGHT = 131
+
+/** Size of the spinner under the history list while a further page loads. */
+export const HISTORY_MORE_LOADER_SIZE = 48
 
 /** Minimum height of the import input. */
 export const IMPORT_INPUT_MIN_HEIGHT = 120

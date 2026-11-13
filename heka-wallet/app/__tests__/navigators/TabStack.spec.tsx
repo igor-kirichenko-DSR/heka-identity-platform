@@ -71,12 +71,13 @@ describe('TabStack tabs', () => {
     expect(screen.queryByTestId('TabPayments')).toBeNull()
   })
 
-  it('adds the Payments tab with the crypto module on', () => {
+  it('adds the Payments tab and drops the Scan tab with the crypto module on', () => {
     mockCryptoEnabled = true
     render(<TabStack />)
 
     expect(screen.getByTestId('TabPayments')).toBeTruthy()
     expect(screen.getByTestId('TabCredentials')).toBeTruthy()
     expect(screen.getByTestId('TabSettings')).toBeTruthy()
+    expect(screen.queryByTestId('TabScan')).toBeNull()
   })
 })

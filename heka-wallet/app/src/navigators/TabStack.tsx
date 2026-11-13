@@ -31,9 +31,10 @@ const NOTIFICATION_OPTIONS = { openIDUri: '' }
 
 // Screens are declared with HomeStack first so React Navigation focuses it on remount
 // (e.g. after lockout-relogin) — `initialRouteName` alone is unreliable for a non-first tab.
+// The Scan tab is left out when the Payments (Coins) tab is shown; Home has its own Scan button.
 // Visual tab-bar order is decoupled here and explicitly defined on the JS side to avoid Android/iOS inconsistency.
 const tabBarVisualOrder: string[] = [
-  BifoldTabStacks.ConnectStack,
+  ...(isCryptoModuleEnabled ? [] : [BifoldTabStacks.ConnectStack]),
   BifoldTabStacks.HomeStack,
   ...(isCryptoModuleEnabled ? [TabStacks.CryptoStack] : []),
   TabStacks.BifoldSettingsStack,
@@ -132,32 +133,34 @@ export const TabStack: React.FC = () => {
             },
           }}
         />
-        <Tab.Screen
-          name={BifoldTabStacks.ConnectStack}
-          options={{
-            tabBarIcon: ({ color, focused }) => (
-              <TabBarIcon
-                iconComponent={<BootstrapIcon name={'qr-code-scan'} color={color} size={IconSizes.medium} />}
-                label={t('TabStack.Scan')}
-                focused={focused}
-              />
-            ),
-            tabBarShowLabel: false,
-            tabBarAccessibilityLabel: t('TabStack.Scan'),
-            tabBarTestID: testIdWithKey('TabScan'),
-          }}
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              e.preventDefault()
-              if (!assertNetworkConnected()) {
-                return
-              }
-              navigation.navigate(BifoldStacks.ConnectStack, { screen: BifoldScreens.Scan })
-            },
-          })}
-        >
-          {() => <View />}
-        </Tab.Screen>
+        {!isCryptoModuleEnabled && (
+          <Tab.Screen
+            name={BifoldTabStacks.ConnectStack}
+            options={{
+              tabBarIcon: ({ color, focused }) => (
+                <TabBarIcon
+                  iconComponent={<BootstrapIcon name={'qr-code-scan'} color={color} size={IconSizes.medium} />}
+                  label={t('TabStack.Scan')}
+                  focused={focused}
+                />
+              ),
+              tabBarShowLabel: false,
+              tabBarAccessibilityLabel: t('TabStack.Scan'),
+              tabBarTestID: testIdWithKey('TabScan'),
+            }}
+            listeners={({ navigation }) => ({
+              tabPress: (e) => {
+                e.preventDefault()
+                if (!assertNetworkConnected()) {
+                  return
+                }
+                navigation.navigate(BifoldStacks.ConnectStack, { screen: BifoldScreens.Scan })
+              },
+            })}
+          >
+            {() => <View />}
+          </Tab.Screen>
+        )}
         <Tab.Screen
           name={TabStacks.BifoldSettingsStack}
           component={SettingStack}

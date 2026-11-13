@@ -63,7 +63,6 @@ const translation = {
     "Debug": {
       "PhraseCopied": "Phrase copiée (version de débogage)"
     },
-    "Explorer": "Voir dans l'explorateur",
     "Wallet": {
       "LoadFailed": "Le portefeuille de paiement n'a pas pu être ouvert.",
       "Retry": "Réessayer"

@@ -128,6 +128,8 @@ export const ConfirmationInputModal: React.FC<ConfirmationInputModalProps> = ({
       </SafeAreaView>
       <ScrollView
         scrollEnabled={false}
+        // The PIN field is focused (its soft keyboard is off); without this the first Numpad tap only blurs it
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ ...styles.container, ...globalStyles.defaultContainer }}
       >
         <Text style={styles.title}>{title}</Text>

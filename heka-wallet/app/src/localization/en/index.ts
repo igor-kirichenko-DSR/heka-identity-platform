@@ -63,7 +63,6 @@ const translation = {
     "Debug": {
       "PhraseCopied": "Phrase copied (debug build)"
     },
-    "Explorer": "View in explorer",
     "Wallet": {
       "LoadFailed": "The payment wallet could not be opened.",
       "Retry": "Try again"

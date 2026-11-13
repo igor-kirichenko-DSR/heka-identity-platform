@@ -2,7 +2,6 @@ import type { FeeQuote } from '@heka-wallet/crypto-core'
 
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { Linking } from 'react-native'
 
 import { CryptoScreens } from '../../src/navigators/routes'
 import { Send } from '../../src/screens/Send'
@@ -142,9 +141,8 @@ describe('Send', () => {
     expect(services.adapters[0].transfer).not.toHaveBeenCalled()
   })
 
-  it('sends after the PIN, shows pending, then the final status with the explorer link', async () => {
+  it('sends after the PIN, shows pending, then the final status', async () => {
     const services = await tracked()
-    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true)
     await fill(RECIPIENT, '0.1')
     await waitFor(() => expect(screen.getByTestId('CryptoSendSubmit')).not.toBeDisabled(), QUOTE_WAIT)
 
@@ -162,8 +160,7 @@ describe('Send', () => {
     services.adapters[0].getStatus.mockResolvedValue({ status: 'success' })
     await waitFor(() => expect(screen.getByTestId('CryptoStatus-success')).toBeTruthy())
 
-    fireEvent.press(screen.getByTestId('CryptoOpenExplorer'))
-    expect(openURL).toHaveBeenCalledWith(`https://explorer.test/tx/${TX}`)
+    expect(screen.queryByTestId('CryptoOpenExplorer')).toBeNull()
   })
 
   it('shows a submit failure and stays on the form', async () => {

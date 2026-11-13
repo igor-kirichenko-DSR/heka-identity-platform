@@ -1,8 +1,8 @@
 import { Button, ButtonType, testIdWithKey } from '@bifold/core'
-import { type HekaTheme, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
+import { type HekaTheme, Loader, useGlobalStyles, useHekaTheme } from '@heka-wallet/shared'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 
 const useStyles = ({ Spacing, TextTheme }: HekaTheme) =>
   StyleSheet.create({
@@ -33,7 +33,7 @@ export const WalletStatusView: React.FC<Props> = ({ failed, onRetry }) => {
           />
         </>
       ) : (
-        <ActivityIndicator testID={testIdWithKey('CryptoLoading')} />
+        <Loader testID={testIdWithKey('CryptoLoading')} />
       )}
     </View>
   )
