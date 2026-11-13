@@ -16,7 +16,7 @@ The design is in [`../Idea and high-level design.md`](../Idea%20and%20high-level
 | [F03](F03-key-provider.md) | F3 | ✅ Key provider: seed, derivation, backup, reveal, import, remove | 1–2 | Spike C | wallet |
 | [F04](F04-wallet-ui.md) | F4 | ✅ UI: register, home, receive, send, history, settings | 2 | — | wallet |
 | [F06](F06-host-wiring.md) | F6 | ✅ Host wiring: flag, provider, tab, scanner, onboarding, i18n | 2–3 | — | wallet |
-| [F05](F05-hedera-entry.md) | F5 | Hedera testnet through the EVM adapter | 1–2 | Spike B | wallet |
+| [F05](F05-hedera-entry.md) | F5 | ✅ Hedera testnet through the EVM adapter | 1–2 | Spike B | wallet |
 | [F07](F07-binding-signing.md) | F7 | Binding signatures: EIP-712, SIWE, nonce; signing-request channel | 1–2 | — | wallet, demo |
 | [F08](F08-gas-in-usdc.md) | F8 | Gas paid in USDC (EIP-7702 + Circle Paymaster) | 1–2 | Spike D | wallet |
 | [F09](F09-walletconnect.md) | F9 | WalletConnect v2 dApp pairing | 5 | — | wallet |
