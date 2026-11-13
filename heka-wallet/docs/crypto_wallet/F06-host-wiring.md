@@ -74,11 +74,11 @@ Agreed 2026-11-11 (DSRDSC-293):
 -   Links: the scan tab, deep links and basic-message links all end in `handleInvitationUrl`, so the `ethereum:` check lives there (`utils/cryptoLinks.ts`, F07 extends it). A link switches the chain to the one it names, then opens Send. No OS URL scheme is registered for `ethereum:`; only scans and in-app links reach it.
 -   The onboarding page reuses the wallet illustration. French and Portuguese strings are by the agent; a native speaker should check them.
 -   `CryptoStack` takes `bottomInset`: the tab bar floats over the screens, so `TabStack` passes its height plus margin, as `Home` pads its bottom. Found by the first device run, with three more defects (agent ref timing in `useCryptoHost`, a redirect in `VerifyMnemonicScreen` that dropped the Done screen, unquoted Maestro `evalScript`); each has a regression test.
--   Maestro: `crypto/*.yaml` added to the workspace config; the flows need a build with `ENABLE_CRYPTO_MODULE=true`. `crypto-register`, `crypto-import` and `crypto-receive` passed on a connected Android phone (debug build, flag on, 2026-11-11); `crypto-send` and the backup → restore check were not run.
+-   Maestro: `crypto/*.yaml` added to the workspace config; the flows need a build with `ENABLE_CRYPTO_MODULE=true`. `crypto-register`, `crypto-import` and `crypto-receive` passed on a connected Android phone (debug build, flag on, 2026-11-11); `crypto-send` was run later by the developer on the same setup. The backup → restore check was not run; it moved to F15 (agreed 2026-11-13).
 
 ## Acceptance criteria
 
 -   Flag off: no crypto provider mounted, three tabs, scanner behaviour unchanged, bundle may still contain the packages.
 -   Flag on: the Payments tab works end to end on the enabled chains.
 -   No vendor key or private key appears in `.env.example` or in config defaults.
--   A seed survives backup → restore on a second device and derives the same addresses (moved from F03, agreed 2026-11-10).
+-   The backup → restore check (a seed survives it on a second device and derives the same addresses) moved to F15, agreed 2026-11-13; it came to F06 from F03 on 2026-11-10.
