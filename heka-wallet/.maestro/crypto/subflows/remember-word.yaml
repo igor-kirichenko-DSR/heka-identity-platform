@@ -1,0 +1,9 @@
+# Stores word ${I} of the new phrase in output.words. Chip text is "<n>. <word>".
+appId: com.heka.wallet
+---
+- scrollUntilVisible:
+    element:
+      id: 'com.ariesbifold:id/CryptoPhraseWord-${I}'
+- copyTextFrom:
+    id: 'com.ariesbifold:id/CryptoPhraseWord-${I}'
+- evalScript: "${output.words = Object.assign(output.words || {}, { ['w' + I]: maestro.copiedText.split('. ')[1] })}"

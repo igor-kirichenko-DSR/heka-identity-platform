@@ -1,0 +1,23 @@
+# Imports a raw key and opens the wallet. Input: env KEY (0x + 64 hex). Starts on the register screen.
+appId: com.heka.wallet
+---
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoImportWallet'
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoImportInput'
+- inputText: ${KEY}
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: 'com.ariesbifold:id/CryptoImportSubmit'
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoImportSubmit'
+- scrollUntilVisible:
+    element:
+      id: 'com.ariesbifold:id/CryptoOpenWallet'
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoOpenWallet'
+- extendedWaitUntil:
+    visible:
+      id: 'com.ariesbifold:id/CryptoReceive'
+    timeout: 30000

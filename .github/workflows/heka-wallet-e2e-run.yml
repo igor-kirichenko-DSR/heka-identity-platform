@@ -13,6 +13,11 @@ on:
         description: ENABLE_EXTERNAL_AUTH value for the app build
         required: true
         type: boolean
+      crypto-module:
+        description: ENABLE_CRYPTO_MODULE value for the app build (the Payments tab the crypto flows open)
+        required: false
+        default: false
+        type: boolean
       backend:
         description: Start the root Compose stack (Postgres, Keycloak, identity-service)
         required: true
@@ -92,8 +97,10 @@ jobs:
       - name: Prepare app env file
         working-directory: ./heka-wallet/app
         run: |
-          sed 's/^ENABLE_EXTERNAL_AUTH=.*/ENABLE_EXTERNAL_AUTH=${{ inputs.external-auth }}/' .env.example > .env.ci
-          grep '^ENABLE_EXTERNAL_AUTH=' .env.ci
+          sed -e 's/^ENABLE_EXTERNAL_AUTH=.*/ENABLE_EXTERNAL_AUTH=${{ inputs.external-auth }}/' \
+              -e 's/^ENABLE_CRYPTO_MODULE=.*/ENABLE_CRYPTO_MODULE=${{ inputs.crypto-module }}/' \
+              .env.example > .env.ci
+          grep -E '^ENABLE_(EXTERNAL_AUTH|CRYPTO_MODULE)=' .env.ci
 
       # Debug build without the JS bundle: the app loads JS from Metro.
       - name: Build debug APK

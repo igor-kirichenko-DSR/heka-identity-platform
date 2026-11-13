@@ -40,6 +40,7 @@ const translation = {
   },
   "TabStack": {
     "Coins": "Moedas",
+    "Payments": "Moedas",
     "Settings": "Configurações"
   },
   "Passkeys": {
@@ -58,102 +59,171 @@ const translation = {
     "UsePasskeyToAuth": "Por favor, use a chave de acesso para autenticar com o serviço de backup"
   },
   "Crypto": {
-    "Balance": "Saldo",
-    "Token": "Token",
-    "Staked": "Em stake",
-    "ConfirmTransaction": "Confirmar transação",
-    "MnemonicSeed": "Semente mnemônica",
-    "HardwareWallet": "Carteira de hardware",
-    "PrivateKey": "Chave privada",
+    "Title": "Moedas",
+    "Debug": {
+      "PhraseCopied": "Frase copiada (versão de depuração)"
+    },
+    "Wallet": {
+      "LoadFailed": "Não foi possível abrir a carteira de pagamentos.",
+      "Retry": "Tentar de novo"
+    },
+    "Address": {
+      "Copy": "Copiar endereço",
+      "Copied": "Copiado"
+    },
     "Register": {
-      "NewWallet": "Criar nova carteira",
-      "ImportExisting": "Importar carteira existente",
-      "ImportLedgerNano": "Importar Ledger Nano X",
-      "CompletedTitle": "Tudo pronto!",
-      "CompletedText": "Sua jornada interchain cósmica começa agora",
-      "MnemonicBackupRecommendation": "Faça backup seguro da sua semente mnemônica",
+      "Intro": {
+        "Title": "Carteira de pagamentos",
+        "Text": "Envie e receba stablecoins como USDC. Crie uma nova carteira ou importe uma que você já tem.",
+        "Empty": "Você ainda não tem carteiras",
+        "Create": "Criar nova carteira",
+        "Import": "Importar carteira existente"
+      },
       "NewMnemonic": {
-        "Title": "Faça backup da sua carteira",
-        "InfoText1": "Sua frase mnemônica secreta é usada para recuperar suas criptomoedas caso você perca seu telefone ou troque de carteira.",
-        "InfoText2": "Guarde essas 12 palavras em um local seguro, como um gerenciador de senhas, e nunca as compartilhe com ninguém."
+        "Title": "Faça o backup da sua carteira",
+        "Text1": "Estas 12 palavras são a única forma de recuperar seus fundos se você perder este celular ou mudar de carteira.",
+        "Text2": "Escreva-as em papel e guarde-as em local seguro. Nunca as compartilhe e nunca as guarde em uma captura de tela.",
+        "Written": "Já anotei"
       },
       "VerifyMnemonic": {
-        "Title": "Você a salvou, certo?",
-        "InfoText": "Verifique se você salvou sua frase mnemônica secreta tocando as palavras na ordem correta:"
+        "Title": "Você salvou, certo?",
+        "Text": "Confirme que você salvou sua frase de recuperação tocando nas palavras que faltam na ordem.",
+        "WrongOrder": "As palavras não estão na ordem certa. Toque em uma palavra para retirá-la ou recomece.",
+        "Reset": "Recomeçar"
       },
-      "ImportWallet": {
-        "Title": "Importe sua carteira",
-        "InfoText": "Importe sua carteira com a frase mnemônica de 12 palavras que você fez backup."
+      "Done": {
+        "Title": "Sua carteira está pronta",
+        "BackupPrompt": "Faça o backup agora para que a nova carteira também esteja no seu backup. Sua frase de recuperação continua sendo o backup principal.",
+        "PhraseIsBackup": "Sua frase de recuperação é o seu backup. Guarde-a em local seguro: sem ela, ninguém pode recuperar seus fundos.",
+        "RawKeyText": "Guarde sua chave privada em local seguro: sem ela, ninguém pode recuperar seus fundos.",
+        "BackupNow": "Fazer backup agora",
+        "BackupDone": "Backup concluído.",
+        "BackupFailed": "O backup falhou. Tente de novo mais tarde nas configurações.",
+        "OpenWallet": "Abrir carteira"
       },
-      "Form": {
-        "WalletLabel": {
-          "Label": "Rótulo da carteira",
-          "Required": "O nome é obrigatório"
-        },
-        "Password": {
-          "Label": "Senha",
-          "Required": "Senha obrigatória",
-          "Invalid": "Senha inválida",
-          "TooShort": "A senha deve ter mais de 8 caracteres"
-        },
-        "ConfirmPassword": {
-          "Label": "Confirmar senha",
-          "Required": "Confirmar a senha é obrigatório",
-          "TooShort": "A senha deve ter mais de 8 caracteres",
-          "DoesntMatch": "As senhas não correspondem"
-        },
-        "Mnemonic": {
-          "Label": "Semente mnemônica",
-          "Required": "Semente mnemônica é obrigatória",
-          "TooShort": "A semente mnemônica deve conter pelo menos 8 palavras",
-          "Invalid": "Semente mnemônica inválida",
-          "InvalidPrivateKey": "Chave privada inválida",
-          "InvalidPrivateKeyLength": "Comprimento da chave privada inválido"
-        }
-      },
-      "BIP44": {
-        "HDDerivationPath": "Caminho de derivação HD",
-        "Description": "Defina um caminho de derivação de endereço personalizado modificando os índices abaixo:",
-        "InvalidChange": "A alteração deve ser 0 ou 1"
+      "Errors": {
+        "Exists": "Já existe uma carteira de pagamentos neste dispositivo.",
+        "SaveFailed": "Não foi possível salvar a carteira. Tente de novo."
+      }
+    },
+    "Import": {
+      "Title": "Importar sua carteira",
+      "Text": "Digite sua frase de recuperação de 12 ou 24 palavras, ou uma chave privada que começa com 0x.",
+      "Label": "Frase de recuperação ou chave privada",
+      "Submit": "Importar",
+      "Errors": {
+        "WordCount": "Uma frase de recuperação tem 12, 15, 18, 21 ou 24 palavras.",
+        "InvalidPhrase": "Esta frase de recuperação não é válida.",
+        "InvalidKey": "Uma chave privada é 0x seguido de 64 caracteres hexadecimais."
       }
     },
     "Home": {
-      "TotalBalance": "Saldo Total",
-      "BIP44": {
-        "SelectAccount": "Selecionar conta",
-        "PreviousTxs": "Transações anteriores"
-      },
-      "Tokens": {
-        "ViewAll": "Ver todos os tokens"
-      }
+      "Receive": "Receber",
+      "Send": "Enviar",
+      "History": "Histórico",
+      "Settings": "Configurações",
+      "NoAccount": "Ainda não há conta nesta rede.",
+      "Balance": "Saldo",
+      "BalanceOf": "Saldo {{symbol}}",
+      "BalanceFailed": "Não foi possível atualizar os saldos. Puxe para baixo para tentar de novo.",
+      "ActivationPending": "Esta conta fica ativa com o primeiro depósito.",
+      "EnableAsset": "Ativar {{symbol}}",
+      "EnableAssetConfirm": "Confirme para ativar o token",
+      "EnableAssetFailed": "Não foi possível ativar o token. Tente de novo."
     },
-    "Account": {
-      "NoAccount": "Nenhuma conta",
-      "SelectAccount": "Selecionar conta",
-      "Selected": "{{name}} (Selecionado)",
-      "RemoveAccount": "Remover conta {{name}}"
+    "Receive": {
+      "Header": "Receber",
+      "Title": "Receber {{symbol}} na {{chain}}",
+      "AccountId": "ID da conta: {{id}}",
+      "Hint": "Envie para este endereço somente ativos da {{chain}}."
     },
     "Send": {
-      "Recipient": "Destinatário",
-      "Amount": "Quantidade",
-      "Memo": "Observação (Opcional)",
-      "Fee": "Taxa",
-      "Gas": "Gás"
+      "Header": "Enviar",
+      "Recipient": "Endereço do destinatário",
+      "Scan": "Ler um código QR",
+      "Amount": "Valor ({{symbol}})",
+      "Max": "Máx.",
+      "SubmitAmount": "Enviar {{amount}} {{symbol}}",
+      "Confirm": "Confirme o pagamento",
+      "NewRecipient": "Você nunca enviou para este endereço. Confira com atenção.",
+      "AddressWarnings": {
+        "no-checksum": "Este endereço não tem soma de verificação. Confira com atenção."
+      },
+      "Result": {
+        "pending": "Pagamento enviado",
+        "success": "Pagamento concluído",
+        "failed": "Falha no pagamento",
+        "unknown": "Status do pagamento desconhecido",
+        "Summary": "{{amount}} para {{to}}"
+      },
+      "Errors": {
+        "InvalidAddress": "Este endereço não é válido nesta rede.",
+        "InvalidAmount": "Digite um valor válido.",
+        "InsufficientAmount": "O saldo é insuficiente para este valor.",
+        "InsufficientFee": "O saldo é insuficiente para pagar a taxa da rede.",
+        "Pending": "Aguarde a conclusão do pagamento anterior.",
+        "Locked": "A carteira está bloqueada. Desbloqueie e tente de novo.",
+        "Failed": "Não foi possível enviar o pagamento."
+      }
     },
-    "Unlock": {
-      "SignIn": "Entrar",
-      "UseBiometry": "Usar autenticação biométrica"
+    "Fee": {
+      "Estimate": "Taxa da rede: {{amount}}",
+      "UpTo": "Taxa da rede: até {{amount}}",
+      "UpToShort": "até {{amount}}",
+      "Usdc": "Pagar taxa em USDC",
+      "Failed": "Não foi possível estimar a taxa da rede.",
+      "Warnings": {
+        "insufficient-native-balance": "O saldo é insuficiente para pagar a taxa da rede."
+      }
     },
-    "Error": {
-      "Unknown": "Erro desconhecido",
-      "ErrorCode": "Código de erro",
-      "InvalidBech32Error": "Endereço inválido",
-      "ICNSFailedToFetchError": "Falha ao buscar o endereço do ICNS",
-      "InvalidNumberAmountError": "Número inválido",
-      "ZeroAmountError": "O valor é zero",
-      "NegativeAmountError": "O valor é negativo",
-      "InsufficientAmountError": "Fundos insuficientes",
-      "InsufficientFeeError": "Saldo insuficiente para a taxa de transação"
+    "Status": {
+      "pending": "Pendente",
+      "success": "Concluído",
+      "failed": "Falhou",
+      "unknown": "Desconhecido"
+    },
+    "History": {
+      "Header": "Histórico",
+      "Empty": "Nenhum pagamento ainda.",
+      "LoadFailed": "Não foi possível carregar o histórico. Puxe para baixo para tentar de novo.",
+      "PartialNote": "Pagamentos antigos e transferências recebidas da moeda própria da rede podem não aparecer aqui.",
+      "Direction": {
+        "in": "De {{address}}",
+        "out": "Para {{address}}",
+        "self": "Para você mesmo"
+      }
+    },
+    "Scan": {
+      "Header": "Ler QR",
+      "NotAnAddress": "Este código QR não contém um endereço.",
+      "Unsupported": "Esta solicitação de pagamento é de outra rede ou outro token."
+    },
+    "Settings": {
+      "Header": "Configurações de pagamento",
+      "Sections": {
+        "Network": "Rede",
+        "Security": "Segurança",
+        "Wallet": "Carteira"
+      },
+      "DefaultChain": "Rede padrão",
+      "SaveFailed": "Não foi possível salvar a rede padrão.",
+      "RevealPhrase": "Mostrar frase de recuperação",
+      "RemoveWallet": "Remover carteira de pagamentos"
+    },
+    "Reveal": {
+      "Header": "Frase de recuperação",
+      "Title": "Sua frase de recuperação",
+      "Warning": "Qualquer pessoa com estas palavras pode levar seus fundos. Não as compartilhe e não faça captura de tela.",
+      "Confirm": "Confirme para mostrar a frase de recuperação",
+      "Failed": "Não foi possível mostrar a frase de recuperação."
+    },
+    "Remove": {
+      "Header": "Remover carteira",
+      "Title": "Remover a carteira de pagamentos?",
+      "Warning": "Isto remove a carteira de pagamentos deste dispositivo. Sem sua frase de recuperação, estes fundos não podem ser recuperados. Suas credenciais não são afetadas.",
+      "Confirm": "Confirme para remover a carteira de pagamentos",
+      "Submit": "Remover",
+      "Failed": "Não foi possível remover a carteira."
     }
   },
   "Biometry": {
@@ -221,6 +291,8 @@ const translation = {
     "StoredSecurelyBody": "O Heka Wallet armazena credenciais digitais — versões digitais de documentos como licenças, identidades, autorizações, receitas médicas, etc. Elas são armazenadas de forma segura, apenas neste dispositivo.",
     "UsingCredentialsTitle": "Recebendo e utilizando credenciais",
     "UsingCredentialsBody": "Para receber e usar credenciais, utilize o recurso “Escanear” no aplicativo para escanear um código QR especial. As informações são enviadas e recebidas por meio de uma conexão privada e criptografada.",
+    "PaymentsTitle": "Pagamentos, separados",
+    "PaymentsBody": "O aplicativo Heka Wallet também pode ter uma carteira de pagamentos para redes de teste. É opcional, e suas chaves nunca saem deste dispositivo. Credenciais e pagamentos não compartilham informações.",
     "PrivacyConfidentiality": "Privacidade e confidencialidade",
     "PrivacyParagraph": "Você aprova cada uso das informações do seu aplicativo Heka Wallet. Você também compartilha apenas o necessário para cada situação. A administração do aplicativo ou terceiros não são informados sobre quando e como você utiliza suas credenciais digitais.",
     "GetStarted": "Começar",
@@ -308,6 +380,10 @@ const translation = {
   },
   "PINEnter": {
     "EnterPIN": "Digite o PIN da sua carteira"
+  },
+  "PINConfirmation": {
+    "Label": "Senha",
+    "Invalid": "Senha inválida"
   },
   "Proof": {
     "SharedInformation": "Informações compartilhadas"

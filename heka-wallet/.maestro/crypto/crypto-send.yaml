@@ -1,0 +1,49 @@
+appId: com.heka.wallet
+name: 0.01 USDC is sent on Base Sepolia and reaches the final status
+# On demand only (tag crypto-onchain, in no CI suite): spends testnet USDC and ETH.
+# Env: CRYPTO_FUNDED_KEY - a funded Base Sepolia test key from a local, untracked file, never committed;
+#      CRYPTO_SEND_TO - recipient (any address; the wallet's own address works).
+# maestro test .maestro/crypto/crypto-send.yaml -e CRYPTO_FUNDED_KEY=<key> -e CRYPTO_SEND_TO=<address>
+tags:
+  - crypto
+  - crypto-onchain
+env:
+  PIN: '482916'
+---
+- runFlow: subflows/open-payments.yaml
+- runFlow:
+    file: subflows/import-key.yaml
+    env:
+      KEY: ${CRYPTO_FUNDED_KEY}
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoSend'
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoAsset-USDC'
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoRecipient'
+- inputText: ${CRYPTO_SEND_TO}
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoAmount'
+- inputText: '0.01'
+- hideKeyboard
+- extendedWaitUntil:
+    visible:
+      id: 'com.ariesbifold:id/CryptoFeePreview'
+    timeout: 30000
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoSendSubmit'
+- runFlow: subflows/confirm-pin.yaml
+- extendedWaitUntil:
+    visible:
+      id: 'com.ariesbifold:id/CryptoSendStatus'
+    timeout: 60000
+- extendedWaitUntil:
+    visible:
+      id: 'com.ariesbifold:id/CryptoStatus-success'
+    timeout: 120000
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoSendDone'
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoHistory'
+- assertVisible:
+    id: 'com.ariesbifold:id/CryptoStatus-success'

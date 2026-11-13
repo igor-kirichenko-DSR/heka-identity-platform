@@ -8,7 +8,8 @@
   "workspaces": {
     "packages": [
       "app",
-      "packages/*"
+      "packages/*",
+      "packages/crypto/*"
     ]
   },
   "scripts": {
@@ -110,8 +111,7 @@
     "protobufjs@npm:8.0.0": "8.6.5",
     "@grpc/grpc-js@npm:1.12.6": "1.12.7",
     "bn.js@npm:5.1.1": "5.2.3",
-    "bn.js@npm:5.2.1": "5.2.3",
-    "elliptic@npm:6.5.4": "6.6.1"
+    "bn.js@npm:5.2.1": "5.2.3"
   },
   "packageManager": "yarn@4.16.0"
 }

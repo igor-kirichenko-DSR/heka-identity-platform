@@ -1,0 +1,46 @@
+{
+  "items": [
+    {
+      "chainId": "eip155:84532",
+      "account": "0x1111111111111111111111111111111111111111",
+      "txId": "0xbbb0000000000000000000000000000000000000000000000000000000000002",
+      "explorerHash": "0xbbb0000000000000000000000000000000000000000000000000000000000002",
+      "direction": "in",
+      "asset": {
+        "id": "eip155:84532/erc20:0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "symbol": "USDC",
+        "name": "USD Coin",
+        "decimals": 6,
+        "kind": "erc20",
+        "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "stable": "USD"
+      },
+      "amount": "2500000",
+      "counterparty": "0x3333333333333333333333333333333333333333",
+      "status": "success",
+      "createdAt": 1762689500000,
+      "source": "chain"
+    },
+    {
+      "chainId": "eip155:84532",
+      "account": "0x1111111111111111111111111111111111111111",
+      "txId": "0xddd0000000000000000000000000000000000000000000000000000000000004",
+      "explorerHash": "0xddd0000000000000000000000000000000000000000000000000000000000004",
+      "direction": "in",
+      "asset": {
+        "id": "eip155:84532/erc20:0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "symbol": "USDC",
+        "name": "USD Coin",
+        "decimals": 6,
+        "kind": "erc20",
+        "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "stable": "USD"
+      },
+      "amount": "7000000",
+      "counterparty": "0x4444444444444444444444444444444444444444",
+      "status": "success",
+      "createdAt": 1762600000000,
+      "source": "chain"
+    }
+  ]
+}
