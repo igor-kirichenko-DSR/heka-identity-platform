@@ -13,6 +13,11 @@ env:
     file: subflows/import-key.yaml
     env:
       KEY: ${output.key}
+# Receive can be below the fold on a small screen.
+- scrollUntilVisible:
+    element:
+      id: 'com.ariesbifold:id/CryptoReceive'
+    centerElement: true
 - tapOn:
     id: 'com.ariesbifold:id/CryptoReceive'
 - assertVisible:

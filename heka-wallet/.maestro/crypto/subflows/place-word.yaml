@@ -1,11 +1,13 @@
-# Puts word ${I} back when its slot is empty (only the taken-out words have empty slots).
+# Puts word ${I} back, if it is one of the missing words. The missing words are the candidate chips at the top of the
+# screen, so they are on screen on a small display too; the slot grid below can be partly off screen, and a `visible`
+# check on a slot silently skipped every slot below the fold. Called for I = 1..12 in phrase order, which is the
+# order the app wants the words back in; each chip is tapped once.
 appId: com.heka.wallet
 ---
 - runFlow:
     when:
       visible:
-        id: 'com.ariesbifold:id/CryptoVerifyWord-${I}'
-        text: '${I}\. ?'
+        id: 'com.ariesbifold:id/CryptoCandidate-${output.words["w" + I]}'
     commands:
       - tapOn:
           id: 'com.ariesbifold:id/CryptoCandidate-${output.words["w" + I]}'

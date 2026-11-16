@@ -116,16 +116,19 @@ env:
       id: 'com.ariesbifold:id/CryptoVerifyContinue'
 - tapOn:
     id: 'com.ariesbifold:id/CryptoVerifyContinue'
-- extendedWaitUntil:
-    visible:
-      id: 'com.ariesbifold:id/CryptoOpenWallet'
-    timeout: 30000
+# The Done button can be below the fold on a small screen: scroll to it, wait up to 30 s for the screen to appear.
 - scrollUntilVisible:
     element:
       id: 'com.ariesbifold:id/CryptoOpenWallet'
+    timeout: 30000
 - tapOn:
     id: 'com.ariesbifold:id/CryptoOpenWallet'
-- assertVisible:
-    id: 'com.ariesbifold:id/CryptoReceive'
-- assertVisible:
-    id: 'com.ariesbifold:id/CryptoBalance-USDC'
+- extendedWaitUntil:
+    visible:
+      id: 'com.ariesbifold:id/CryptoBalance-USDC'
+    timeout: 30000
+# Send and Receive sit under the balance and can be below the fold on a small screen.
+- scrollUntilVisible:
+    element:
+      id: 'com.ariesbifold:id/CryptoReceive'
+    centerElement: true

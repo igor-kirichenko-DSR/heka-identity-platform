@@ -8,9 +8,11 @@ name: A relying party gets a valid signature from the payment account through a 
 # and the emulator address is unreachable from a real device (the wallet's fetch times out).
 # Maestro itself reads the result from the host.
 # Plain http works only in a debug build (a release build accepts https only).
+# Not tagged no-backend: it needs the requester (demo/crypto-sign-requester) running next to the device, which CI does not
+# have. Run it by hand: maestro test -e REQUESTER_APP_URL=... .maestro/crypto/crypto-sign-request.yaml
 tags:
   - crypto
-  - no-backend
+  - crypto-requester
 env:
   PIN: '482916'
   REQUESTER_HOST_URL: 'http://localhost:8787'

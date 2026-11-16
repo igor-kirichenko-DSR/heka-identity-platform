@@ -17,7 +17,8 @@ appId: com.heka.wallet
       id: 'com.ariesbifold:id/CryptoOpenWallet'
 - tapOn:
     id: 'com.ariesbifold:id/CryptoOpenWallet'
+# The balance is at the top of Home; Send and Receive can be below the fold on a small screen.
 - extendedWaitUntil:
     visible:
-      id: 'com.ariesbifold:id/CryptoReceive'
+      id: 'com.ariesbifold:id/CryptoBalance-ETH'
     timeout: 30000
