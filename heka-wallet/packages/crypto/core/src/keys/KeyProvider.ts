@@ -29,6 +29,13 @@ export interface KeyProvider {
   importRawKey(privateKey: string): Promise<void>
   /** The key lives only inside fn. */
   withAccount<T>(purpose: KeyPurpose, index: number, fn: (account: LocalAccount) => Promise<T>): Promise<T>
+  /** Like withAccount, for a signature a relying party asked for: consumes a fresh proof before the key opens. */
+  withAuthorizedAccount<T>(
+    purpose: KeyPurpose,
+    index: number,
+    auth: AuthProof,
+    fn: (account: LocalAccount) => Promise<T>
+  ): Promise<T>
   revealMnemonic(auth: AuthProof): Promise<string>
   /** Deletes the seed and the cached addresses only, never the identity wallet. */
   removeSeed(auth: AuthProof): Promise<void>

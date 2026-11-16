@@ -52,3 +52,7 @@ export const AMOUNT_ACCESSORY_WIDTH = 120
 /** Debug builds only: how many quick taps copy the new phrase, and the longest pause between two of them. */
 export const DEBUG_COPY_TAPS = 5
 export const DEBUG_COPY_TAP_GAP_MS = 800
+
+/** Typed-data tree: indent per nesting level, and the deepest level shown (a hostile payload cannot grow the screen). */
+export const TREE_INDENT = 12
+export const TREE_MAX_DEPTH = 6

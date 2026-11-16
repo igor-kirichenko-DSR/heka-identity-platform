@@ -41,3 +41,28 @@ export class AuthProofError extends KeyError {}
 
 /** A seed or address entry in the store is malformed. */
 export class KeyStorageError extends KeyError {}
+
+export type SigningRequestErrorCode =
+  | 'malformed-uri'
+  | 'insecure-url'
+  | 'invalid-request'
+  | 'origin-mismatch'
+  | 'expired'
+  | 'too-large'
+  | 'network'
+  | 'chain-mismatch'
+  | 'siwe-domain'
+  | 'permit-refused'
+  | 'unsupported'
+  | 'binding-unavailable'
+  | 'unexpected'
+
+/** A signing request that is malformed, unsafe or refused; the message is safe to show, the code is for logic. */
+export class SigningRequestError extends CryptoCoreError {
+  constructor(
+    readonly code: SigningRequestErrorCode,
+    message: string
+  ) {
+    super(message)
+  }
+}

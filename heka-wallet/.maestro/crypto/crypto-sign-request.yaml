@@ -1,0 +1,43 @@
+appId: com.heka.wallet
+name: A relying party gets a valid signature from the payment account through a heka-sign link
+# Needs a build with ENABLE_CRYPTO_MODULE=true and the test requester running on the host:
+#   cd demo/crypto-sign-requester && yarn start
+# Pass the address the device reaches the requester at, the same one the requester was started with
+# (REQUESTER_BASE_URL): maestro test -e REQUESTER_APP_URL=http://<host LAN address>:8787 ...
+# An emulator reaches the host at http://10.0.2.2:8787. There is no default: a value in this file's env block wins over -e,
+# and the emulator address is unreachable from a real device (the wallet's fetch times out).
+# Maestro itself reads the result from the host.
+# Plain http works only in a debug build (a release build accepts https only).
+tags:
+  - crypto
+  - no-backend
+env:
+  PIN: '482916'
+  REQUESTER_HOST_URL: 'http://localhost:8787'
+---
+- runFlow: subflows/open-payments.yaml
+- evalScript: "${output.key = '0x' + Array.from({ length: 64 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('')}"
+- runFlow:
+    file: subflows/import-key.yaml
+    env:
+      KEY: ${output.key}
+# A raw-key wallet has no binding account, so this flow asks for the payment account.
+# The link is built first and opened as one value.
+- evalScript: ${output.requestId = 'maestro-' + Date.now()}
+- evalScript: ${output.link = 'heka-sign://?request_uri=' + encodeURIComponent(REQUESTER_APP_URL + '/requests/' + output.requestId + '?kind=personal_sign&branch=payment')}
+- openLink: ${output.link}
+- extendedWaitUntil:
+    visible:
+      id: 'com.ariesbifold:id/CryptoSignOrigin'
+    timeout: 30000
+- assertVisible: '${REQUESTER_APP_URL}'
+- tapOn:
+    id: 'com.ariesbifold:id/CryptoSignConfirm'
+- runFlow:
+    file: subflows/confirm-pin.yaml
+- extendedWaitUntil:
+    visible:
+      id: 'com.ariesbifold:id/CryptoSignDone'
+    timeout: 30000
+- evalScript: ${output.result = json(http.get(REQUESTER_HOST_URL + '/requests/' + output.requestId + '/result').body)}
+- assertTrue: ${output.result.status == 'verified'}

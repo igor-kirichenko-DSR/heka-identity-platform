@@ -18,4 +18,5 @@ export enum CryptoScreens {
   Settings = 'CryptoSettings',
   RevealPhrase = 'CryptoRevealPhrase',
   RemoveWallet = 'CryptoRemoveWallet',
+  SignRequest = 'CryptoSignRequest',
 }

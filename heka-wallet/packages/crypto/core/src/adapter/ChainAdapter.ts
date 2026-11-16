@@ -1,4 +1,5 @@
-import type { KeyProvider } from '../keys'
+import type { AuthProof, KeyProvider } from '../keys'
+import type { SigningRequest } from '../requests'
 import type {
   Account,
   AssetDescriptor,
@@ -17,6 +18,11 @@ export interface AddressValidation {
   warning?: string
 }
 
+export interface SignedRequest {
+  address: string
+  signature: string
+}
+
 export interface HistoryPage {
   items: TxRecord[]
   next?: string
@@ -32,6 +38,17 @@ export interface ChainAdapter {
   transfer(req: TransferRequest, keys: KeyProvider): Promise<TransferResult>
   getStatus(txId: string): Promise<StatusResult>
   getHistory(account: Account, cursor?: string): Promise<HistoryPage>
+  /** Signing requests (F07): chain and content checks, thrown as SigningRequestError; nothing is signed here. */
+  checkSigningRequest?(request: SigningRequest, context: { requestUrl: string }): void
+  /** The address the request would be signed with, for the holder to read before signing. */
+  signingAddress?(request: SigningRequest): Promise<string>
+  /** Signs after the checks, inside KeyProvider.withAuthorizedAccount; returns the signing address and signature. */
+  signRequest?(
+    request: SigningRequest,
+    context: { requestUrl: string },
+    keys: KeyProvider,
+    auth: AuthProof
+  ): Promise<SignedRequest>
   /** Hedera alias accounts. */
   activationState?(account: Account): Promise<'active' | 'pending'>
   /** Hedera: the `0.0.x` account id; undefined while the account is not on the ledger. */

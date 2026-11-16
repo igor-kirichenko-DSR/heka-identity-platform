@@ -4,6 +4,8 @@ import { LedgerError } from '../errors'
 
 /** Raw Askar entries, as Spike C chose for the seed: no Credo API lists this category. */
 export const LEDGER_CATEGORY = 'crypto-ledger'
+/** Signed signing-requests (F07); a category of its own keeps the send ledger's list free of foreign entries. */
+export const SIGNATURE_CATEGORY = 'crypto-signatures'
 
 interface EntryRef {
   category: string
@@ -32,12 +34,15 @@ const readValue = (name: string, value: unknown): string => {
 }
 
 export class AskarLedgerStorage implements LedgerStorage {
-  constructor(private readonly withSession: WithAskarSession) {}
+  constructor(
+    private readonly withSession: WithAskarSession,
+    private readonly category: string = LEDGER_CATEGORY
+  ) {}
 
   put(key: string, value: string, tags: Record<string, string>): Promise<void> {
     return this.withSession(async (session) => {
-      const entry = { category: LEDGER_CATEGORY, name: key, value, tags }
-      const existing = await session.fetch({ category: LEDGER_CATEGORY, name: key })
+      const entry = { category: this.category, name: key, value, tags }
+      const existing = await session.fetch({ category: this.category, name: key })
       if (existing) await session.replace(entry)
       else await session.insert(entry)
     })
@@ -45,14 +50,14 @@ export class AskarLedgerStorage implements LedgerStorage {
 
   get(key: string): Promise<string | undefined> {
     return this.withSession(async (session) => {
-      const entry = await session.fetch({ category: LEDGER_CATEGORY, name: key })
+      const entry = await session.fetch({ category: this.category, name: key })
       return entry ? readValue(key, entry.value) : undefined
     })
   }
 
   list(): Promise<LedgerStorageEntry[]> {
     return this.withSession(async (session) => {
-      const entries = await session.fetchAll({ category: LEDGER_CATEGORY })
+      const entries = await session.fetchAll({ category: this.category })
       return entries.map(({ name, value }) => ({ key: name, value: readValue(name, value) }))
     })
   }

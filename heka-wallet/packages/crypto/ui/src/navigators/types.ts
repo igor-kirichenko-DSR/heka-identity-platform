@@ -26,6 +26,8 @@ export type CryptoMainStackParams = {
   [CryptoScreens.Settings]: undefined
   [CryptoScreens.RevealPhrase]: undefined
   [CryptoScreens.RemoveWallet]: undefined
+  /** The https URL a heka-sign link carried; the request itself is fetched by the screen. */
+  [CryptoScreens.SignRequest]: { requestUrl: string }
 }
 
 export type CryptoStackParams = {

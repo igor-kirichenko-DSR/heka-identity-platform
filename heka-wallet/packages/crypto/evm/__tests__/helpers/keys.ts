@@ -1,4 +1,4 @@
-import type { AddressBook, ChainDescriptor, KeyProvider, KeyPurpose } from '@heka-wallet/crypto-core'
+import type { AddressBook, AuthProof, ChainDescriptor, KeyProvider, KeyPurpose } from '@heka-wallet/crypto-core'
 import type { Hex, LocalAccount, PrivateKeyAccount } from 'viem'
 
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
@@ -37,8 +37,17 @@ export class FakeKeyProvider implements KeyProvider {
     this.opened.push({ purpose, index })
     return fn(this.account)
   }
+
+  async withAuthorizedAccount<T>(
+    purpose: KeyPurpose,
+    index: number,
+    _auth: AuthProof,
+    fn: (account: LocalAccount) => Promise<T>
+  ): Promise<T> {
+    return this.withAccount(purpose, index, fn)
+  }
 }
 
 export const makeAddressBook = (address?: string): jest.Mocked<AddressBook> => ({
-  getAddress: jest.fn(async (_chain: ChainDescriptor, _index: number) => address),
+  getAddress: jest.fn(async (_chain: ChainDescriptor, _index: number, _purpose?: KeyPurpose) => address),
 })

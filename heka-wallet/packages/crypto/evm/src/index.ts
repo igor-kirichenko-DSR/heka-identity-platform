@@ -5,3 +5,4 @@ export { type EvmSigner, type UnsignedEvmTransaction, withEvmAccount } from './E
 export { EvmAdapter, type EvmAdapterOptions } from './EvmAdapter'
 export * from './hedera'
 export * from './types'
+export { buildSiweMessage, checkEvmSigningRequest, signEvmRequest } from './signing'

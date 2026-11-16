@@ -115,6 +115,21 @@ export class SeedKeyProvider implements KeyProvider, AddressBook {
     })
   }
 
+  withAuthorizedAccount<T>(
+    purpose: KeyPurpose,
+    index: number,
+    auth: AuthProof,
+    fn: (account: LocalAccount) => Promise<T>
+  ): Promise<T> {
+    try {
+      this.assertUnlocked()
+      this.proofs.consume(auth)
+    } catch (error) {
+      return Promise.reject(error)
+    }
+    return this.withAccount(purpose, index, fn)
+  }
+
   async revealMnemonic(auth: AuthProof): Promise<string> {
     this.assertUnlocked()
     this.proofs.consume(auth)
@@ -131,10 +146,14 @@ export class SeedKeyProvider implements KeyProvider, AddressBook {
   }
 
   /** Reads the address record only, never the seed. In the app it fails while locked: the store is closed then. */
-  async getAddress(chain: ChainDescriptor, index: number): Promise<string | undefined> {
+  async getAddress(
+    chain: ChainDescriptor,
+    index: number,
+    purpose: KeyPurpose = 'payment'
+  ): Promise<string | undefined> {
     if (chain.kind !== 'evm') return undefined
     const addresses = await this.storage.readAddresses()
-    return addresses?.payment[String(index)]
+    return addresses?.[purpose][String(index)]
   }
 
   private async runWithAccount<T>(

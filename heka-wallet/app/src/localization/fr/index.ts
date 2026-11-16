@@ -186,6 +186,9 @@ const translation = {
       "Header": "Historique",
       "Empty": "Aucun paiement pour le moment.",
       "LoadFailed": "L'historique n'a pas pu être chargé. Tirez vers le bas pour réessayer.",
+      "Transactions": "Paiements",
+      "Signatures": "Signatures",
+      "SignaturesEmpty": "Vous n'avez encore rien signé pour un site.",
       "PartialNote": "Les paiements anciens et les transferts entrants de la monnaie propre au réseau peuvent manquer ici.",
       "Direction": {
         "in": "De {{address}}",
@@ -224,6 +227,54 @@ const translation = {
       "Confirm": "Confirmez pour supprimer le portefeuille de paiement",
       "Submit": "Supprimer",
       "Failed": "Le portefeuille n'a pas pu être supprimé."
+    },
+    "Sign": {
+      "Header": "Demande de signature",
+      "Confirm": "Confirmez pour signer",
+      "Request": "Demande",
+      "Origin": "Demandé par",
+      "Chain": "Réseau",
+      "Address": "Adresse de signature",
+      "Branch": "Compte",
+      "Branches": {
+        "payment": "Compte de paiement",
+        "binding": "Compte de liaison"
+      },
+      "Content": "Vous signez",
+      "PrimaryType": "Type de message",
+      "Site": "Site",
+      "Statement": "Déclaration",
+      "Uri": "Adresse",
+      "Nonce": "Nonce",
+      "Expires": "Expire",
+      "Submit": "Signer",
+      "Reject": "Refuser",
+      "Retry": "Renvoyer",
+      "Back": "Retour",
+      "Done": "Terminé",
+      "Sent": "La signature a été envoyée.",
+      "SendFailed": "La signature n'a pas pu être envoyée. Vous pouvez la renvoyer.",
+      "SignFailed": "Le message n'a pas pu être signé.",
+      "Kinds": {
+        "eip712": "Données typées",
+        "siwe": "Connexion",
+        "personal_sign": "Message"
+      },
+      "Refused": {
+        "malformed-uri": "Ce lien de signature n'est pas valide.",
+        "insecure-url": "Cette demande n'est pas servie par une connexion sécurisée.",
+        "invalid-request": "Cette demande n'est pas valide.",
+        "origin-mismatch": "Cette demande ne vient pas d'un seul site, elle a donc été refusée.",
+        "expired": "Cette demande a expiré.",
+        "too-large": "Cette demande est trop volumineuse.",
+        "network": "La demande n'a pas pu être chargée. Vérifiez votre connexion et réessayez.",
+        "chain-mismatch": "Cette demande concerne un autre réseau que celui annoncé.",
+        "siwe-domain": "Ce message de connexion nomme un autre site que celui qui le demande.",
+        "permit-refused": "Ce message permettrait de dépenser vos jetons, il ne peut donc pas être signé.",
+        "unsupported": "Ce portefeuille ne peut pas signer cette demande.",
+        "binding-unavailable": "Ce portefeuille n'a pas de compte de liaison. Il a été importé depuis une seule clé.",
+        "unexpected": "Une erreur s'est produite lors de la préparation de cette demande. Réessayez."
+      }
     }
   },
   "Biometry": {

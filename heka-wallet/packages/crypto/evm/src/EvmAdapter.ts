@@ -4,6 +4,7 @@ import type {
   AddressValidation,
   AssetDescriptor,
   AssetId,
+  AuthProof,
   ChainAdapter,
   ChainDescriptor,
   FeeMode,
@@ -11,6 +12,8 @@ import type {
   FeeWarning,
   HistoryPage,
   KeyProvider,
+  SignedRequest,
+  SigningRequest,
   StatusResult,
   TransferRequest,
   TransferResult,
@@ -43,6 +46,7 @@ import {
   type TransferLog,
 } from './history'
 import { readL1Fee } from './l1Fee'
+import { checkEvmSigningRequest, signEvmRequest, signingAddressFor } from './signing'
 import { type EvmChainConfig, evmChainId } from './types'
 import { toViemChain } from './viemChain'
 
@@ -95,6 +99,28 @@ export class EvmAdapter implements ChainAdapter {
     const cached = await this.addressBook.getAddress(this.chain, index)
     const address = cached ?? (await keys.withAccount('payment', index, async (account) => account.address))
     return { chainId: this.chain.id, address: getAddress(address), index }
+  }
+
+  /** Chain and content checks of a relying party's signing request (F07); throws SigningRequestError. */
+  checkSigningRequest(request: SigningRequest, { requestUrl }: { requestUrl: string }): void {
+    checkEvmSigningRequest(this.config, request, requestUrl)
+  }
+
+  /** The cached address of the request's branch; the key stays closed. */
+  signingAddress(request: SigningRequest): Promise<string> {
+    return signingAddressFor(this.config, request, (index, branch) =>
+      this.addressBook.getAddress(this.chain, index, branch)
+    )
+  }
+
+  /** Signs after the checks, with a fresh proof; the key opens only for the signature. */
+  signRequest(
+    request: SigningRequest,
+    { requestUrl }: { requestUrl: string },
+    keys: KeyProvider,
+    auth: AuthProof
+  ): Promise<SignedRequest> {
+    return signEvmRequest(this.config, request, requestUrl, keys, auth)
   }
 
   /** EIP-55 check of a recipient; rejects the zero address and token contracts of this chain. */
