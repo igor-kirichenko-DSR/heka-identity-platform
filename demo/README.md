@@ -8,3 +8,4 @@ Please note that the provided demo code is not intended for production usage (se
 ## Available Demos
 
 - [Agent-to-Agent (A2A) + OID4VP integration](./a2a-oid4vp): Demonstrates how an AI agent can request additional authentication from a user using the OID4VP protocol, leverages Heka Identity Platform as Verifiable Credentials Wallet and Verifier.
+- [Crypto signing requester](./crypto-sign-requester): A test relying party for the Heka Wallet payment module. It serves EIP-712, SIWE and nonce signing requests (`heka-sign`) and verifies the signature the wallet posts back.
