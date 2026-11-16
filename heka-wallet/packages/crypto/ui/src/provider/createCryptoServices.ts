@@ -13,6 +13,8 @@ import {
   type KeyProvider,
   LocalLedger,
   SeedKeyProvider,
+  SIGNATURE_CATEGORY,
+  SignatureLog,
   TransactionStore,
   WalletStore,
   type WithAskarSeedSession,
@@ -42,6 +44,8 @@ export interface CryptoServices {
   accounts: AccountStore
   balances: BalanceStore
   transactions: TransactionStore
+  /** What the holder signed for relying parties (F07). */
+  signatures: SignatureLog
   wallet: WalletStore
   chainPreference: ChainPreference
   backup?: WalletBackup
@@ -58,8 +62,21 @@ export const createCryptoServices = (config: CryptoServicesConfig): CryptoServic
   const balances = new BalanceStore(registry, accounts, logger)
   const ledger = new LocalLedger(new AskarLedgerStorage(withLedgerSession), logger)
   const transactions = new TransactionStore(registry, ledger, keys, logger)
+  const signatures = new SignatureLog(new AskarLedgerStorage(withLedgerSession, SIGNATURE_CATEGORY), logger)
   const wallet = new WalletStore(keys, accounts, logger)
-  return { registry, keys, authIssuer, accounts, balances, transactions, wallet, chainPreference, backup, logger }
+  return {
+    registry,
+    keys,
+    authIssuer,
+    accounts,
+    balances,
+    transactions,
+    signatures,
+    wallet,
+    chainPreference,
+    backup,
+    logger,
+  }
 }
 
 export const disposeCryptoServices = (services: CryptoServices): void => {

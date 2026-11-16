@@ -186,6 +186,9 @@ const translation = {
       "Header": "Histórico",
       "Empty": "Nenhum pagamento ainda.",
       "LoadFailed": "Não foi possível carregar o histórico. Puxe para baixo para tentar de novo.",
+      "Transactions": "Pagamentos",
+      "Signatures": "Assinaturas",
+      "SignaturesEmpty": "Você ainda não assinou nada para um site.",
       "PartialNote": "Pagamentos antigos e transferências recebidas da moeda própria da rede podem não aparecer aqui.",
       "Direction": {
         "in": "De {{address}}",
@@ -224,6 +227,54 @@ const translation = {
       "Confirm": "Confirme para remover a carteira de pagamentos",
       "Submit": "Remover",
       "Failed": "Não foi possível remover a carteira."
+    },
+    "Sign": {
+      "Header": "Pedido de assinatura",
+      "Confirm": "Confirme para assinar",
+      "Request": "Pedido",
+      "Origin": "Solicitado por",
+      "Chain": "Rede",
+      "Address": "Endereço de assinatura",
+      "Branch": "Conta",
+      "Branches": {
+        "payment": "Conta de pagamento",
+        "binding": "Conta de vinculação"
+      },
+      "Content": "Você está assinando",
+      "PrimaryType": "Tipo de mensagem",
+      "Site": "Site",
+      "Statement": "Declaração",
+      "Uri": "Endereço",
+      "Nonce": "Nonce",
+      "Expires": "Expira",
+      "Submit": "Assinar",
+      "Reject": "Rejeitar",
+      "Retry": "Enviar de novo",
+      "Back": "Voltar",
+      "Done": "Concluído",
+      "Sent": "A assinatura foi enviada.",
+      "SendFailed": "Não foi possível enviar a assinatura. Você pode enviá-la de novo.",
+      "SignFailed": "Não foi possível assinar a mensagem.",
+      "Kinds": {
+        "eip712": "Dados tipados",
+        "siwe": "Login",
+        "personal_sign": "Mensagem"
+      },
+      "Refused": {
+        "malformed-uri": "Este link de assinatura não é válido.",
+        "insecure-url": "Este pedido não é servido por uma conexão segura.",
+        "invalid-request": "Este pedido não é válido.",
+        "origin-mismatch": "Este pedido não vem de um único site, por isso foi recusado.",
+        "expired": "Este pedido expirou.",
+        "too-large": "Este pedido é grande demais.",
+        "network": "Não foi possível carregar o pedido. Verifique sua conexão e tente de novo.",
+        "chain-mismatch": "Este pedido é de outra rede, diferente da informada.",
+        "siwe-domain": "Esta mensagem de login cita outro site, diferente do que pediu.",
+        "permit-refused": "Esta mensagem permitiria gastar seus tokens, por isso não pode ser assinada.",
+        "unsupported": "Esta carteira não pode assinar este pedido.",
+        "binding-unavailable": "Esta carteira não tem conta de vinculação. Ela foi importada de uma única chave.",
+        "unexpected": "Algo deu errado ao preparar este pedido. Tente de novo."
+      }
     }
   },
   "Biometry": {

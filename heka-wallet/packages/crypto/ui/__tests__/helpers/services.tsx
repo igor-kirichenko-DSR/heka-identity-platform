@@ -10,6 +10,7 @@ import {
   MemoryLedgerStorage,
   MemorySeedStorage,
   SeedKeyProvider,
+  SignatureLog,
   TransactionStore,
   WalletStore,
 } from '@heka-wallet/crypto-core'
@@ -66,6 +67,7 @@ export const makeServices = (
     accounts,
     balances,
     transactions,
+    signatures: new SignatureLog(new MemoryLedgerStorage(), logger),
     wallet,
     chainPreference: new MemoryChainPreference(),
     backup: options.backup,

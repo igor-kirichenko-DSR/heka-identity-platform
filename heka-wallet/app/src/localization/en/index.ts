@@ -186,6 +186,9 @@ const translation = {
       "Header": "History",
       "Empty": "No payments yet.",
       "LoadFailed": "History could not be loaded. Pull down to try again.",
+      "Transactions": "Payments",
+      "Signatures": "Signatures",
+      "SignaturesEmpty": "You have not signed anything for a website yet.",
       "PartialNote": "Older payments and incoming transfers of the network's own coin may be missing here.",
       "Direction": {
         "in": "From {{address}}",
@@ -224,6 +227,54 @@ const translation = {
       "Confirm": "Confirm to remove the payment wallet",
       "Submit": "Remove",
       "Failed": "The wallet could not be removed."
+    },
+    "Sign": {
+      "Header": "Signature request",
+      "Confirm": "Confirm to sign",
+      "Request": "Request",
+      "Origin": "Asked by",
+      "Chain": "Network",
+      "Address": "Signing address",
+      "Branch": "Account",
+      "Branches": {
+        "payment": "Payment account",
+        "binding": "Binding account"
+      },
+      "Content": "You are signing",
+      "PrimaryType": "Message type",
+      "Site": "Site",
+      "Statement": "Statement",
+      "Uri": "Address",
+      "Nonce": "Nonce",
+      "Expires": "Expires",
+      "Submit": "Sign",
+      "Reject": "Reject",
+      "Retry": "Send again",
+      "Back": "Back",
+      "Done": "Done",
+      "Sent": "The signature was sent.",
+      "SendFailed": "The signature could not be sent. You can send it again.",
+      "SignFailed": "The message could not be signed.",
+      "Kinds": {
+        "eip712": "Typed data",
+        "siwe": "Sign-in",
+        "personal_sign": "Message"
+      },
+      "Refused": {
+        "malformed-uri": "This signing link is not valid.",
+        "insecure-url": "This request is not served over a secure connection.",
+        "invalid-request": "This request is not valid.",
+        "origin-mismatch": "This request does not come from one site, so it was refused.",
+        "expired": "This request has expired.",
+        "too-large": "This request is too large.",
+        "network": "The request could not be loaded. Check your connection and try again.",
+        "chain-mismatch": "This request is for another network than the one it claims.",
+        "siwe-domain": "This sign-in message names another site than the one that asked.",
+        "permit-refused": "This message would let someone spend your tokens, so it cannot be signed.",
+        "unsupported": "This wallet cannot sign this request.",
+        "binding-unavailable": "This wallet has no binding account. It was imported from a single key.",
+        "unexpected": "Something went wrong while preparing this request. Try again."
+      }
     }
   },
   "Biometry": {

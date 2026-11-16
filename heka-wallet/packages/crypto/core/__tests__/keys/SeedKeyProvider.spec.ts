@@ -348,6 +348,15 @@ describe('SeedKeyProvider', () => {
       expect(readSeed).not.toHaveBeenCalled()
     })
 
+    it('returns the binding address when asked for the binding branch', async () => {
+      const { provider } = makeProvider()
+      await provider.importSeed(OTHER_MNEMONIC)
+      const binding = await address('binding', 0, provider)
+
+      await expect(provider.getAddress(EVM_CHAIN, 0, 'binding')).resolves.toBe(binding)
+      await expect(provider.getAddress(EVM_CHAIN, 0)).resolves.toBe(OTHER_PAYMENT_0)
+    })
+
     it('returns nothing for a non-EVM chain', async () => {
       const { provider } = makeProvider()
       await provider.importSeed(OTHER_MNEMONIC)
@@ -452,6 +461,43 @@ describe('SeedKeyProvider', () => {
       await expect(provider.removeSeed(proof)).rejects.toThrow(AuthProofError)
       await expect(provider.hasSeed()).resolves.toBe(true)
       await expect(provider.getAddress(EVM_CHAIN, 0)).resolves.toBe(OTHER_PAYMENT_0)
+    })
+
+    describe('withAuthorizedAccount', () => {
+      it.each(['payment', 'binding'] as const)('opens the %s key with a fresh proof', async (purpose) => {
+        const { provider, issuer } = await setup()
+        const expected = await address(purpose, 0, provider)
+
+        await expect(
+          provider.withAuthorizedAccount(purpose, 0, issuer.issue(), async (account) => account.address)
+        ).resolves.toBe(expected)
+      })
+
+      it('refuses without a proof, with a used proof and with a stale proof, and never calls fn', async () => {
+        const { provider, issuer, clock } = await setup()
+        const fn = jest.fn(async () => 'signed')
+        const used = issuer.issue()
+        await provider.withAuthorizedAccount('binding', 0, used, fn)
+        fn.mockClear()
+        const stale = issuer.issue()
+        clock.now += AUTH_PROOF_MAX_AGE_MS + 1
+
+        await expect(
+          provider.withAuthorizedAccount('binding', 0, undefined as unknown as AuthProof, fn)
+        ).rejects.toThrow(AuthProofError)
+        await expect(provider.withAuthorizedAccount('binding', 0, used, fn)).rejects.toThrow(AuthProofError)
+        await expect(provider.withAuthorizedAccount('binding', 0, stale, fn)).rejects.toThrow(AuthProofError)
+        expect(fn).not.toHaveBeenCalled()
+      })
+
+      it('refuses while locked', async () => {
+        const { provider, issuer } = await setup()
+        provider.lock()
+
+        await expect(
+          provider.withAuthorizedAccount('payment', 0, issuer.issue(), async () => 'signed')
+        ).rejects.toThrow(KeyLockedError)
+      })
     })
 
     it('refuses to reveal without a seed', async () => {

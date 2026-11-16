@@ -13,6 +13,7 @@ import { RevealPhrase } from '../screens/RevealPhrase'
 import { ScanAddress } from '../screens/ScanAddress'
 import { Send } from '../screens/Send'
 import { Settings } from '../screens/Settings'
+import { SignRequest } from '../screens/SignRequest'
 
 import { CryptoScreens } from './routes'
 import { useLightHeader } from './useLightHeader'
@@ -55,6 +56,11 @@ export const MainStack: React.FC = () => {
         name={CryptoScreens.RemoveWallet}
         component={RemoveWallet}
         options={{ title: t('Crypto.Remove.Header') }}
+      />
+      <Stack.Screen
+        name={CryptoScreens.SignRequest}
+        component={SignRequest}
+        options={{ title: t('Crypto.Sign.Header') }}
       />
     </Stack.Navigator>
   )

@@ -30,6 +30,14 @@
 				<string>com.heka.wallet.auth</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.heka.wallet.sign</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>heka-sign</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1.3</string>

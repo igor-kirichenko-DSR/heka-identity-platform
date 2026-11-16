@@ -3,6 +3,8 @@ import { renderHook } from '@testing-library/react-native'
 import { useInvitationHandlers } from '../../src/utils/useInvitationHandlers'
 
 const PAYMENT_LINK = 'ethereum:0x1111111111111111111111111111111111111111@84532?value=5'
+const SIGNING_URL = 'https://rp.example.com/sign/abc'
+const SIGNING_LINK = `heka-sign://?request_uri=${encodeURIComponent(SIGNING_URL)}`
 const OPENID_LINK = 'openid-credential-offer://?credential_offer_uri=https://issuer.example/offer'
 
 const mockNavigate = jest.fn()
@@ -26,7 +28,7 @@ jest.mock('@react-navigation/core', () => {
   return { useNavigation: () => navigation }
 })
 jest.mock('@heka-wallet/crypto-ui', () => ({
-  CryptoScreens: { Send: 'CryptoSend' },
+  CryptoScreens: { Send: 'CryptoSend', SignRequest: 'CryptoSignRequest' },
   CryptoStacks: { Main: 'CryptoMain' },
   useOptionalCrypto: () => mockCrypto,
   prefillFromEip681: (...args: unknown[]) => mockPrefillFromEip681(...args),
@@ -88,5 +90,34 @@ describe('useInvitationHandlers payment links', () => {
       'OpenIdStack',
       expect.objectContaining({ screen: 'OpenIdCredentialOffer' })
     )
+  })
+
+  it('opens SignRequest with the request URL of a heka-sign link when the module is on', async () => {
+    await handle(SIGNING_LINK)
+
+    expect(mockNavigate).toHaveBeenCalledWith('BifoldStack', {
+      screen: 'TabStack',
+      params: {
+        screen: 'TabCryptoStack',
+        params: {
+          screen: 'CryptoMain',
+          params: { screen: 'CryptoSignRequest', params: { requestUrl: SIGNING_URL }, initial: false },
+        },
+      },
+    })
+    expect(mockParseInvitationUrl).not.toHaveBeenCalled()
+    expect(mockSetChain).not.toHaveBeenCalled()
+  })
+
+  it('treats a heka-sign link as unrecognised when the module is off', async () => {
+    mockCrypto = null
+
+    await expect(handle(SIGNING_LINK)).rejects.toThrow('Invitation message is not recognized')
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
+  it('rejects a heka-sign link without a request URL and does not navigate', async () => {
+    await expect(handle('heka-sign://?other=1')).rejects.toThrow('request_uri')
+    expect(mockNavigate).not.toHaveBeenCalled()
   })
 })

@@ -16,7 +16,7 @@ Without a request channel F7 has no caller in the MVP (WalletConnect is stretch)
 -   In: signer helper; signing-request format; fetch, validate and render the request; confirm-before-sign; post the response.
 -   Out: WalletConnect (F09); `eth_sendTransaction` requests from a relying party (payments go through Send or F12).
 
-## Signing-request format (proposal — agree before implementation)
+## Signing-request format (agreed 2026-11-13, implemented as written)
 
 QR or deep link: `heka-sign://?request_uri=<https URL>`. The wallet GETs the URL and receives JSON:
 
@@ -54,7 +54,7 @@ The wallet POSTs `{ id, address, signature }` to `response_uri`. Only `https` is
 
 ### Wallet — `app`
 
--   Scanner / deep-link routing: extend F06's routing (`useInvitationHandlers.ts`, `useDeeplinks.ts`) with signing-request URIs → SignRequest, only when `ENABLE_CRYPTO_MODULE` is on; `crypto-ui` exports the open-SignRequest helper and `crypto-core` the signing-request URI parser.
+-   Scanner / deep-link routing: extend F06's routing (`utils/cryptoLinks.ts`, used by `useInvitationHandlers.ts` for the scanner and `useDeeplinks.ts`) with signing-request URIs → SignRequest, only when `ENABLE_CRYPTO_MODULE` is on; `crypto-core` exports the signing-request URI parser. The `heka-sign` scheme is registered in the Android manifest and `Info.plist` (native rebuild).
 -   Signing-request strings in `Crypto.*`, all three locales.
 
 ### Identity Service
@@ -63,7 +63,7 @@ No change for wallet-attested binding. An issuer-attested address claim is a sep
 
 ### Demo
 
--   A minimal test requester used by tests and demos: a small Node script or route in the demo project (decided in F14) that creates a request, serves it, receives the signature and verifies it with viem `verifyTypedData` / `verifySiweMessage` / `verifyMessage`.
+-   A minimal test requester used by tests and demos: `demo/crypto-sign-requester/` (Node script) that creates a request, serves it, receives the signature and verifies it with viem `verifyTypedData` / `verifySiweMessage` / `verifyMessage`.
 
 ## Tests
 
@@ -82,6 +82,16 @@ No change for wallet-attested binding. An issuer-attested address claim is a sep
 -   A relying party can obtain an EIP-712, SIWE or nonce signature from the holder's payment or binding address, verified on its side.
 -   The holder always sees origin, chain, address and content before signing; nothing is signed without fresh auth.
 -   A permit or allowance cannot be obtained through a binding request.
+
+## Decisions (2026-11-13)
+
+-   Format exactly as above; own `heka-sign` scheme now, F09 reuses the screen.
+-   Signing goes through optional `ChainAdapter.checkSigningRequest`, `signingAddress` and `signRequest` (the UI cannot import `crypto-evm`); the key opens only in `KeyProvider.withAuthorizedAccount`, which consumes a fresh `AuthProof`.
+-   Signed requests are kept in `SignatureLog` (own Askar category `crypto-signatures`), not in the send ledger; History has a "Signatures" segment.
+-   Added by the implementation, not in the first draft: SIWE needs `issuedAt` (the RP rebuilds the exact text from the posted fields); typed-data `domain.chainId` is required; any type name containing "permit" is refused; fetch timeout 10 s, body at most 65 536 characters, no redirect to another origin; a failed post is retried without a second PIN and without signing twice.
+-   The "unless the request is from the wallet itself" exception for permit-shaped data has no case in F07, so permit shapes are always refused.
+-   Maestro uses the payment branch (the flow imports a raw key, which has no binding account) and a debug build (plain http to the local requester).
+-   Spec: `specs/wallet/30-Features/Signing-Requests.md`.
 
 ## Open questions
 
