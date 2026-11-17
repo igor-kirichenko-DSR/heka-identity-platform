@@ -11,7 +11,6 @@ import {
   PasskeyGetResult,
 } from 'react-native-passkey'
 import RNUserIdentity from 'react-native-user-identity'
-import url from 'url'
 
 export type PasskeyAuthResult = PasskeyGetResult | PasskeyCreateResult
 
@@ -26,7 +25,7 @@ export class PasskeysStore {
     this._origin =
       Platform.OS === 'android'
         ? `android:apk-key-hash:-${Config.CERTIFICATE_HASH}` // Android: base64url encoded `sha256_cert_fingerprints`
-        : `https://${url.parse(this._authProviderUrl).host}` // iOS: fully qualified origin of API requester (RP ID)
+        : `https://${new URL(this._authProviderUrl).host}` // iOS: fully qualified origin of API requester (RP ID)
 
     makeAutoObservable(this)
   }

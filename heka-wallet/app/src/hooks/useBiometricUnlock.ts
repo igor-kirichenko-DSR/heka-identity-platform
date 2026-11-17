@@ -1,6 +1,6 @@
 import { DispatchAction, EventTypes, TOKENS, useAuth, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { DeviceEventEmitter, InteractionManager } from 'react-native'
+import { DeviceEventEmitter } from 'react-native'
 
 import { PINEntryUsage } from './usePinUnlock'
 
@@ -65,7 +65,8 @@ export const useBiometricUnlock = (
       return
     }
 
-    const handle = InteractionManager.runAfterInteractions(async () => {
+    // Idle callback: prompt only after the screen transition has finished.
+    const handle = requestIdleCallback(async () => {
       biometryCheckStartedRef.current = true
       if (!store.preferences.useBiometry) {
         return
@@ -88,7 +89,7 @@ export const useBiometricUnlock = (
       }
     })
 
-    return handle.cancel
+    return () => cancelIdleCallback(handle)
   }, [store.preferences.useBiometry, isBiometricsActive, disableBiometrics, dispatch, loadWalletCredentials, logger])
 
   return { loadWalletCredentials, biometricsErr, biometricsEnrollmentChange }

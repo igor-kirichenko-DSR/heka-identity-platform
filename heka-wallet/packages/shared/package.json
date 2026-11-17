@@ -21,6 +21,7 @@
     "react-native-logs": "^5.0.1",
     "react-native-paper": "^5.12.5",
     "react-native-permissions": "^5.4.1",
+    "react-native-safe-area-context": "5.7.0",
     "react-native-share": "^12.2.6",
     "react-native-svg": "^15.12.1",
     "react-native-vector-icons": "^10.3.0",

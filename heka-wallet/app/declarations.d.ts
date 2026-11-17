@@ -5,3 +5,7 @@ declare module '*.svg' {
 }
 
 declare module 'react-native-argon2'
+
+// React Native installs these globals (Libraries/Core/setUpTimers.js) but ships no types for them.
+declare function requestIdleCallback(callback: () => void, options?: { timeout?: number }): number
+declare function cancelIdleCallback(handle: number): void
