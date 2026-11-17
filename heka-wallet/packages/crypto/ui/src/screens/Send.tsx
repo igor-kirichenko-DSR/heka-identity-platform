@@ -2,7 +2,7 @@ import type { CryptoMainStackParams } from '../navigators/types'
 import type { StackScreenProps } from '@react-navigation/stack'
 
 import { observer } from 'mobx-react-lite'
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect } from 'react'
 
 import { AuthGate } from '../components/AuthGate'
 import { SendForm } from '../components/SendForm'
@@ -15,7 +15,7 @@ type Props = StackScreenProps<CryptoMainStackParams, CryptoScreens.Send>
 
 export const Send: React.FC<Props> = observer(({ navigation, route }) => {
   const form = useSendForm()
-  const { submit, sent, isSending, error, gateProps } = useSendSubmit()
+  const { submit, sent, isSending, error, offerNative, dismissNativeOffer, gateProps } = useSendSubmit()
   const prefill = route.params?.prefill
   const { applyPrefill } = form
 
@@ -25,6 +25,12 @@ export const Send: React.FC<Props> = observer(({ navigation, route }) => {
     applyPrefill(prefill)
     navigation.setParams({ prefill: undefined })
   }, [prefill, applyPrefill, navigation])
+
+  const { setFeeMode } = form
+  const onUseNative = useCallback(() => {
+    setFeeMode('native')
+    dismissNativeOffer()
+  }, [setFeeMode, dismissNativeOffer])
 
   const onSend = () => {
     if (form.request && form.quote) void submit(form.request, form.quote)
@@ -41,6 +47,9 @@ export const Send: React.FC<Props> = observer(({ navigation, route }) => {
           onSend={onSend}
           isSending={isSending}
           submitError={error}
+          offerNative={offerNative}
+          onUseNative={onUseNative}
+          onDismissNative={dismissNativeOffer}
         />
       )}
       <AuthGate {...gateProps} />

@@ -15,6 +15,7 @@ import { BottomActions } from './BottomActions'
 import { Card } from './Card'
 import { FeeModePicker } from './FeeModePicker'
 import { FeePreview } from './FeePreview'
+import { PayInNativePrompt } from './PayInNativePrompt'
 import { SendBalanceCard } from './SendBalanceCard'
 
 const useStyles = ({ Spacing, TextTheme, ColorPalette }: HekaTheme) =>
@@ -34,9 +35,22 @@ interface Props {
   onSend: () => void
   isSending: boolean
   submitError?: string
+  /** The USDC fee path failed before sending: ask whether to pay the fee in the native asset. */
+  offerNative: boolean
+  onUseNative: () => void
+  onDismissNative: () => void
 }
 
-export const SendForm: React.FC<Props> = ({ form, onScan, onSend, isSending, submitError }) => {
+export const SendForm: React.FC<Props> = ({
+  form,
+  onScan,
+  onSend,
+  isSending,
+  submitError,
+  offerNative,
+  onUseNative,
+  onDismissNative,
+}) => {
   const styles = useStyles(useHekaTheme())
   const scrollContent = useScrollContent()
   const { t } = useTranslation()
@@ -46,7 +60,12 @@ export const SendForm: React.FC<Props> = ({ form, onScan, onSend, isSending, sub
     form.amountText && !form.amountInvalid
       ? t('Crypto.Send.SubmitAmount', { amount: form.amountText, symbol })
       : t('Global.Send')
-  const errors = [fundsError, form.hasPendingSend ? 'Crypto.Send.Errors.Pending' : undefined, submitError]
+  const errors = [
+    fundsError,
+    form.quoteBlockedKey,
+    form.hasPendingSend ? 'Crypto.Send.Errors.Pending' : undefined,
+    submitError,
+  ]
 
   return (
     <KeyboardView scrollViewProps={{ contentContainerStyle: [scrollContent, styles.content] }}>
@@ -83,6 +102,13 @@ export const SendForm: React.FC<Props> = ({ form, onScan, onSend, isSending, sub
           failed={form.quoteFailed}
           showAmount={form.feeModes.length < 2}
         />
+        {offerNative && (
+          <PayInNativePrompt
+            symbol={form.chain?.nativeAsset.symbol ?? ''}
+            onAccept={onUseNative}
+            onDismiss={onDismissNative}
+          />
+        )}
         {errors.map(
           (key) =>
             key && (

@@ -2,7 +2,7 @@ import type { Hex, TransactionSerializedEIP1559 } from 'viem'
 
 import { keccak256, parseTransaction, recoverTransactionAddress, serializeTransaction } from 'viem'
 
-import { EvmAdapterError, withEvmAccount } from '../src'
+import { baseSepolia, EvmAdapterError, type EvmChainConfig, withEvmAccount } from '../src'
 
 import {
   accountOf,
@@ -16,6 +16,12 @@ import {
 import { L1_FEE, MAX_FEE, PENDING_NONCE, PRIORITY_FEE, sendHandlers } from './helpers/handlers'
 import { FakeKeyProvider } from './helpers/keys'
 import { createRpcMock } from './helpers/rpc'
+
+const withoutPaymaster: EvmChainConfig = {
+  ...baseSepolia,
+  descriptor: { ...baseSepolia.descriptor, features: { ...baseSepolia.descriptor.features, paymaster: undefined } },
+  aa: undefined,
+}
 
 const setup = (options: Parameters<typeof sendHandlers>[0] = {}) => {
   const keys = new FakeKeyProvider()
@@ -145,11 +151,13 @@ describe('EvmAdapter.transfer', () => {
     expect(sent).toHaveLength(1)
   })
 
-  it('refuses the usdc-paymaster fee mode until F08', async () => {
-    const { keys, rpc, from, adapter } = setup()
-    await expect(adapter.transfer(transferRequest(from, { feeMode: 'usdc-paymaster' }), keys)).rejects.toThrow(
-      EvmAdapterError
-    )
+  it('refuses the usdc-paymaster fee mode on a chain without a paymaster, before any RPC call', async () => {
+    const rpc = createRpcMock(sendHandlers())
+    const adapter = makeAdapter(rpc.transport, withoutPaymaster)
+    const keys = new FakeKeyProvider()
+    await expect(
+      adapter.transfer(transferRequest(accountOf(keys.account.address), { feeMode: 'usdc-paymaster' }), keys)
+    ).rejects.toThrow(EvmAdapterError)
     expect(rpc.calls).toEqual([])
   })
 })

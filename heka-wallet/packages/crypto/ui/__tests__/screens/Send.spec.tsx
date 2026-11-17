@@ -1,5 +1,6 @@
 import type { FeeQuote } from '@heka-wallet/crypto-core'
 
+import { ForeignDelegationError, PaymasterUnavailableError } from '@heka-wallet/crypto-core'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
 
@@ -176,6 +177,83 @@ describe('Send', () => {
 
     await waitFor(() => expect(screen.getByText('Crypto.Send.Errors.Failed')).toBeTruthy())
     expect(screen.queryByTestId('CryptoSendStatus')).toBeNull()
+  })
+
+  describe('USDC fees', () => {
+    const submitInUsdcMode = async (services: TestServices) => {
+      await fill(RECIPIENT, '0.1')
+      fireEvent.press(screen.getByTestId('CryptoFeeMode-Crypto.Fee.Usdc'))
+      await waitFor(
+        () =>
+          expect(services.adapters[0].estimateFee).toHaveBeenLastCalledWith(
+            expect.objectContaining({ feeMode: 'usdc-paymaster' })
+          ),
+        QUOTE_WAIT
+      )
+      await waitFor(() => expect(screen.getByTestId('CryptoSendSubmit')).not.toBeDisabled(), QUOTE_WAIT)
+      act(() => {
+        fireEvent.press(screen.getByTestId('CryptoSendSubmit'))
+      })
+      await act(async () => fireEvent.press(screen.getByTestId('PinSuccess')))
+    }
+
+    it('offers native fees when the paymaster is unavailable, and sends nothing more', async () => {
+      const services = await tracked(undefined, PAYMASTER_CHAIN)
+      services.adapters[0].transfer.mockRejectedValue(new PaymasterUnavailableError('bundler down'))
+
+      await submitInUsdcMode(services)
+
+      await waitFor(() => expect(screen.getByTestId('CryptoPayInNative')).toBeTruthy())
+      expect(services.adapters[0].transfer).toHaveBeenCalledTimes(1)
+      expect(screen.queryByText('Crypto.Send.Errors.Failed')).toBeNull()
+      expect(screen.queryByTestId('CryptoStatus-pending')).toBeNull()
+    })
+
+    it('switches to native fees only when the holder accepts, and still sends nothing by itself', async () => {
+      const services = await tracked(undefined, PAYMASTER_CHAIN)
+      services.adapters[0].transfer.mockRejectedValue(new PaymasterUnavailableError('bundler down'))
+      await submitInUsdcMode(services)
+      await waitFor(() => expect(screen.getByTestId('CryptoPayInNativeAccept')).toBeTruthy())
+
+      fireEvent.press(screen.getByTestId('CryptoPayInNativeAccept'))
+
+      await waitFor(() =>
+        expect(services.adapters[0].estimateFee).toHaveBeenLastCalledWith(
+          expect.objectContaining({ feeMode: 'native' })
+        )
+      )
+      expect(screen.queryByTestId('CryptoPayInNative')).toBeNull()
+      expect(services.adapters[0].transfer).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps the USDC mode when the holder dismisses the offer', async () => {
+      const services = await tracked(undefined, PAYMASTER_CHAIN)
+      services.adapters[0].transfer.mockRejectedValue(new PaymasterUnavailableError('bundler down'))
+      await submitInUsdcMode(services)
+      await waitFor(() => expect(screen.getByTestId('CryptoPayInNativeDismiss')).toBeTruthy())
+      const quotesBefore = services.adapters[0].estimateFee.mock.calls.length
+
+      fireEvent.press(screen.getByTestId('CryptoPayInNativeDismiss'))
+
+      expect(screen.queryByTestId('CryptoPayInNative')).toBeNull()
+      expect(services.adapters[0].estimateFee.mock.calls.length).toBe(quotesBefore)
+      expect(services.adapters[0].transfer).toHaveBeenCalledTimes(1)
+    })
+
+    it('explains a foreign 7702 delegation and keeps Send disabled', async () => {
+      const services = await tracked(undefined, PAYMASTER_CHAIN)
+      services.adapters[0].estimateFee.mockImplementation(async (request) => {
+        if (request.feeMode === 'usdc-paymaster') throw new ForeignDelegationError('delegated elsewhere')
+        return { mode: 'native', asset: eth, amount: BigInt(21000), display: '' }
+      })
+      await fill(RECIPIENT, '0.1')
+
+      fireEvent.press(screen.getByTestId('CryptoFeeMode-Crypto.Fee.Usdc'))
+
+      await waitFor(() => expect(screen.getByText('Crypto.Send.Errors.ForeignDelegation')).toBeTruthy(), QUOTE_WAIT)
+      expect(screen.queryByText('Crypto.Fee.Failed')).toBeNull()
+      expect(screen.getByTestId('CryptoSendSubmit')).toBeDisabled()
+    })
   })
 
   it('fills the form from a scanned payment request and clears the params', async () => {

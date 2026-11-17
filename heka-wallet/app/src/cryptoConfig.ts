@@ -1,9 +1,10 @@
 import type { ChainId } from '@heka-wallet/crypto-core'
+import type { EvmChainConfig } from '@heka-wallet/crypto-evm'
 
 /** Used when `CRYPTO_DEFAULT_CHAIN` is empty or names a chain this build does not register. */
 export const FALLBACK_CRYPTO_CHAIN: ChainId = 'eip155:84532'
 
-/** Env name suffix → chain. A chain gets its `CRYPTO_RPC_URL_<suffix>` / `CRYPTO_BUNDLER_URL_<suffix>` here (F08 adds its bundler URLs). */
+/** Env name suffix → chain. A chain gets its `CRYPTO_RPC_URL_<suffix>` / `CRYPTO_BUNDLER_URL_<suffix>` here (the bundler URL applies where the entry has a paymaster). */
 const REGISTERED_CHAINS: Record<string, ChainId> = {
   BASE_SEPOLIA: 'eip155:84532',
   HEDERA_TESTNET: 'eip155:296',
@@ -65,4 +66,15 @@ export const buildCryptoConfig = (env: CryptoEnv, isDev: boolean, warn: Warn): C
     if (rpcUrl || bundlerUrl) overrides[chainId] = { rpcUrl, bundlerUrl }
   }
   return { defaultChain, overrides }
+}
+
+/** The registry entry with the operator's RPC and bundler URLs applied; a bundler URL needs a paymaster entry. */
+export const withChainOverrides = (config: EvmChainConfig, overrides?: CryptoChainOverrides): EvmChainConfig => {
+  const { paymaster } = config.descriptor.features
+  const features =
+    overrides?.bundlerUrl && paymaster
+      ? { ...config.descriptor.features, paymaster: { ...paymaster, bundlerUrl: overrides.bundlerUrl } }
+      : config.descriptor.features
+  const rpcUrl = overrides?.rpcUrl ?? config.descriptor.rpcUrl
+  return { ...config, descriptor: { ...config.descriptor, rpcUrl, features } }
 }

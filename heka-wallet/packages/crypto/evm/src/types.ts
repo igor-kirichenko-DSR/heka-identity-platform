@@ -5,6 +5,14 @@ import { eip155Reference } from '@heka-wallet/crypto-core'
 
 import { EvmAdapterError } from './errors'
 
+/** EVM-only data of the USDC-fee path (F08). */
+export interface AaConfig {
+  /** The only implementation an account may be delegated to (EIP-7702); anything else is refused. */
+  implementation: Address
+  /** USDC base units per 1 ETH, for the first quote before any receipt gives a rate. */
+  seedUsdcPerEth: bigint
+}
+
 /** A registry entry for an EVM chain: the chain-agnostic descriptor plus what only the EVM adapter needs. */
 export interface EvmChainConfig {
   descriptor: ChainDescriptor
@@ -19,6 +27,8 @@ export interface EvmChainConfig {
    * balance >= value + gas × price + L1 fee, so a quote without it is too low. Absent = no L1 fee.
    */
   l1FeeOracle?: Address
+  /** Present with `features.paymaster`: what USDC-paid user operations need beyond the paymaster entry. */
+  aa?: AaConfig
 }
 
 /** The numeric EIP-155 chain id of an 'eip155:N' entry. */

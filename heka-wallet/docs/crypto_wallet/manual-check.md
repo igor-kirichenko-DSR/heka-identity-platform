@@ -62,6 +62,19 @@ Fund the address from Receive with Base Sepolia ETH, and USDC if you want to tes
 | After auth | "Payment sent", then "Payment complete" within seconds, with "View in explorer" opening the transaction on the block explorer |
 | Send twice quickly | the second is blocked: "Wait until your payment is complete." |
 
+### 5a. Fees in USDC (needs an account with USDC and no ETH)
+
+Base Sepolia only. Import a key that holds at least 0.05 USDC and 0 ETH (a fresh testnet key funded from the Circle faucet).
+
+| Step | Expected |
+|---|---|
+| Home -> Send, valid address and amount in USDC | a fee mode choice appears: the native asset and "Pay fee in USDC"; the USDC line says "up to ..." |
+| Choose "Pay fee in USDC", confirm with PIN | "Payment sent", then "Payment complete" within seconds |
+| View in explorer | opens the bundler transaction, not the operation hash |
+| History | the payment is one row; the charged USDC shows as its fee |
+| An account delegated to another contract (7702) | choosing USDC says fees cannot be paid in USDC; Send stays disabled |
+| Set `CRYPTO_BUNDLER_URL_BASE_SEPOLIA` to an unreachable https URL, rebuild, send in USDC | "Pay the network fee in ETH instead?" with two buttons; nothing is sent until you answer |
+
 ## 6. History
 
 | Step | Expected |
@@ -130,5 +143,5 @@ Debug output of a failed run: `~/.maestro/tests/<timestamp>`. Secret screens (ph
 
 ## Known gaps
 
--   Hedera testnet, EIP-7702 USDC gas and signing requests come with F05, F08 and F07; their screens appear only when an adapter reports the capability.
+-   Hedera testnet and signing requests come with F05 and F07; their screens appear only when an adapter reports the capability. USDC fees (F08) have no Maestro flow: they need a zero-ETH account, so section 5a is manual.
 -   French and Portuguese strings were written by an agent: have a native speaker read them.

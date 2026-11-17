@@ -163,6 +163,7 @@ const translation = {
         "InsufficientFee": "The balance is too low to pay the network fee.",
         "Pending": "Wait until your payment is complete.",
         "Locked": "The wallet is locked. Unlock it and try again.",
+        "ForeignDelegation": "This account is delegated to another contract, so network fees cannot be paid in USDC.",
         "Failed": "The payment could not be sent."
       }
     },
@@ -171,6 +172,9 @@ const translation = {
       "UpTo": "Network fee: up to {{amount}}",
       "UpToShort": "up to {{amount}}",
       "Usdc": "Pay fee in USDC",
+      "PayInNativeTitle": "USDC fees are not available right now. Pay the network fee in {{symbol}} instead?",
+      "PayInNativeAction": "Pay in {{symbol}}",
+      "PayInNativeDismiss": "Cancel",
       "Failed": "The network fee could not be estimated.",
       "Warnings": {
         "insufficient-native-balance": "The balance is too low to pay the network fee."

@@ -1,3 +1,4 @@
+export * from './aa'
 export { ADDRESS_WARNING_NO_CHECKSUM, validateEvmAddress } from './address'
 export * from './chains'
 export * from './errors'

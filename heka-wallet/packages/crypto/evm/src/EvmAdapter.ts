@@ -20,7 +20,7 @@ import type {
 } from '@heka-wallet/crypto-core'
 import type { Address, Chain, Hex, PublicClient, Transport } from 'viem'
 
-import { formatUnits } from '@heka-wallet/crypto-core'
+import { formatUnits, sameAddress } from '@heka-wallet/crypto-core'
 import {
   createPublicClient,
   encodeFunctionData,
@@ -32,6 +32,7 @@ import {
 } from 'viem'
 
 import { withEvmAccount } from './EvmAccount'
+import { createViemBundler, PaymasterSender, type UserOpBundler } from './aa'
 import { validateEvmAddress } from './address'
 import { EvmAdapterError } from './errors'
 import { assertGasCeiling, withGasMargin } from './fees'
@@ -56,6 +57,8 @@ export interface EvmAdapterOptions {
   addressBook: AddressBook
   /** Default: HTTP to the entry's rpcUrl. Tests pass a custom transport. */
   transport?: Transport
+  /** Default: the viem bundler client on the entry's bundler URL. Tests pass a fake. */
+  bundler?: UserOpBundler
 }
 
 /** A transaction ready to sign: everything except nonce and signature. */
@@ -83,15 +86,18 @@ export class EvmAdapter implements ChainAdapter {
   protected readonly chainIdNumber: number
   protected readonly addressBook: AddressBook
   protected readonly client: PublicClient<Transport, Chain>
+  /** Only on a chain whose entry has a paymaster and the EVM data for it. */
+  protected readonly paymaster?: PaymasterSender
 
   /** Builds the viem client for this entry; throws on an entry without an RPC URL or a non-EVM id. */
-  constructor({ config, addressBook, transport }: EvmAdapterOptions) {
+  constructor({ config, addressBook, transport, bundler }: EvmAdapterOptions) {
     const viemChain = toViemChain(config)
     this.config = config
     this.chain = config.descriptor
     this.chainIdNumber = evmChainId(config)
     this.addressBook = addressBook
     this.client = createPublicClient({ chain: viemChain, transport: transport ?? http(config.descriptor.rpcUrl) })
+    this.paymaster = this.createPaymasterSender(bundler)
   }
 
   /** The account at index: the cached address, or derived from the payment key on a cache miss. */
@@ -153,7 +159,8 @@ export class EvmAdapter implements ChainAdapter {
    * with a warning when ETH cannot cover it.
    */
   async estimateFee(req: TransferRequest): Promise<FeeQuote> {
-    this.assertNativeMode(req.feeMode)
+    this.assertFeeMode(req.feeMode)
+    if (req.feeMode === 'usdc-paymaster') return this.quotePaymaster(req)
     const [plan, nativeBalance] = await Promise.all([
       this.planTransaction(req),
       this.readNativeBalance(getAddress(req.from.address)),
@@ -173,13 +180,28 @@ export class EvmAdapter implements ChainAdapter {
 
   /** Checks the RPC chain, signs with the payment key and submits; returns before the receipt. */
   async transfer(req: TransferRequest, keys: KeyProvider): Promise<TransferResult> {
-    this.assertNativeMode(req.feeMode)
+    this.assertFeeMode(req.feeMode)
+    if (req.feeMode === 'usdc-paymaster') return this.transferPaymaster(req, keys)
     return { txId: await this.sendPlanned(req.from, () => this.planTransaction(req), keys, req.feeCap) }
   }
 
-  /** Receipt → success / failed with the fee paid; no receipt yet → pending. */
+  /**
+   * Receipt → success / failed with the fee paid; no receipt yet → pending. On a paymaster chain the id may be a
+   * user-operation hash: one this session sent asks the bundler first, an unknown one only after the chain has no
+   * such transaction (an operation sent before a restart).
+   */
   async getStatus(txId: string): Promise<StatusResult> {
     if (!isHash(txId)) throw new EvmAdapterError(`Not a transaction hash: ${txId}`)
+    const paymaster = this.paymaster
+    if (!paymaster) return this.getTransactionStatus(txId)
+    if (paymaster.knows(txId)) return (await paymaster.status(txId)) ?? { status: 'pending' }
+    const onChain = await this.getTransactionStatus(txId)
+    if (onChain.status !== 'pending') return onChain
+    return (await paymaster.status(txId)) ?? onChain
+  }
+
+  /** The plain transaction receipt of a hash. */
+  private async getTransactionStatus(txId: Hex): Promise<StatusResult> {
     try {
       const receipt = await this.client.getTransactionReceipt({ hash: txId })
       const fee = { asset: this.chain.nativeAsset, amount: receipt.gasUsed * receipt.effectiveGasPrice }
@@ -216,21 +238,24 @@ export class EvmAdapter implements ChainAdapter {
   protected async planTransaction(req: TransferRequest): Promise<PlannedTransaction> {
     this.assertOwnAccount(req.from)
     this.assertOwnAsset(req.asset)
+    return this.priceCall(req.from, this.buildCall(req))
+  }
+
+  /** The call a transfer makes, after the amount and recipient checks. */
+  protected buildCall(req: TransferRequest): { to: Address; value: bigint; data?: Hex } {
     if (req.amount <= ZERO) throw new EvmAdapterError('Amount must be positive')
     const recipient = this.validateAddress(req.to)
     if (!recipient.ok || recipient.normalized === undefined) {
       throw new EvmAdapterError(`Invalid recipient: ${req.to}`)
     }
     const to = getAddress(recipient.normalized)
-    const call =
-      req.asset.kind === 'native'
-        ? { to, value: this.toCallValue(req.amount) }
-        : {
-            to: tokenAddress(req.asset),
-            value: ZERO,
-            data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [to, req.amount] }),
-          }
-    return this.priceCall(req.from, call)
+    return req.asset.kind === 'native'
+      ? { to, value: this.toCallValue(req.amount) }
+      : {
+          to: tokenAddress(req.asset),
+          value: ZERO,
+          data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [to, req.amount] }),
+        }
   }
 
   /** Prices a call: gas × 1.2 (refused above the chain's ceiling), fees per gas, and the L1 data fee where it applies. */
@@ -340,6 +365,7 @@ export class EvmAdapter implements ChainAdapter {
     toBlock: bigint
   ): Promise<TransferLog[]> {
     const query = { address: tokens, event: TRANSFER_EVENT, fromBlock, toBlock }
+    const feeCollector = this.paymaster?.paymasterAddress
     const [sent, received] = await Promise.all([
       this.client.getLogs({ ...query, args: { from: holder } }),
       this.client.getLogs({ ...query, args: { to: holder } }),
@@ -350,6 +376,8 @@ export class EvmAdapter implements ChainAdapter {
       // Mined-only ranges; a log without these fields is malformed and skipped
       if (from === undefined || to === undefined || value === undefined) return
       if (log.blockNumber === null || log.logIndex === null || log.transactionHash === null) return
+      // The paymaster's prefund and refund are the fee of a send, not payments of their own
+      if (feeCollector && [from, to].some((party) => sameAddress(party, feeCollector))) return
       logs.push({
         token: getAddress(log.address),
         from,
@@ -370,9 +398,52 @@ export class EvmAdapter implements ChainAdapter {
     return new Map(blocks.map((block, i) => [blockNumbers[i], block.timestamp]))
   }
 
-  /** Only 'native' until F08 adds 'usdc-paymaster'. */
-  protected assertNativeMode(feeMode: FeeMode): void {
-    if (feeMode !== 'native') throw new EvmAdapterError(`Fee mode ${feeMode} is not supported on ${this.chain.id}`)
+  /** 'usdc-paymaster' only on a chain with a paymaster entry. */
+  protected assertFeeMode(feeMode: FeeMode): void {
+    if (feeMode === 'native' || (feeMode === 'usdc-paymaster' && this.paymaster)) return
+    throw new EvmAdapterError(`Fee mode ${feeMode} is not supported on ${this.chain.id}`)
+  }
+
+  /** Quote of a send paid in USDC; refused for a foreign 7702 delegation, unavailable when the bundler is down. */
+  private async quotePaymaster(req: TransferRequest): Promise<FeeQuote> {
+    this.assertOwnAccount(req.from)
+    this.assertOwnAsset(req.asset)
+    this.buildCall(req)
+    return this.requirePaymaster().quote(getAddress(req.from.address))
+  }
+
+  /** Signs and submits a user operation after the same chain check as a plain send; returns the operation hash. */
+  private async transferPaymaster(req: TransferRequest, keys: KeyProvider): Promise<TransferResult> {
+    this.assertOwnAccount(req.from)
+    this.assertOwnAsset(req.asset)
+    const call = this.buildCall(req)
+    const rpcChainId = await this.client.getChainId()
+    if (rpcChainId !== this.chainIdNumber) {
+      throw new EvmAdapterError(`RPC serves chain ${rpcChainId}, expected ${this.chainIdNumber}`)
+    }
+    return this.requirePaymaster().send(req, call, keys)
+  }
+
+  private requirePaymaster(): PaymasterSender {
+    if (!this.paymaster) throw new EvmAdapterError(`${this.chain.id} has no paymaster`)
+    return this.paymaster
+  }
+
+  /** The USDC-fee path, when the entry has a paymaster, the EVM data for it and a USDC token. */
+  private createPaymasterSender(bundler?: UserOpBundler): PaymasterSender | undefined {
+    const paymaster = this.chain.features.paymaster
+    const { aa } = this.config
+    if (!paymaster || !aa) return undefined
+    const usdc = this.chain.assets.find((asset) => asset.kind === 'erc20' && asset.stable === 'USD')
+    if (!usdc) throw new EvmAdapterError(`${this.chain.id} has a paymaster but no USDC token`)
+    return new PaymasterSender({
+      chainId: this.chainIdNumber,
+      paymaster,
+      aa,
+      usdc,
+      client: this.client,
+      bundler: bundler ?? createViemBundler({ client: this.client, transport: http(paymaster.bundlerUrl) }),
+    })
   }
 
   /** Refuses an account of another chain. */

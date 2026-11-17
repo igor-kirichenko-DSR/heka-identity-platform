@@ -163,6 +163,7 @@ const translation = {
         "InsufficientFee": "O saldo é insuficiente para pagar a taxa da rede.",
         "Pending": "Aguarde a conclusão do pagamento anterior.",
         "Locked": "A carteira está bloqueada. Desbloqueie e tente de novo.",
+        "ForeignDelegation": "Esta conta está delegada a outro contrato, então as taxas de rede não podem ser pagas em USDC.",
         "Failed": "Não foi possível enviar o pagamento."
       }
     },
@@ -171,6 +172,9 @@ const translation = {
       "UpTo": "Taxa da rede: até {{amount}}",
       "UpToShort": "até {{amount}}",
       "Usdc": "Pagar taxa em USDC",
+      "PayInNativeTitle": "As taxas em USDC não estão disponíveis agora. Pagar a taxa de rede em {{symbol}}?",
+      "PayInNativeAction": "Pagar em {{symbol}}",
+      "PayInNativeDismiss": "Cancelar",
       "Failed": "Não foi possível estimar a taxa da rede.",
       "Warnings": {
         "insufficient-native-balance": "O saldo é insuficiente para pagar a taxa da rede."
