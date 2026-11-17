@@ -163,6 +163,7 @@ const translation = {
         "InsufficientFee": "Le solde est insuffisant pour payer les frais de réseau.",
         "Pending": "Attendez la fin de votre paiement précédent.",
         "Locked": "Le portefeuille est verrouillé. Déverrouillez-le et réessayez.",
+        "ForeignDelegation": "Ce compte est délégué à un autre contrat : les frais de réseau ne peuvent pas être payés en USDC.",
         "Failed": "Le paiement n'a pas pu être envoyé."
       }
     },
@@ -171,6 +172,9 @@ const translation = {
       "UpTo": "Frais de réseau : jusqu'à {{amount}}",
       "UpToShort": "jusqu'à {{amount}}",
       "Usdc": "Payer les frais en USDC",
+      "PayInNativeTitle": "Les frais en USDC ne sont pas disponibles pour le moment. Payer les frais de réseau en {{symbol}} ?",
+      "PayInNativeAction": "Payer en {{symbol}}",
+      "PayInNativeDismiss": "Annuler",
       "Failed": "Les frais de réseau n'ont pas pu être estimés.",
       "Warnings": {
         "insufficient-native-balance": "Le solde est insuffisant pour payer les frais de réseau."

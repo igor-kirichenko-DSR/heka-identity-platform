@@ -135,6 +135,14 @@ describe('HederaEvmAdapter.getBalances', () => {
 })
 
 describe('HederaEvmAdapter fee quote and transfer', () => {
+  it('still refuses the usdc-paymaster fee mode: Hedera has no 7702 and no paymaster', async () => {
+    const { adapter, account, keys } = setup()
+    await expect(adapter.estimateFee(request(account, { feeMode: 'usdc-paymaster' }))).rejects.toThrow(EvmAdapterError)
+    await expect(adapter.transfer(request(account, { feeMode: 'usdc-paymaster' }), keys)).rejects.toThrow(
+      EvmAdapterError
+    )
+  })
+
   it('quotes in HBAR: gas x 1.2 at the relay price x 1.2, converted to tinybar and rounded up', async () => {
     const { adapter, account } = setup()
 

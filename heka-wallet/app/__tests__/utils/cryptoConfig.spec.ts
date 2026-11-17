@@ -1,4 +1,6 @@
-import { buildCryptoConfig, CryptoConfigError, FALLBACK_CRYPTO_CHAIN } from '../../src/cryptoConfig'
+import { baseSepolia, hederaTestnet } from '@heka-wallet/crypto-evm'
+
+import { buildCryptoConfig, CryptoConfigError, FALLBACK_CRYPTO_CHAIN, withChainOverrides } from '../../src/cryptoConfig'
 
 const BASE_SEPOLIA = 'eip155:84532'
 const RPC = 'CRYPTO_RPC_URL_BASE_SEPOLIA'
@@ -75,6 +77,22 @@ describe('buildCryptoConfig', () => {
     )
     expect(config.defaultChain).toBe(HEDERA_TESTNET)
     expect(config.overrides[HEDERA_TESTNET]).toEqual({ rpcUrl: 'https://relay.example/api', bundlerUrl: undefined })
+  })
+
+  it('applies the RPC and bundler overrides to a registry entry with a paymaster', () => {
+    const config = withChainOverrides(baseSepolia, {
+      rpcUrl: 'https://rpc.example/key',
+      bundlerUrl: 'https://bundler.example',
+    })
+    expect(config.descriptor.rpcUrl).toBe('https://rpc.example/key')
+    expect(config.descriptor.features.paymaster?.bundlerUrl).toBe('https://bundler.example')
+    expect(baseSepolia.descriptor.features.paymaster?.bundlerUrl).not.toBe('https://bundler.example')
+  })
+
+  it('keeps the registry URLs without overrides, and ignores a bundler URL where there is no paymaster', () => {
+    expect(withChainOverrides(baseSepolia)).toEqual(baseSepolia)
+    const hedera = withChainOverrides(hederaTestnet, { bundlerUrl: 'https://bundler.example' })
+    expect(hedera.descriptor.features.paymaster).toBeUndefined()
   })
 
   it('refuses a plain-http Hedera relay outside development', () => {

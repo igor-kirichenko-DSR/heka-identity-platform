@@ -10,6 +10,7 @@ import { createRpcMock, hex } from './helpers/rpc'
 
 const HOLDER = getAddress('0x9c2b1f0a0a7e5d3c1b2a39485766a5b4c3d2e1f0')
 const OTHER = RECIPIENT
+const PAYMASTER = getAddress('0x3BA9A96eE3eFf3A69E2B18886AcF52027EFF8966')
 const HEAD = 100_000
 const FLOOR = HEAD - 10_000 + 1
 const TIMESTAMP_BASE = 1_762_000_000
@@ -188,8 +189,22 @@ describe('EvmAdapter.getHistory', () => {
 
   it('returns nothing on a chain without ERC-20 assets (no native inbound history)', async () => {
     const rpc = createRpcMock({})
-    const config = { ...baseSepolia, descriptor: { ...baseSepolia.descriptor, assets: [] } }
+    const { paymaster: _paymaster, ...features } = baseSepolia.descriptor.features
+    const config = { ...baseSepolia, aa: undefined, descriptor: { ...baseSepolia.descriptor, assets: [], features } }
     await expect(makeAdapter(rpc.transport, config).getHistory(account)).resolves.toEqual({ items: [] })
     expect(rpc.calls).toEqual([])
+  })
+
+  it('leaves out the paymaster prefund and refund, so a sponsored send is one record', async () => {
+    const { adapter } = chainWith([
+      { from: HOLDER, to: OTHER, value: 10_000, block: 99_750, logIndex: 4, txHash: txHash(2) },
+      { from: HOLDER, to: PAYMASTER, value: 9_030, block: 99_750, logIndex: 5, txHash: txHash(2) },
+      { from: PAYMASTER, to: HOLDER, value: 4_984, block: 99_750, logIndex: 6, txHash: txHash(2) },
+    ])
+
+    const page = await adapter.getHistory(account)
+
+    expect(page.items).toHaveLength(1)
+    expect(page.items[0]).toMatchObject({ txId: txHash(2), amount: BigInt(10_000), counterparty: OTHER })
   })
 })

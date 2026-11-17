@@ -1,6 +1,6 @@
 import { toFunctionSelector } from 'viem'
 
-import { baseSepolia, EvmAdapterError } from '../src'
+import { baseSepolia, EvmAdapterError, type EvmChainConfig } from '../src'
 import { withGasMargin } from '../src/fees'
 
 import { accountOf, ETH, makeAdapter, RECIPIENT, transferRequest, USDC_ADDRESS } from './helpers/chain'
@@ -145,10 +145,15 @@ describe('EvmAdapter.estimateFee', () => {
     })
   })
 
-  it('refuses the usdc-paymaster fee mode until F08', async () => {
+  it('refuses the usdc-paymaster fee mode on a chain without a paymaster, before any RPC call', async () => {
     const rpc = createRpcMock(sendHandlers())
+    const config: EvmChainConfig = {
+      ...baseSepolia,
+      descriptor: { ...baseSepolia.descriptor, features: { ...baseSepolia.descriptor.features, paymaster: undefined } },
+      aa: undefined,
+    }
     await expect(
-      makeAdapter(rpc.transport).estimateFee(transferRequest(from, { feeMode: 'usdc-paymaster' }))
+      makeAdapter(rpc.transport, config).estimateFee(transferRequest(from, { feeMode: 'usdc-paymaster' }))
     ).rejects.toThrow(EvmAdapterError)
     expect(rpc.calls).toEqual([])
   })

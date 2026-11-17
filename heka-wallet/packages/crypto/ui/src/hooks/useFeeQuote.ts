@@ -1,6 +1,6 @@
 import type { ChainAdapter, FeeQuote, TransferRequest } from '@heka-wallet/crypto-core'
 
-import { accountKey } from '@heka-wallet/crypto-core'
+import { accountKey, ForeignDelegationError } from '@heka-wallet/crypto-core'
 import { useEffect, useState } from 'react'
 
 import { FEE_QUOTE_DEBOUNCE_MS } from '../constants'
@@ -23,6 +23,8 @@ export const useFeeQuote = (adapter: ChainAdapter | undefined, request: Transfer
   const [quote, setQuote] = useState<FeeQuote>()
   const [isQuoting, setQuoting] = useState(false)
   const [failed, setFailed] = useState(false)
+  // A reason the holder can act on, shown instead of the generic failure
+  const [blockedKey, setBlockedKey] = useState<string>()
   const key = request ? requestKey(request) : undefined
   const [current, setCurrent] = useState<{ key: string; request: TransferRequest }>()
 
@@ -32,6 +34,7 @@ export const useFeeQuote = (adapter: ChainAdapter | undefined, request: Transfer
   useEffect(() => {
     setQuote(undefined)
     setFailed(false)
+    setBlockedKey(undefined)
     if (!adapter || !current) {
       setQuoting(false)
       return
@@ -44,7 +47,9 @@ export const useFeeQuote = (adapter: ChainAdapter | undefined, request: Transfer
         .then((result) => !cancelled && setQuote(result))
         .catch((error: unknown) => {
           logger.warn('Fee quote failed', { chainId: current.request.from.chainId, error: String(error) })
-          if (!cancelled) setFailed(true)
+          if (cancelled) return
+          if (error instanceof ForeignDelegationError) setBlockedKey('Crypto.Send.Errors.ForeignDelegation')
+          else setFailed(true)
         })
         .finally(() => !cancelled && setQuoting(false))
     }, FEE_QUOTE_DEBOUNCE_MS)
@@ -54,5 +59,5 @@ export const useFeeQuote = (adapter: ChainAdapter | undefined, request: Transfer
     }
   }, [adapter, current, logger])
 
-  return { quote, isQuoting, failed }
+  return { quote, isQuoting, failed, blockedKey }
 }

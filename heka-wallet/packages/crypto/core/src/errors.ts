@@ -15,6 +15,12 @@ export class AccountError extends CryptoCoreError {}
 
 export class PendingSendError extends CryptoCoreError {}
 
+/** The bundler, the gas estimate or the paymaster failed before anything was sent; the UI offers native fees. */
+export class PaymasterUnavailableError extends CryptoCoreError {}
+
+/** The account is delegated (EIP-7702) to a contract other than the pinned one; USDC fees are refused. */
+export class ForeignDelegationError extends CryptoCoreError {}
+
 /** A store method was called before the store's init() finished. */
 export class NotReadyError extends CryptoCoreError {}
 

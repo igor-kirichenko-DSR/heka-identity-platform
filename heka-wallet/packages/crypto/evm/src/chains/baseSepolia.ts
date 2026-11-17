@@ -7,6 +7,14 @@ const CHAIN_ID: ChainId = 'eip155:84532'
 // Circle "USDC contract addresses", checked 2026-11-05 (Spike A/D)
 const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
 const EXPLORER = 'https://sepolia.basescan.org'
+// Circle Paymaster v0.8, the same address on every testnet Circle lists (Spike D, 2026-11-05)
+const CIRCLE_PAYMASTER = '0x3BA9A96eE3eFf3A69E2B18886AcF52027EFF8966'
+// Public Pimlico endpoint, no key; a keyed URL is an override in F06 (CRYPTO_BUNDLER_URL_BASE_SEPOLIA)
+const BUNDLER_URL = 'https://public.pimlico.io/v2/84532/rpc'
+// Simple7702 implementation, from viem 2.57.8, checked deployed on Base Sepolia (Spike D)
+const SIMPLE_7702_IMPLEMENTATION = '0xe6Cae83BdE06E4c305530e199D7217f42808555B'
+// Circle's effective rate in Spike D: 3 345.3 USDC per ETH, in USDC base units
+const SEED_USDC_PER_ETH = BigInt(3_345_300_000)
 
 const eth: AssetDescriptor = {
   id: `${CHAIN_ID}/slip44:60`,
@@ -46,6 +54,7 @@ export const baseSepolia: EvmChainConfig = {
       historySource: 'rpc-logs',
       autoCreateOnReceive: false,
       historyWindowBlocks: 10_000,
+      paymaster: { kind: 'circle', version: '0.8', address: CIRCLE_PAYMASTER, bundlerUrl: BUNDLER_URL },
     },
   },
   // ETH send 21 000, USDC send ~62 000 gas (Spike A)
@@ -53,4 +62,5 @@ export const baseSepolia: EvmChainConfig = {
   logsMaxRange: 200,
   multicall3: MULTICALL3_ADDRESS,
   l1FeeOracle: OP_GAS_PRICE_ORACLE,
+  aa: { implementation: SIMPLE_7702_IMPLEMENTATION, seedUsdcPerEth: SEED_USDC_PER_ETH },
 }

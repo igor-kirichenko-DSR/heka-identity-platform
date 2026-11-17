@@ -1,20 +1,17 @@
 import type { CryptoProviderProps } from '@heka-wallet/crypto-ui'
 
-import { baseSepolia, EvmAdapter, type EvmChainConfig, HederaEvmAdapter, hederaTestnet } from '@heka-wallet/crypto-evm'
+import { baseSepolia, EvmAdapter, HederaEvmAdapter, hederaTestnet } from '@heka-wallet/crypto-evm'
 import { GlobalLogger } from '@heka-wallet/shared'
 import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { getCryptoConfig, isWalletBackupEnabled } from '../config'
 import { useRootStore } from '../contexts'
-import { type CryptoChainOverrides } from '../cryptoConfig'
+import { withChainOverrides } from '../cryptoConfig'
 import { useHekaAgent } from '../utils/agent'
 import { createAgentTransactionRunner, AskarStoreClosedError } from '../utils/askarSession'
 import { useWalletBackupHelpers } from '../utils/useWalletBackupHelpers'
 
 const logger = GlobalLogger.createContextLogger('Crypto')
-
-const withRpcOverride = (config: EvmChainConfig, overrides?: CryptoChainOverrides): EvmChainConfig =>
-  overrides?.rpcUrl ? { ...config, descriptor: { ...config.descriptor, rpcUrl: overrides.rpcUrl } } : config
 
 /**
  * Everything `CryptoProvider` needs from the app. The provider builds its services once from the first props, so
@@ -49,11 +46,11 @@ export const useCryptoHost = (): Omit<CryptoProviderProps, 'children'> => {
   const createAdapters = useCallback<CryptoProviderProps['createAdapters']>(
     (addressBook) => [
       new EvmAdapter({
-        config: withRpcOverride(baseSepolia, config.overrides[baseSepolia.descriptor.id]),
+        config: withChainOverrides(baseSepolia, config.overrides[baseSepolia.descriptor.id]),
         addressBook,
       }),
       new HederaEvmAdapter({
-        config: withRpcOverride(hederaTestnet, config.overrides[hederaTestnet.descriptor.id]),
+        config: withChainOverrides(hederaTestnet, config.overrides[hederaTestnet.descriptor.id]),
         addressBook,
       }),
     ],

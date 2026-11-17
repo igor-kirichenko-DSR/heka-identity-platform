@@ -69,3 +69,14 @@ No change.
 
 -   Rate source for the USDC quote (Spike D).
 -   Revocation of the delegation as a user action (Settings) or only in the Phase 4 security test: decide in F15.
+
+## Implementation notes (2026-11-16)
+
+-   `estimateFee` is keyless: it models the gas of one transfer (260 000 for the first operation that carries the delegation, 200 000 after; Spike D), prices it with `pimlico_getUserOperationGasPrice` and the rate, and shows `max` = 2.5 x the estimate. The permit is signed at send time from the prepared operation (its worst-case cost x rate x 1.5), because signing needs the key and a quote must not open it. A send whose permit would exceed the request's `feeCap` is refused.
+-   Rate: the registry seed (`aa.seedUsdcPerEth`, 3 345.3 USDC per ETH from Spike D) until a receipt gives the real one; kept in memory only.
+-   The registry's bundler URL is the public Pimlico endpoint (no key in code); a keyed URL goes in `CRYPTO_BUNDLER_URL_BASE_SEPOLIA`.
+-   History drops the paymaster's prefund and refund logs, so a send paid in USDC is one row.
+-   Errors: `PaymasterUnavailableError` (offer native fees) and `ForeignDelegationError` (explain, block USDC mode) in `crypto-core`.
+-   Not covered by automated tests: the viem bundler client against a live bundler. It runs only in `integration/baseSepoliaPaymaster.spec.ts` (`CRYPTO_IT=1`, key `CRYPTO_IT_ZERO_ETH_KEY`); the developer runs it.
+-   Gas estimation signs a real permit for 10 USDC (never submitted). The first version sent a dummy permit and the bundler's simulation reverted with `AA33 ... amount exceeds allowance`. Errors from the bundler quote its URL, which carries the API key, so the messages are redacted before they reach the log.
+-   No Maestro flow: a zero-ETH account is needed, so `manual-check.md` section 5a covers it.
