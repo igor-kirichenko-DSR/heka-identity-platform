@@ -79,4 +79,5 @@ No change.
 -   Errors: `PaymasterUnavailableError` (offer native fees) and `ForeignDelegationError` (explain, block USDC mode) in `crypto-core`.
 -   Not covered by automated tests: the viem bundler client against a live bundler. It runs only in `integration/baseSepoliaPaymaster.spec.ts` (`CRYPTO_IT=1`, key `CRYPTO_IT_ZERO_ETH_KEY`); the developer runs it.
 -   Gas estimation signs a real permit for 10 USDC (never submitted). The first version sent a dummy permit and the bundler's simulation reverted with `AA33 ... amount exceeds allowance`. Errors from the bundler quote its URL, which carries the API key, so the messages are redacted before they reach the log.
+-   `CRYPTO_USDC_FEES=false` in `app/.env` hides fees in USDC on every chain (the paymaster is removed from the registry entry the app builds); empty or `true` keeps them where the entry has a paymaster.
 -   No Maestro flow: a zero-ETH account is needed, so `manual-check.md` section 5a covers it.

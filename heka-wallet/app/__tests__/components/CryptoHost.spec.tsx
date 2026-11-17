@@ -9,7 +9,9 @@ type ProviderProps = {
   backup?: { backupNow: () => Promise<void> }
   defaultChainId: string
   withSeedSession: (callback: (session: unknown) => Promise<unknown>) => Promise<unknown>
-  createAdapters: (addressBook: unknown) => Array<{ chain: { id: string; rpcUrl?: string } }>
+  createAdapters: (
+    addressBook: unknown
+  ) => Array<{ chain: { id: string; rpcUrl?: string; features: { paymaster?: unknown } } }>
 }
 
 jest.mock('@credo-ts/askar', () => ({ AskarStoreManager: class {} }))
@@ -17,6 +19,7 @@ jest.mock('@credo-ts/askar', () => ({ AskarStoreManager: class {} }))
 let mockAgent: object | undefined
 let mockBackupEnabled = false
 let mockRpcOverride: string | undefined
+let mockUsdcFees = true
 const mockProvider = jest.fn()
 const mockMountRead = jest.fn()
 const mockBackupWallet = jest.fn()
@@ -41,6 +44,7 @@ jest.mock('../../src/config', () => ({
   },
   getCryptoConfig: () => ({
     defaultChain: 'eip155:84532',
+    usdcFees: mockUsdcFees,
     overrides: mockRpcOverride ? { 'eip155:84532': { rpcUrl: mockRpcOverride } } : {},
   }),
 }))
@@ -67,6 +71,7 @@ describe('CryptoHost', () => {
     mockAgent = undefined
     mockBackupEnabled = false
     mockRpcOverride = undefined
+    mockUsdcFees = true
     jest.clearAllMocks()
   })
 
@@ -106,6 +111,23 @@ describe('CryptoHost', () => {
 
     expect(lastProps().defaultChainId).toBe('eip155:84532')
     expect(adapter.chain).toMatchObject({ id: 'eip155:84532', rpcUrl: 'https://rpc.example/key' })
+  })
+
+  it('registers Base Sepolia with its paymaster, so fees in USDC are offered', () => {
+    render(<CryptoHost />)
+
+    const [adapter] = lastProps().createAdapters({ getAddress: jest.fn() })
+
+    expect(adapter.chain.features.paymaster).toBeDefined()
+  })
+
+  it('registers Base Sepolia without a paymaster when fees in USDC are turned off', () => {
+    mockUsdcFees = false
+    render(<CryptoHost />)
+
+    const [adapter] = lastProps().createAdapters({ getAddress: jest.fn() })
+
+    expect(adapter.chain.features.paymaster).toBeUndefined()
   })
 
   it('lets the provider read the store in its effect when the agent arrives after the first render', async () => {

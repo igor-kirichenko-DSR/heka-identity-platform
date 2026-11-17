@@ -46,11 +46,11 @@ export const useCryptoHost = (): Omit<CryptoProviderProps, 'children'> => {
   const createAdapters = useCallback<CryptoProviderProps['createAdapters']>(
     (addressBook) => [
       new EvmAdapter({
-        config: withChainOverrides(baseSepolia, config.overrides[baseSepolia.descriptor.id]),
+        config: withChainOverrides(baseSepolia, config.overrides[baseSepolia.descriptor.id], config.usdcFees),
         addressBook,
       }),
       new HederaEvmAdapter({
-        config: withChainOverrides(hederaTestnet, config.overrides[hederaTestnet.descriptor.id]),
+        config: withChainOverrides(hederaTestnet, config.overrides[hederaTestnet.descriptor.id], config.usdcFees),
         addressBook,
       }),
     ],

@@ -9,13 +9,18 @@ const BUNDLER = 'CRYPTO_BUNDLER_URL_BASE_SEPOLIA'
 describe('buildCryptoConfig', () => {
   it('uses the fallback chain and no overrides when nothing is set', () => {
     const warn = jest.fn()
-    expect(buildCryptoConfig({}, false, warn)).toEqual({ defaultChain: FALLBACK_CRYPTO_CHAIN, overrides: {} })
+    expect(buildCryptoConfig({}, false, warn)).toEqual({
+      defaultChain: FALLBACK_CRYPTO_CHAIN,
+      usdcFees: true,
+      overrides: {},
+    })
     expect(warn).not.toHaveBeenCalled()
   })
 
   it('treats empty values like missing ones', () => {
     expect(buildCryptoConfig({ CRYPTO_DEFAULT_CHAIN: '', [RPC]: '  ' }, false, jest.fn())).toEqual({
       defaultChain: FALLBACK_CRYPTO_CHAIN,
+      usdcFees: true,
       overrides: {},
     })
   })
@@ -93,6 +98,30 @@ describe('buildCryptoConfig', () => {
     expect(withChainOverrides(baseSepolia)).toEqual(baseSepolia)
     const hedera = withChainOverrides(hederaTestnet, { bundlerUrl: 'https://bundler.example' })
     expect(hedera.descriptor.features.paymaster).toBeUndefined()
+  })
+
+  it('keeps fees in USDC on when CRYPTO_USDC_FEES is empty or true', () => {
+    expect(buildCryptoConfig({ CRYPTO_USDC_FEES: '' }, false, jest.fn()).usdcFees).toBe(true)
+    expect(buildCryptoConfig({ CRYPTO_USDC_FEES: ' TRUE ' }, false, jest.fn()).usdcFees).toBe(true)
+  })
+
+  it('turns fees in USDC off with CRYPTO_USDC_FEES=false', () => {
+    expect(buildCryptoConfig({ CRYPTO_USDC_FEES: 'false' }, false, jest.fn()).usdcFees).toBe(false)
+    expect(buildCryptoConfig({ CRYPTO_USDC_FEES: ' False ' }, false, jest.fn()).usdcFees).toBe(false)
+  })
+
+  it('warns and keeps fees in USDC on for any other value', () => {
+    const warn = jest.fn()
+    expect(buildCryptoConfig({ CRYPTO_USDC_FEES: 'off' }, false, warn).usdcFees).toBe(true)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('CRYPTO_USDC_FEES'))
+  })
+
+  it('drops the paymaster from the registry entry when fees in USDC are off, and keeps the rest', () => {
+    const config = withChainOverrides(baseSepolia, { rpcUrl: 'https://rpc.example/key' }, false)
+    expect(config.descriptor.features.paymaster).toBeUndefined()
+    expect(config.descriptor.rpcUrl).toBe('https://rpc.example/key')
+    expect(config.descriptor.features.historySource).toBe(baseSepolia.descriptor.features.historySource)
+    expect(baseSepolia.descriptor.features.paymaster).toBeDefined()
   })
 
   it('refuses a plain-http Hedera relay outside development', () => {

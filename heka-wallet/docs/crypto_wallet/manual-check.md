@@ -73,6 +73,7 @@ Base Sepolia only. Import a key that holds at least 0.05 USDC and 0 ETH (a fresh
 | View in explorer | opens the bundler transaction, not the operation hash |
 | History | the payment is one row; the charged USDC shows as its fee |
 | An account delegated to another contract (7702) | choosing USDC says fees cannot be paid in USDC; Send stays disabled |
+| Set `CRYPTO_USDC_FEES=false`, rebuild | Send shows no fee mode choice, only the native network fee; with the line empty again the choice returns |
 | Set `CRYPTO_BUNDLER_URL_BASE_SEPOLIA` to an unreachable https URL, rebuild, send in USDC | "Pay the network fee in ETH instead?" with two buttons; nothing is sent until you answer |
 
 ## 6. History

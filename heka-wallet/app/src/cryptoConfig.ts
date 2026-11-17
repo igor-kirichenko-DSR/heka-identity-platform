@@ -17,6 +17,8 @@ export interface CryptoChainOverrides {
 
 export interface CryptoConfig {
   defaultChain: ChainId
+  /** False hides fees in USDC everywhere, even on a chain whose entry has a paymaster. */
+  usdcFees: boolean
   overrides: Partial<Record<ChainId, CryptoChainOverrides>>
 }
 
@@ -48,6 +50,15 @@ const parseOverride = (name: string, value: string | undefined, isDev: boolean, 
   return undefined
 }
 
+/** Empty or `true` keeps fees in USDC on; `false` turns them off; anything else warns and keeps them on. */
+const parseUsdcFees = (value: string | undefined, warn: Warn): boolean => {
+  const flag = value?.trim().toLowerCase()
+  if (!flag || flag === 'true') return true
+  if (flag === 'false') return false
+  warn(`CRYPTO_USDC_FEES ignored: expected true or false, got "${value}"`)
+  return true
+}
+
 /** Reads the payment module's settings from env values. Pure: `config.ts` passes `Config` and `__DEV__`. */
 export const buildCryptoConfig = (env: CryptoEnv, isDev: boolean, warn: Warn): CryptoConfig => {
   const requested = env.CRYPTO_DEFAULT_CHAIN?.trim()
@@ -65,16 +76,23 @@ export const buildCryptoConfig = (env: CryptoEnv, isDev: boolean, warn: Warn): C
     const bundlerUrl = parseOverride(`CRYPTO_BUNDLER_URL_${suffix}`, env[`CRYPTO_BUNDLER_URL_${suffix}`], isDev, warn)
     if (rpcUrl || bundlerUrl) overrides[chainId] = { rpcUrl, bundlerUrl }
   }
-  return { defaultChain, overrides }
+  return { defaultChain, usdcFees: parseUsdcFees(env.CRYPTO_USDC_FEES, warn), overrides }
 }
 
-/** The registry entry with the operator's RPC and bundler URLs applied; a bundler URL needs a paymaster entry. */
-export const withChainOverrides = (config: EvmChainConfig, overrides?: CryptoChainOverrides): EvmChainConfig => {
-  const { paymaster } = config.descriptor.features
+/**
+ * The registry entry with the operator's settings applied: RPC and bundler URLs, and no paymaster at all when fees in
+ * USDC are off (the send form then offers native fees only, and the adapter refuses the USDC mode).
+ */
+export const withChainOverrides = (
+  config: EvmChainConfig,
+  overrides?: CryptoChainOverrides,
+  usdcFees = true
+): EvmChainConfig => {
+  const { paymaster, ...plain } = config.descriptor.features
   const features =
-    overrides?.bundlerUrl && paymaster
-      ? { ...config.descriptor.features, paymaster: { ...paymaster, bundlerUrl: overrides.bundlerUrl } }
-      : config.descriptor.features
+    paymaster && usdcFees
+      ? { ...plain, paymaster: { ...paymaster, bundlerUrl: overrides?.bundlerUrl ?? paymaster.bundlerUrl } }
+      : plain
   const rpcUrl = overrides?.rpcUrl ?? config.descriptor.rpcUrl
   return { ...config, descriptor: { ...config.descriptor, rpcUrl, features } }
 }
